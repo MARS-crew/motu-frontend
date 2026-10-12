@@ -1,0 +1,30 @@
+name: "♻️ Refactor"
+description: 기능 변화 없는 코드 개선 (포맷팅, 이름 변경, 파일 삭제 포함)
+title: "[Refactor] "
+labels: ["Refactor"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 코드를 개선하는지 한두 줄로 요약해 주세요.
+      placeholder: 화면마다 중복된 버튼을 공용 Button 컴포넌트로 분리합니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 현재 문제점과 개선 방향, 영향받는 파일을 적어 주세요.
+      placeholder: |
+        - 현재: 로그인/회원가입 화면에 같은 버튼 코드가 중복됨
+        - 개선: src/components/Button.tsx로 분리
+        - 영향 파일: app/(auth)/login.tsx, app/(auth)/sign-up.tsx
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]

@@ -1,0 +1,30 @@
+name: "⚡ Perf"
+description: 성능 개선
+title: "[Perf] "
+labels: ["Perf"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 성능을 개선하는지 한두 줄로 요약해 주세요.
+      placeholder: 코인 목록 FlatList의 불필요한 리렌더링을 줄입니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 현재 성능 문제, 원인으로 추정되는 부분, 개선 방법을 적어 주세요. 측정 수치가 있으면 함께 적어 주세요.
+      placeholder: |
+        - 현재: 시세 갱신 때마다 목록 전체가 리렌더링됨
+        - 원인: renderItem이 매 렌더마다 새로 생성됨
+        - 개선: CoinCard memo 처리, keyExtractor 지정
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]

@@ -1,0 +1,29 @@
+name: "🔧 Chore"
+description: 의존성, 설정, 초기 세팅 등 기타 작업
+title: "[Chore] "
+labels: ["Chore"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 작업인지 한두 줄로 요약해 주세요.
+      placeholder: ESLint와 Prettier 설정을 추가합니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 설치할 패키지, 변경할 설정 파일 등을 적어 주세요.
+      placeholder: |
+        - 패키지: eslint-config-expo, prettier, prettier-plugin-tailwindcss
+        - 설정 파일: eslint.config.js, .prettierrc
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]

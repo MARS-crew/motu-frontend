@@ -1,0 +1,31 @@
+name: "🐛 Fix"
+description: 버그 수정 (긴급 수정 포함)
+title: "[Fix] "
+labels: ["Fix"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 버그인지 한두 줄로 요약해 주세요.
+      placeholder: 토큰 만료 시 화면이 무한 로딩됩니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 재현 방법, 예상 동작, 실제 동작, 발생 환경을 적어 주세요. 스크린샷이 있으면 첨부해 주세요.
+      placeholder: |
+        - 재현 방법: 로그인 후 1시간 대기 → 코인 목록 진입
+        - 예상 동작: 토큰 재발급 후 목록 표시
+        - 실제 동작: 로딩 스피너가 계속 돎
+        - 환경: iOS 18 / Expo Go
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]
