@@ -1,0 +1,30 @@
+name: "🚀 CI"
+description: 빌드·배포 파이프라인
+title: "[CI] "
+labels: ["CI"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 빌드·배포 작업인지 한두 줄로 요약해 주세요.
+      placeholder: EAS Build 워크플로우를 추가합니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 실행 조건, 대상 플랫폼, 변경할 설정 파일 등을 적어 주세요.
+      placeholder: |
+        - 실행 조건: main 브랜치 push 시
+        - 대상: iOS, Android
+        - 설정 파일: eas.json, .github/workflows/eas-build.yml
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]

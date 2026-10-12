@@ -1,0 +1,30 @@
+name: "✨ Feat"
+description: 새로운 기능 추가 (새 화면, UI 포함)
+title: "[Feat] "
+labels: ["Feat"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 작업인지 한두 줄로 요약해 주세요.
+      placeholder: 로그인 화면을 구현합니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 구현할 기능의 상세 내용, 참고 디자인이나 자료를 적어 주세요.
+      placeholder: |
+        - 이메일/비밀번호 입력 폼
+        - 유효성 검증은 loginSchema 사용
+        - Figma 링크:
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]

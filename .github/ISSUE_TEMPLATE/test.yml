@@ -1,0 +1,29 @@
+name: "✅ Test"
+description: 테스트 코드 추가 및 수정
+title: "[Test] "
+labels: ["Test"]
+body:
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview
+      description: 어떤 테스트를 작성하는지 한두 줄로 요약해 주세요.
+      placeholder: 로그인 폼 유효성 검증 테스트를 작성합니다.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 테스트 대상과 검증할 케이스를 적어 주세요.
+      placeholder: |
+        - 대상: src/schemas/loginSchema.ts
+        - 케이스: 이메일 형식 오류, 비밀번호 8자 미만, 정상 입력
+  - type: textarea
+    id: todo
+    attributes:
+      label: To do
+      description: 해야 할 일을 체크리스트로 적어 주세요.
+      value: |
+        - [ ]
+        - [ ]
