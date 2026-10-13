@@ -96,6 +96,30 @@ Inter 폰트는 `src/hooks/useAppFonts.ts`에서 로드하고, `tailwind.config.
 
 폰트 클래스에 `font-bold` 등 별도의 굵기 클래스를 함께 사용하지 않습니다.
 
+### 색상
+
+색상 토큰은 `tailwind.config.js`의 `theme.extend.colors`에 등록합니다.
+아래 7개 공통 색상을 정의하며, 화면에는 아직 적용하지 않습니다.
+
+| 토큰 | 용도 | 색상 |
+|------|------|------|
+| `motu-black` | 메인 블랙 | `#2E3138` |
+| `motu-red` | 레드 | `#F04452` |
+| `motu-blue` | 블루 | `#2175F3` |
+| `motu-grey` | 중간 그레이 | `#8B8E96` |
+| `motu-grey-light` | 연한 그레이 | `#BEBFC1` |
+| `motu-grey-lighter` | 완전 연한 그레이 | `#EAEAEB` |
+| `motu-green` | 그린 | `#0E9F6E` |
+
+```tsx
+<View className="bg-motu-grey-lighter">
+  <Text className="text-motu-black">MOTU</Text>
+</View>
+```
+
+배경은 `bg-`, 텍스트는 `text-`, 테두리는 `border-` 접두사로 사용합니다.
+예: `bg-motu-blue`, `text-motu-red`, `border-motu-grey-light`.
+
 ### 코드 및 Git
 
 Git 컨벤션과 코드 컨벤션은 Notion에서 관리합니다.
