@@ -78,6 +78,26 @@ assets/                 # 이미지, 폰트
 
 ## 컨벤션
 
+### 폰트
+
+Inter 폰트는 `src/hooks/useAppFonts.ts`에서 로드하고, `tailwind.config.js`의 `fontFamily`에 등록합니다.
+텍스트와 입력창에는 필요한 굵기의 클래스를 직접 사용합니다.
+
+| 굵기 | NativeWind 클래스 |
+|------|-------------------|
+| Regular (400) | `font-inter` |
+| Medium (500) | `font-inter-medium` |
+| SemiBold (600) | `font-inter-semibold` |
+| Bold (700) | `font-inter-bold` |
+
+```tsx
+<Text className="font-inter-bold text-xl">MOTU</Text>
+```
+
+폰트 클래스에 `font-bold` 등 별도의 굵기 클래스를 함께 사용하지 않습니다.
+
+### 코드 및 Git
+
 Git 컨벤션과 코드 컨벤션은 Notion에서 관리합니다.
 
 - [motu 컨벤션 (Notion)](https://app.notion.com/p/motu_convention-94dd69e1aaa683b29e4d81416531c97d)
