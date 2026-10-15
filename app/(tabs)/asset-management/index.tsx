@@ -18,7 +18,7 @@ export default function AssetManagementScreen() {
 
   const handlePointGrant = () => router.push('/asset-management/point-grant');
 
-  const handlePointReset = () => {};
+  const handlePointReset = () => router.push('/asset-management/point-reset');
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
