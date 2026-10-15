@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
 
-const PREVIEW_POINT_BALANCE = 2345678;
+import { usePointPreviewStore } from '@/stores/usePointPreviewStore';
 
 export default function AssetManagementScreen() {
+  const balance = usePointPreviewStore((state) => state.balance);
   const handleBack = () => {
     if (router.canGoBack()) {
       router.back();
@@ -15,7 +16,7 @@ export default function AssetManagementScreen() {
     }
   };
 
-  const handlePointGrant = () => {};
+  const handlePointGrant = () => router.push('/asset-management/point-grant');
 
   const handlePointReset = () => {};
 
@@ -29,7 +30,7 @@ export default function AssetManagementScreen() {
             <Text className="font-inter text-xs text-motu-grey">보유 포인트</Text>
             <Text className="mt-2 font-inter text-[11px] text-motu-grey">예수금</Text>
             <Text className="mt-1 font-inter-bold text-[22px] text-motu-black">
-              {PREVIEW_POINT_BALANCE.toLocaleString('ko-KR')} P
+              {balance.toLocaleString('ko-KR')} P
             </Text>
           </View>
 
