@@ -18,7 +18,7 @@ export default function PointGrantCompleteScreen() {
   const nextGrantLabel = `${nextGrantAt.getFullYear()}.${String(nextGrantAt.getMonth() + 1).padStart(2, '0')}.${String(nextGrantAt.getDate()).padStart(2, '0')} ${String(nextGrantAt.getHours()).padStart(2, '0')}:${String(nextGrantAt.getMinutes()).padStart(2, '0')}`;
 
   return (
-    <SafeAreaView className="bg-motu-bg flex-1">
+    <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar title="포인트 추가 지급" onBack={handleConfirm} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pb-10">

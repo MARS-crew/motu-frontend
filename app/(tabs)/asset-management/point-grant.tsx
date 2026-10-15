@@ -26,7 +26,7 @@ export default function PointGrantScreen() {
   };
 
   return (
-    <SafeAreaView className="bg-motu-bg flex-1">
+    <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar title="포인트 추가 지급" onBack={handleBack} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="gap-6 px-6 pb-10 pt-2">
