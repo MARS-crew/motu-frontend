@@ -5,6 +5,9 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontSize: {
+        topbar: '17px',
+      },
       // 공통 색상·폰트는 여기에 등록합니다.
       colors: {
         'motu-black': '#2E3138',
@@ -16,6 +19,7 @@ module.exports = {
         'motu-grey-lighter': '#EAEAEB',
         'motu-grey-chip': '#E8ECF0',
         'motu-green': '#0E9F6E',
+        'motu-btn-red': '#E5484D',
       },
       fontFamily: {
         inter: ['Inter_400Regular'],
