@@ -20,7 +20,7 @@ export default function AssetManagementScreen() {
   const handlePointReset = () => {};
 
   return (
-    <SafeAreaView className="bg-motu-bg flex-1">
+    <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar title="자산관리" onBack={handleBack} />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -71,7 +71,7 @@ export default function AssetManagementScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={handlePointReset}
-              className="bg-motu-btn-red mt-5 min-h-11 items-center justify-center rounded-xl py-4 active:opacity-50"
+              className="mt-5 min-h-11 items-center justify-center rounded-xl bg-motu-btn-red py-4 active:opacity-50"
             >
               <Text className="text-center font-inter-bold text-[13px] text-white">
                 포인트 리셋 신청
