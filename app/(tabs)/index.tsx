@@ -1,6 +1,7 @@
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DevLoginToggle } from '@/components/DevLoginToggle';
 import { AssetSummaryCard } from '@/components/home/AssetSummaryCard';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { HomeSection } from '@/components/home/HomeSection';
@@ -55,6 +56,8 @@ export default function HomeScreen() {
               <LoginRequiredBox />
             )}
           </HomeSection>
+
+          <DevLoginToggle />
         </View>
       </ScrollView>
     </SafeAreaView>
