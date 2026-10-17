@@ -23,6 +23,8 @@ export default function HomeScreen() {
 
   const handleSearchPress = () => router.push('/search');
 
+  const handleNoticePress = () => router.push('/notice');
+
   // 신규 상장 목록 화면이 추가되면 이동을 연결합니다.
   const handleNewListingsMore = () => {};
 
@@ -37,7 +39,7 @@ export default function HomeScreen() {
         <View className="gap-4 px-6 pb-7 pt-1">
           <AssetSummaryCard summary={isLoggedIn ? ASSET_SUMMARY : null} />
 
-          <NoticeBanner notice={LATEST_NOTICE} />
+          <NoticeBanner notice={LATEST_NOTICE} onPress={handleNoticePress} />
 
           <HomeSection title="최근 본 종목">
             {isLoggedIn ? (
