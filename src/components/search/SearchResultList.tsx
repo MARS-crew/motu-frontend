@@ -13,7 +13,7 @@ export function SearchResultList({ products, onFavoritePress }: SearchResultList
     <View className="px-6 pt-6">
       <Text
         accessibilityRole="header"
-        className="font-inter-bold text-[13px] leading-[18px] text-motu-black"
+        className="font-pretendard-bold text-[13px] leading-[18px] text-motu-black"
       >
         검색 결과 <Text className="text-motu-grey">{products.length}</Text>
       </Text>
@@ -30,7 +30,7 @@ export function SearchResultList({ products, onFavoritePress }: SearchResultList
           ))}
         </View>
       ) : (
-        <Text className="pt-20 text-center font-inter-medium text-xs leading-4 text-motu-grey">
+        <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
           검색 결과가 없습니다.
         </Text>
       )}

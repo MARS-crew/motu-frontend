@@ -25,31 +25,31 @@ export default function PointResetCompleteScreen() {
                 className="h-[10px] w-[14px]"
               />
             </View>
-            <Text className="mt-4 text-center font-inter-bold text-sm text-motu-black">
+            <Text className="mt-4 text-center font-pretendard-bold text-sm text-motu-black">
               포인트 리셋이 완료되었습니다
             </Text>
-            <Text className="mt-2 font-inter-bold text-[22px] text-motu-black">
+            <Text className="mt-2 font-pretendard-bold text-[22px] text-motu-black">
               {receipt.balance.toLocaleString('ko-KR')} P
             </Text>
           </View>
           <View className="gap-3.5">
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">리셋 전</Text>
-              <Text className="font-inter-semibold text-xs text-motu-black">
+              <Text className="font-pretendard text-xs text-motu-grey">리셋 전</Text>
+              <Text className="font-pretendard-semibold text-xs text-motu-black">
                 {receipt.previousBalance.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">리셋 후</Text>
-              <Text className="font-inter-semibold text-xs text-motu-black">
+              <Text className="font-pretendard text-xs text-motu-grey">리셋 후</Text>
+              <Text className="font-pretendard-semibold text-xs text-motu-black">
                 {receipt.balance.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">다음 리셋 가능</Text>
+              <Text className="font-pretendard text-xs text-motu-grey">다음 리셋 가능</Text>
               <View className="items-end">
-                <Text className="font-inter-semibold text-xs text-motu-black">7일 후</Text>
-                <Text className="mt-0.5 font-inter text-[11px] text-motu-grey-light">
+                <Text className="font-pretendard-semibold text-xs text-motu-black">7일 후</Text>
+                <Text className="mt-0.5 font-pretendard text-[11px] text-motu-grey-light">
                   ({nextResetLabel})
                 </Text>
               </View>
@@ -60,9 +60,9 @@ export default function PointResetCompleteScreen() {
             onPress={handleConfirm}
             className="mt-9 min-h-11 items-center justify-center rounded-xl bg-motu-black py-4 active:opacity-50"
           >
-            <Text className="font-inter-bold text-[13px] text-white">확인</Text>
+            <Text className="font-pretendard-bold text-[13px] text-white">확인</Text>
           </Pressable>
-          <Text className="mt-4 text-center font-inter text-[11px] text-motu-grey-light">
+          <Text className="mt-4 text-center font-pretendard text-[11px] text-motu-grey-light">
             리셋 처리 내역은 포인트 변경 이력에 저장됩니다.
           </Text>
         </View>

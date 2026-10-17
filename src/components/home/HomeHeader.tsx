@@ -12,7 +12,7 @@ type HomeHeaderProps = {
 export function HomeHeader({ hasUnreadNotification, onSearchPress }: HomeHeaderProps) {
   return (
     <View className="h-20 flex-row items-center justify-between px-6 pb-3 pt-8">
-      <Text accessibilityRole="header" className="font-inter-bold text-lg text-motu-black">
+      <Text accessibilityRole="header" className="font-pretendard-bold text-lg text-motu-black">
         모투
       </Text>
       <View className="flex-row gap-0.5">

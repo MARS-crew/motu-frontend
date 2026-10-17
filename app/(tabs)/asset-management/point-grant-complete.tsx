@@ -29,31 +29,31 @@ export default function PointGrantCompleteScreen() {
                 className="h-[10px] w-[14px]"
               />
             </View>
-            <Text className="mt-4 text-center font-inter-bold text-sm text-motu-black">
+            <Text className="mt-4 text-center font-pretendard-bold text-sm text-motu-black">
               포인트 지급이 완료되었습니다
             </Text>
-            <Text className="mt-2 font-inter-bold text-[22px] text-motu-green">
+            <Text className="mt-2 font-pretendard-bold text-[22px] text-motu-green">
               +{POINT_GRANT_AMOUNT.toLocaleString('ko-KR')} P
             </Text>
           </View>
           <View className="gap-3.5">
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">지급 전</Text>
-              <Text className="font-inter-semibold text-xs text-motu-black">
+              <Text className="font-pretendard text-xs text-motu-grey">지급 전</Text>
+              <Text className="font-pretendard-semibold text-xs text-motu-black">
                 {receipt.previousBalance.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">지급 후</Text>
-              <Text className="font-inter-semibold text-xs text-motu-black">
+              <Text className="font-pretendard text-xs text-motu-grey">지급 후</Text>
+              <Text className="font-pretendard-semibold text-xs text-motu-black">
                 {receipt.balance.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="font-inter text-xs text-motu-grey">다음 지급 가능 시간</Text>
+              <Text className="font-pretendard text-xs text-motu-grey">다음 지급 가능 시간</Text>
               <View className="items-end">
-                <Text className="font-inter-semibold text-xs text-motu-black">24시간 후</Text>
-                <Text className="mt-0.5 font-inter text-[11px] text-motu-grey-light">
+                <Text className="font-pretendard-semibold text-xs text-motu-black">24시간 후</Text>
+                <Text className="mt-0.5 font-pretendard text-[11px] text-motu-grey-light">
                   ({nextGrantLabel})
                 </Text>
               </View>
@@ -64,9 +64,9 @@ export default function PointGrantCompleteScreen() {
             onPress={handleConfirm}
             className="mt-9 min-h-11 items-center justify-center rounded-xl bg-motu-black py-4 active:opacity-50"
           >
-            <Text className="font-inter-bold text-[13px] text-white">확인</Text>
+            <Text className="font-pretendard-bold text-[13px] text-white">확인</Text>
           </Pressable>
-          <Text className="mt-4 text-center font-inter text-[11px] text-motu-grey-light">
+          <Text className="mt-4 text-center font-pretendard text-[11px] text-motu-grey-light">
             지급 내역은 포인트 변경 이력에 저장됩니다.
           </Text>
         </View>

@@ -18,7 +18,9 @@ export function CategoryChip({ label, isSelected, onPress }: CategoryChipProps) 
     >
       <Text
         className={`text-[13px] leading-8 ${
-          isSelected ? 'font-inter-semibold text-white' : 'font-inter-medium text-motu-grey'
+          isSelected
+            ? 'font-pretendard-semibold text-white'
+            : 'font-pretendard-medium text-motu-grey'
         }`}
       >
         {label}

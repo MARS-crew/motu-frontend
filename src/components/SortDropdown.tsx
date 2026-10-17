@@ -36,7 +36,7 @@ export function SortDropdown({ options, value, onValueChange }: SortDropdownProp
         onPress={() => setIsOpen((previousIsOpen) => !previousIsOpen)}
         className="h-[42px] flex-row items-center gap-1.5 rounded-lg border border-motu-grey-lighter bg-white px-[15px]"
       >
-        <Text className="font-inter-medium text-[13px] leading-5 text-motu-black">
+        <Text className="font-pretendard-medium text-[13px] leading-5 text-motu-black">
           {selectedOption.label}
         </Text>
         <Image
@@ -60,14 +60,16 @@ export function SortDropdown({ options, value, onValueChange }: SortDropdownProp
                 className="h-8 flex-row items-center justify-between px-3"
               >
                 <Text
-                  className={`font-inter-medium text-xs leading-4 ${
+                  className={`font-pretendard-medium text-xs leading-4 ${
                     isSelected ? 'text-motu-black' : 'text-motu-grey'
                   }`}
                 >
                   {option.label}
                 </Text>
                 {isSelected && (
-                  <Text className="font-inter-medium text-xs leading-4 text-motu-black">✓</Text>
+                  <Text className="font-pretendard-medium text-xs leading-4 text-motu-black">
+                    ✓
+                  </Text>
                 )}
               </Pressable>
             );

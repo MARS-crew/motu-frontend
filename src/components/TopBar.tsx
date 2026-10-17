@@ -27,7 +27,7 @@ export function TopBar({ title, onBack }: TopBarProps) {
       </Pressable>
       <Text
         accessibilityRole="header"
-        className="flex-1 font-inter-bold text-[17px] text-motu-black"
+        className="flex-1 font-pretendard-bold text-[17px] text-motu-black"
       >
         {title}
       </Text>

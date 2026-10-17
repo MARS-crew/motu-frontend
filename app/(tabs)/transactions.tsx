@@ -16,11 +16,11 @@ export default function TransactionsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row items-center justify-between px-6 pb-4 pt-8">
-        <Text className="font-inter-bold text-xl text-motu-black">거래내역</Text>
+        <Text className="font-pretendard-bold text-xl text-motu-black">거래내역</Text>
         <SortDropdown options={SORT_OPTIONS} value={sortValue} onValueChange={setSortValue} />
       </View>
       <View className="flex-1 items-center justify-center">
-        <Text className="font-inter-medium text-sm text-motu-grey">
+        <Text className="font-pretendard-medium text-sm text-motu-grey">
           {SORT_OPTIONS.find((option) => option.value === sortValue)?.label}
         </Text>
       </View>

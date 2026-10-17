@@ -24,7 +24,7 @@ export function SearchBar({ value, onChangeText, onBlur, onSubmit }: SearchBarPr
         returnKeyType="search"
         autoFocus
         accessibilityLabel="검색어 입력"
-        className="flex-1 px-1 font-inter-medium text-[13px] text-motu-black"
+        className="flex-1 px-1 font-pretendard-medium text-[13px] text-motu-black"
       />
       <Pressable
         accessibilityRole="button"

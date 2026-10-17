@@ -17,7 +17,7 @@ export function HomeSection({ title, children, onMorePress }: HomeSectionProps) 
       <View className="flex-row items-center justify-between">
         <Text
           accessibilityRole="header"
-          className="font-inter-bold text-[13px] leading-[18px] text-motu-black"
+          className="font-pretendard-bold text-[13px] leading-[18px] text-motu-black"
         >
           {title}
         </Text>
@@ -28,7 +28,7 @@ export function HomeSection({ title, children, onMorePress }: HomeSectionProps) 
             hitSlop={8}
             className="flex-row items-center active:opacity-60"
           >
-            <Text className="font-inter-medium text-[11px] leading-[14px] text-motu-grey">
+            <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
               자세히 보기
             </Text>
             <Image

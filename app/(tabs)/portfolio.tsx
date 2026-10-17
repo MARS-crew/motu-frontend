@@ -14,7 +14,7 @@ export default function PortfolioScreen() {
           onPress={handleAssetManagementPress}
           className="mt-6 rounded-xl bg-motu-black px-6 py-4 active:opacity-80"
         >
-          <Text className="font-inter-semibold text-base text-white">자산관리</Text>
+          <Text className="font-pretendard-semibold text-base text-white">자산관리</Text>
         </Pressable>
       </View>
     </SafeAreaView>

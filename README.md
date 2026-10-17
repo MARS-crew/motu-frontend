@@ -80,18 +80,18 @@ assets/                 # 이미지, 폰트
 
 ### 폰트
 
-Inter 폰트는 `src/hooks/useAppFonts.ts`에서 로드하고, `tailwind.config.js`의 `fontFamily`에 등록합니다.
+Pretendard 폰트(`assets/fonts`)는 `src/hooks/useAppFonts.ts`에서 로드하고, `tailwind.config.js`의 `fontFamily`에 등록합니다.
 텍스트와 입력창에는 필요한 굵기의 클래스를 직접 사용합니다.
 
 | 굵기 | NativeWind 클래스 |
 |------|-------------------|
-| Regular (400) | `font-inter` |
-| Medium (500) | `font-inter-medium` |
-| SemiBold (600) | `font-inter-semibold` |
-| Bold (700) | `font-inter-bold` |
+| Regular (400) | `font-pretendard` |
+| Medium (500) | `font-pretendard-medium` |
+| SemiBold (600) | `font-pretendard-semibold` |
+| Bold (700) | `font-pretendard-bold` |
 
 ```tsx
-<Text className="font-inter-bold text-xl">MOTU</Text>
+<Text className="font-pretendard-bold text-xl">MOTU</Text>
 ```
 
 폰트 클래스에 `font-bold` 등 별도의 굵기 클래스를 함께 사용하지 않습니다.

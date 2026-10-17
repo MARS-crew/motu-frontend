@@ -23,8 +23,12 @@ type AssetStatProps = {
 function AssetStat({ label, value, valueClassName = 'text-motu-black' }: AssetStatProps) {
   return (
     <View className="flex-1">
-      <Text className="font-inter-medium text-[11px] leading-[14px] text-motu-grey">{label}</Text>
-      <Text className={`mt-1 font-inter-medium text-xs leading-4 ${valueClassName}`}>{value}</Text>
+      <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
+        {label}
+      </Text>
+      <Text className={`mt-1 font-pretendard-medium text-xs leading-4 ${valueClassName}`}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -34,7 +38,7 @@ export function AssetSummaryCard({ summary }: AssetSummaryCardProps) {
   if (!summary) {
     return (
       <View className="rounded-2xl border border-motu-grey-lighter bg-white p-4">
-        <Text className="font-inter-medium text-xs leading-4 text-motu-grey">총 평가자산</Text>
+        <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">총 평가자산</Text>
         <View className="mt-3">
           <LoginRequiredBox />
         </View>
@@ -50,13 +54,13 @@ export function AssetSummaryCard({ summary }: AssetSummaryCardProps) {
       onPress={handlePress}
       className="rounded-2xl border border-motu-grey-lighter bg-white p-4 active:opacity-80"
     >
-      <Text className="font-inter-medium text-xs leading-4 text-motu-grey">총 평가자산</Text>
+      <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">총 평가자산</Text>
       <View className="mt-1.5 flex-row items-center gap-2">
-        <Text className="font-inter-bold text-2xl text-motu-black">
+        <Text className="font-pretendard-bold text-2xl text-motu-black">
           {formatPoint(summary.totalAsset)}
         </Text>
         <Text
-          className={`font-inter-bold text-[13px] leading-[18px] ${getChangeColorClass(summary.totalReturnRate)}`}
+          className={`font-pretendard-bold text-[13px] leading-[18px] ${getChangeColorClass(summary.totalReturnRate)}`}
         >
           {formatRate(summary.totalReturnRate)}
         </Text>

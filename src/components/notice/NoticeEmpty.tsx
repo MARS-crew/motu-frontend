@@ -14,10 +14,10 @@ export function NoticeEmpty() {
           className="h-6 w-6"
         />
       </View>
-      <Text className="text-center font-inter-bold text-[13px] leading-[18px] text-motu-black">
+      <Text className="text-center font-pretendard-bold text-[13px] leading-[18px] text-motu-black">
         등록된 공지사항이 없어요.
       </Text>
-      <Text className="text-center font-inter-medium text-xs leading-4 text-motu-grey">
+      <Text className="text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
         새로운 공지사항이 등록되면 이곳에서 알려드릴게요.
       </Text>
     </View>

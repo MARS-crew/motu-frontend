@@ -24,7 +24,7 @@ export function RecentSearchList({
       <View className="flex-row items-center justify-between">
         <Text
           accessibilityRole="header"
-          className="font-inter-bold text-[13px] leading-[18px] text-motu-black"
+          className="font-pretendard-bold text-[13px] leading-[18px] text-motu-black"
         >
           최근 검색
         </Text>
@@ -35,7 +35,7 @@ export function RecentSearchList({
           hitSlop={8}
           className="active:opacity-60"
         >
-          <Text className="font-inter-medium text-[11px] leading-[14px] text-motu-grey">
+          <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
             전체 삭제
           </Text>
         </Pressable>
@@ -55,7 +55,7 @@ export function RecentSearchList({
               >
                 <Text
                   numberOfLines={1}
-                  className="font-inter-medium text-[13px] leading-[18px] text-motu-black"
+                  className="font-pretendard-medium text-[13px] leading-[18px] text-motu-black"
                 >
                   {keyword}
                 </Text>
@@ -76,7 +76,7 @@ export function RecentSearchList({
           ))}
         </View>
       ) : (
-        <Text className="pt-20 text-center font-inter-medium text-xs leading-4 text-motu-grey">
+        <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
           최근 검색 내역이 없습니다.
         </Text>
       )}
