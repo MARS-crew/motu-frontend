@@ -25,8 +25,7 @@ export default function HomeScreen() {
 
   const handleNoticePress = () => router.push('/notice');
 
-  // 신규 상장 목록 화면이 추가되면 이동을 연결합니다.
-  const handleNewListingsMore = () => {};
+  const handleNewListingsMore = () => router.push('/new-listings');
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
