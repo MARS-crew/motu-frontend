@@ -43,6 +43,9 @@ export default function MarketScreen() {
 
   const handleFavoritePress = () => router.push('/favorites');
 
+  const handleProductPress = (id: number) =>
+    router.push({ pathname: '/product/[id]', params: { id: String(id) } });
+
   const handleProductFavoritePress = (id: number) => {
     setProducts((prev) =>
       prev.map((product) =>
@@ -82,13 +85,13 @@ export default function MarketScreen() {
         showsVerticalScrollIndicator={false}
       >
         {visibleProducts.length > 0 ? (
-          // 상품 상세 화면이 추가되면 onPress로 이동을 연결합니다.
           <View className="gap-2">
             {visibleProducts.map((product, index) => (
               <ProductListItem
                 key={product.id}
                 product={product}
                 rank={index + 1}
+                onPress={() => handleProductPress(product.id)}
                 onFavoritePress={() => handleProductFavoritePress(product.id)}
               />
             ))}

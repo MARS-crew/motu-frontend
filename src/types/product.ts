@@ -15,3 +15,29 @@ export type MarketProduct = Product & {
 };
 
 export type MarketSort = 'tradeAmount' | 'rateDesc' | 'rateAsc' | 'volume' | 'listedAt';
+
+export type ChartPeriod = 'minute' | 'hour' | 'day' | 'week' | 'month';
+
+export type ProductCandle = {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type TradeSummary = {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  tradeAmount: number;
+};
+
+export type ProductDetail = Product & {
+  description: string;
+  isTradable: boolean;
+  summary: TradeSummary;
+};
