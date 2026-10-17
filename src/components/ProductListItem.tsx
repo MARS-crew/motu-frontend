@@ -37,12 +37,18 @@ export function ProductListItem({ product, rank, onPress, onFavoritePress }: Pro
           </Text>
         </View>
         <View className="flex-1">
-          <Text
-            numberOfLines={1}
-            className="font-pretendard-bold text-sm leading-[18px] text-motu-black"
-          >
-            {product.name}
-          </Text>
+          {/* 이름이 길면 이름을 말줄임하고 카테고리는 끝까지 보이게 합니다. */}
+          <View className="flex-row items-center gap-1.5">
+            <Text
+              numberOfLines={1}
+              className="flex-shrink font-pretendard-bold text-sm leading-[18px] text-motu-black"
+            >
+              {product.name}
+            </Text>
+            <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
+              {product.category}
+            </Text>
+          </View>
           <View className="mt-1 flex-row items-center gap-1.5">
             <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">
               {formatPoint(product.price)}
