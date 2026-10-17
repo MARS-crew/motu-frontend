@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FaqSection } from '@/components/faq/FaqSection';
 import { NoticeEmpty } from '@/components/notice/NoticeEmpty';
 import { NoticeListItem } from '@/components/notice/NoticeListItem';
 import { NoticeTabs, type NoticeTab } from '@/components/notice/NoticeTabs';
@@ -45,7 +46,7 @@ export default function NoticeScreen() {
       >
         <NoticeTabs value={selectedTab} onValueChange={setSelectedTab} />
 
-        {/* FAQ 탭 화면은 MOTU-13에서 작업합니다. */}
+        {selectedTab === 'faq' && <FaqSection />}
         {selectedTab === 'notice' &&
           (SORTED_NOTICES.length > 0 ? (
             <>
