@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DevLoginToggle } from '@/components/DevLoginToggle';
 import { AssetSummaryCard } from '@/components/home/AssetSummaryCard';
+import { HomeEmptyBox } from '@/components/home/HomeEmptyBox';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { HomeSection } from '@/components/home/HomeSection';
 import { LoginRequiredBox } from '@/components/home/LoginRequiredBox';
@@ -12,6 +13,9 @@ import { StockListItem } from '@/components/home/StockListItem';
 import { ASSET_SUMMARY, LATEST_NOTICE, NEW_LISTINGS, RECENT_STOCKS } from '@/constants/homePreview';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNotificationPreviewStore } from '@/stores/useNotificationPreviewStore';
+
+// 화면설계서 기준으로 최근 본 종목과 신규 상장은 최신순 3개까지만 보여줍니다.
+const HOME_LIST_LIMIT = 3;
 
 export default function HomeScreen() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -42,21 +46,23 @@ export default function HomeScreen() {
           <NoticeBanner notice={LATEST_NOTICE} onPress={handleNoticePress} />
 
           <HomeSection title="최근 본 종목">
-            {isLoggedIn ? (
+            {!isLoggedIn ? (
+              <LoginRequiredBox />
+            ) : RECENT_STOCKS.length > 0 ? (
               <View className="gap-2">
-                {RECENT_STOCKS.map((stock) => (
+                {RECENT_STOCKS.slice(0, HOME_LIST_LIMIT).map((stock) => (
                   <StockListItem key={stock.id} stock={stock} />
                 ))}
               </View>
             ) : (
-              <LoginRequiredBox />
+              <HomeEmptyBox message="최근 본 종목이 없습니다." />
             )}
           </HomeSection>
 
           <HomeSection title="신규 상장" onMorePress={handleNewListingsMore}>
             {isLoggedIn ? (
               <View className="gap-2">
-                {NEW_LISTINGS.map((stock) => (
+                {NEW_LISTINGS.slice(0, HOME_LIST_LIMIT).map((stock) => (
                   <StockListItem key={stock.id} stock={stock} />
                 ))}
               </View>

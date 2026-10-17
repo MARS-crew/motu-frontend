@@ -15,6 +15,7 @@ export const LATEST_NOTICE: Notice = {
   createdAt: '2026.09.12',
 };
 
+// 최근 본 종목이 없는 화면은 빈 배열로 바꿔서 확인합니다.
 export const RECENT_STOCKS: StockSummary[] = [
   { id: 1, name: '토스', price: 15300, changeRate: 1.86, color: '#2C6FE0' },
   { id: 2, name: '모투', price: 8420, changeRate: -0.73, color: '#2E3138' },
