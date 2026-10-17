@@ -1,4 +1,4 @@
-import type { NoticeListItem } from '@/types/notice';
+import type { NoticeDetail, NoticeListItem } from '@/types/notice';
 
 export const NOTICE_PAGE_SIZE = 10;
 
@@ -90,3 +90,35 @@ export const NOTICES: NoticeListItem[] = [
     createdAt: '2026.06.01',
   },
 ];
+
+const NOTICE_CONTENTS: Record<number, string> = {
+  1: `안녕하세요. 모투(MOTU)입니다.
+
+보다 안정적인 서비스 제공을 위해 아래와 같이 시스템 점검이 진행됩니다.
+
+■ 점검 일시
+2026년 9월 17일(목) 02:00 ~ 05:00 (약 3시간)
+
+■ 점검 영향
+· 주문 및 체결 일시 중단
+· 입출금 신청 지연
+· 자산 조회 일시 제한
+
+점검 시간 동안에는 서비스 이용이 제한되오니 양해 부탁드립니다. 점검이 완료되는 대로 공지사항을 통해 안내드리겠습니다.
+
+감사합니다.
+모투(MOTU) 운영팀`,
+};
+
+const DEFAULT_NOTICE_CONTENT = `안녕하세요. 모투(MOTU)입니다.
+
+공지 내용은 서버 연동 후 표시됩니다.
+
+감사합니다.
+모투(MOTU) 운영팀`;
+
+export const getNoticeDetail = (id: number): NoticeDetail | null => {
+  const notice = NOTICES.find((item) => item.id === id);
+  if (!notice) return null;
+  return { ...notice, content: NOTICE_CONTENTS[id] ?? DEFAULT_NOTICE_CONTENT };
+};
