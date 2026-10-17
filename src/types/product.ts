@@ -7,3 +7,11 @@ export type Product = {
   color: string;
   isFavorite: boolean;
 };
+
+export type MarketProduct = Product & {
+  tradeAmount: number;
+  volume: number;
+  listedAt: string;
+};
+
+export type MarketSort = 'tradeAmount' | 'rateDesc' | 'rateAsc' | 'volume' | 'listedAt';

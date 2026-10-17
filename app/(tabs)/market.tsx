@@ -1,32 +1,67 @@
-import { CategoryChip } from '@/components/CategoryChip';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const CATEGORIES = [
-  '전체',
-  'SaaS / 소프트웨어',
-  'AI / 데이터',
-  '핀테크',
-  '커머스 / 유통',
-  '콘텐츠 / 미디어',
-  '헬스케어',
-  '교육',
-  '모빌리티',
-  '기타',
-];
+import { CategoryChip } from '@/components/CategoryChip';
+import { MarketHeader } from '@/components/market/MarketHeader';
+import { MarketSortDropdown } from '@/components/market/MarketSortDropdown';
+import { ProductListItem } from '@/components/ProductListItem';
+import { MARKET_CATEGORIES, MARKET_PRODUCTS, MARKET_SORT_OPTIONS } from '@/constants/marketPreview';
+import type { MarketProduct, MarketSort } from '@/types/product';
+
+// 서버 연동 시 카테고리·정렬 값을 API 파라미터로 넘기고, 응답 순서를 그대로 사용합니다
+const sortProducts = (products: MarketProduct[], sort: MarketSort) => {
+  const sorted = [...products];
+  switch (sort) {
+    case 'rateDesc':
+      return sorted.sort((a, b) => b.changeRate - a.changeRate);
+    case 'rateAsc':
+      return sorted.sort((a, b) => a.changeRate - b.changeRate);
+    case 'volume':
+      return sorted.sort((a, b) => b.volume - a.volume);
+    case 'listedAt':
+      return sorted.sort((a, b) => b.listedAt.localeCompare(a.listedAt));
+    default:
+      return sorted.sort((a, b) => b.tradeAmount - a.tradeAmount);
+  }
+};
 
 export default function MarketScreen() {
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [selectedCategory, setSelectedCategory] = useState(MARKET_CATEGORIES[0]);
+  const [sort, setSort] = useState<MarketSort>('tradeAmount');
+  const [products, setProducts] = useState(MARKET_PRODUCTS);
+
+  const visibleProducts = sortProducts(
+    selectedCategory === '전체'
+      ? products
+      : products.filter((product) => product.category === selectedCategory),
+    sort,
+  );
+
+  const handleSearchPress = () => router.push('/search');
+
+  const handleFavoritePress = () => router.push('/favorites');
+
+  const handleProductFavoritePress = (id: number) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === id ? { ...product, isFavorite: !product.isFavorite } : product,
+      ),
+    );
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-motu-bg">
-      <View className="px-6 pb-4 pt-8">
-        <Text className="font-pretendard-bold text-lg leading-6 text-motu-black">상품 목록</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="h-11">
-        <View className="h-11 flex-row items-center gap-2 px-6">
-          {CATEGORIES.map((category) => (
+    <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
+      <MarketHeader onSearchPress={handleSearchPress} onFavoritePress={handleFavoritePress} />
+
+      <View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="gap-2 px-6 pb-3"
+        >
+          {MARKET_CATEGORIES.map((category) => (
             <CategoryChip
               key={category}
               label={category}
@@ -34,11 +69,36 @@ export default function MarketScreen() {
               onPress={() => setSelectedCategory(category)}
             />
           ))}
-        </View>
-      </ScrollView>
-      <View className="flex-1 items-center justify-center">
-        <Text className="font-pretendard-bold text-xl text-motu-black">{selectedCategory}</Text>
+        </ScrollView>
       </View>
+
+      <View className="z-10 px-6 pb-3 pt-1">
+        <MarketSortDropdown options={MARKET_SORT_OPTIONS} value={sort} onValueChange={setSort} />
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-6 pb-6 pt-2"
+        showsVerticalScrollIndicator={false}
+      >
+        {visibleProducts.length > 0 ? (
+          // 상품 상세 화면이 추가되면 onPress로 이동을 연결합니다.
+          <View className="gap-2">
+            {visibleProducts.map((product, index) => (
+              <ProductListItem
+                key={product.id}
+                product={product}
+                rank={index + 1}
+                onFavoritePress={() => handleProductFavoritePress(product.id)}
+              />
+            ))}
+          </View>
+        ) : (
+          <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
+            해당 카테고리의 상품이 없습니다.
+          </Text>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
