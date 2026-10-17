@@ -7,9 +7,14 @@ cssInterop(Image, { className: 'style' });
 type HomeHeaderProps = {
   hasUnreadNotification: boolean;
   onSearchPress: () => void;
+  onNotificationPress: () => void;
 };
 
-export function HomeHeader({ hasUnreadNotification, onSearchPress }: HomeHeaderProps) {
+export function HomeHeader({
+  hasUnreadNotification,
+  onSearchPress,
+  onNotificationPress,
+}: HomeHeaderProps) {
   return (
     <View className="h-20 flex-row items-center justify-between px-6 pb-3 pt-8">
       <Text accessibilityRole="header" className="font-pretendard-bold text-lg text-motu-black">
@@ -42,6 +47,7 @@ export function HomeHeader({ hasUnreadNotification, onSearchPress }: HomeHeaderP
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={hasUnreadNotification ? '알림, 새 알림 있음' : '알림'}
+          onPress={onNotificationPress}
           className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
         >
           <Image

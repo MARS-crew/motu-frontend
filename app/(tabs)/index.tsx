@@ -9,19 +9,19 @@ import { HomeSection } from '@/components/home/HomeSection';
 import { LoginRequiredBox } from '@/components/home/LoginRequiredBox';
 import { NoticeBanner } from '@/components/home/NoticeBanner';
 import { StockListItem } from '@/components/home/StockListItem';
-import {
-  ASSET_SUMMARY,
-  HAS_UNREAD_NOTIFICATION,
-  LATEST_NOTICE,
-  NEW_LISTINGS,
-  RECENT_STOCKS,
-} from '@/constants/homePreview';
+import { ASSET_SUMMARY, LATEST_NOTICE, NEW_LISTINGS, RECENT_STOCKS } from '@/constants/homePreview';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useNotificationPreviewStore } from '@/stores/useNotificationPreviewStore';
 
 export default function HomeScreen() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const hasUnreadNotification = useNotificationPreviewStore((state) =>
+    state.notifications.some((notification) => !notification.isRead),
+  );
 
   const handleSearchPress = () => router.push('/search');
+
+  const handleNotificationPress = () => router.push('/notification');
 
   const handleNoticePress = () => router.push('/notice');
 
@@ -31,8 +31,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <HomeHeader
-        hasUnreadNotification={HAS_UNREAD_NOTIFICATION}
+        hasUnreadNotification={hasUnreadNotification}
         onSearchPress={handleSearchPress}
+        onNotificationPress={handleNotificationPress}
       />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
