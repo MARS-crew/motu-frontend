@@ -7,3 +7,7 @@ export type NoticeListItem = {
   isImportant: boolean;
   createdAt: string;
 };
+
+export type NoticeDetail = NoticeListItem & {
+  content: string;
+};

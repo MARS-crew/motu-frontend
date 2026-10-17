@@ -31,6 +31,9 @@ export default function NoticeScreen() {
     }
   };
 
+  const handleNoticePress = (id: number) =>
+    router.push({ pathname: '/notice/[id]', params: { id: String(id) } });
+
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar title="공지사항 및 FAQ" onBack={handleBack} />
@@ -46,10 +49,13 @@ export default function NoticeScreen() {
         {selectedTab === 'notice' &&
           (SORTED_NOTICES.length > 0 ? (
             <>
-              {/* 공지 상세 화면이 추가되면 onPress로 이동을 연결합니다. */}
               <View className="mt-5 gap-2.5">
                 {pageNotices.map((notice) => (
-                  <NoticeListItem key={notice.id} notice={notice} />
+                  <NoticeListItem
+                    key={notice.id}
+                    notice={notice}
+                    onPress={() => handleNoticePress(notice.id)}
+                  />
                 ))}
               </View>
               <Pagination
