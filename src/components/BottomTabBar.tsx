@@ -93,7 +93,7 @@ export function BottomTabBar({ descriptors, navigation, state, insets }: BottomT
                 className="h-[22px] w-[22px]"
               />
               <Text
-                className={`font-inter-medium text-[10px] leading-[15px] ${
+                className={`font-pretendard-medium text-[10px] leading-[15px] ${
                   isFocused ? 'text-motu-black' : 'text-motu-grey-light'
                 }`}
               >

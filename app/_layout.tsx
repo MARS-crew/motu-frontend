@@ -16,7 +16,7 @@ export default function RootLayout() {
   const { isLoaded, error } = useAppFonts();
 
   useEffect(() => {
-    if (error) console.warn('Inter 폰트를 불러오지 못했습니다.', error);
+    if (error) console.warn('Pretendard 폰트를 불러오지 못했습니다.', error);
     if (isLoaded || error) SplashScreen.hide();
   }, [isLoaded, error]);
 

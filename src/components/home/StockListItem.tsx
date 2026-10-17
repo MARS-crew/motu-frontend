@@ -24,34 +24,37 @@ export function StockListItem({ stock, onPress }: StockListItemProps) {
         className="h-9 w-9 items-center justify-center rounded-full"
         style={{ backgroundColor: stock.color }}
       >
-        <Text className="font-inter-bold text-base leading-[22px] text-white">
+        <Text className="font-pretendard-bold text-base leading-[22px] text-white">
           {stock.name.charAt(0)}
         </Text>
       </View>
       <View className="flex-1 gap-0.5">
-        <Text numberOfLines={1} className="font-inter-bold text-sm leading-[18px] text-motu-black">
+        <Text
+          numberOfLines={1}
+          className="font-pretendard-bold text-sm leading-[18px] text-motu-black"
+        >
           {stock.name}
         </Text>
         {stock.description && (
           <Text
             numberOfLines={1}
-            className="font-inter-medium text-[10px] leading-[13px] text-motu-grey"
+            className="font-pretendard-medium text-[10px] leading-[13px] text-motu-grey"
           >
             {stock.description}
           </Text>
         )}
         {stock.listedAt && (
-          <Text className="font-inter-medium text-[10px] leading-[13px] text-motu-grey-light">
+          <Text className="font-pretendard-medium text-[10px] leading-[13px] text-motu-grey-light">
             상장일 {stock.listedAt}
           </Text>
         )}
       </View>
       <View className="items-end gap-0.5">
-        <Text className="font-inter-bold text-[13px] leading-[18px] text-motu-black">
+        <Text className="font-pretendard-bold text-[13px] leading-[18px] text-motu-black">
           {formatPoint(stock.price)}
         </Text>
         <Text
-          className={`font-inter-medium text-xs leading-4 ${getChangeColorClass(stock.changeRate)}`}
+          className={`font-pretendard-medium text-xs leading-4 ${getChangeColorClass(stock.changeRate)}`}
         >
           {formatRate(stock.changeRate)}
         </Text>

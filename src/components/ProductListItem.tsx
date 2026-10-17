@@ -23,7 +23,7 @@ export function ProductListItem({ product, rank, onPress, onFavoritePress }: Pro
         className="flex-1 flex-row items-center active:opacity-60"
       >
         {rank !== undefined && (
-          <Text className="mr-4 w-4 text-center font-inter-bold text-[13px] leading-[18px] text-motu-grey">
+          <Text className="mr-4 w-4 text-center font-pretendard-bold text-[13px] leading-[18px] text-motu-grey">
             {rank}
           </Text>
         )}
@@ -32,23 +32,23 @@ export function ProductListItem({ product, rank, onPress, onFavoritePress }: Pro
           className="mr-3 h-10 w-10 items-center justify-center rounded-full"
           style={{ backgroundColor: product.color }}
         >
-          <Text className="font-inter-bold text-[15px] leading-5 text-white">
+          <Text className="font-pretendard-bold text-[15px] leading-5 text-white">
             {product.name.charAt(0)}
           </Text>
         </View>
         <View className="flex-1">
           <Text
             numberOfLines={1}
-            className="font-inter-bold text-sm leading-[18px] text-motu-black"
+            className="font-pretendard-bold text-sm leading-[18px] text-motu-black"
           >
             {product.name}
           </Text>
           <View className="mt-1 flex-row items-center gap-1.5">
-            <Text className="font-inter-medium text-xs leading-4 text-motu-grey">
+            <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">
               {formatPoint(product.price)}
             </Text>
             <Text
-              className={`font-inter-medium text-xs leading-4 ${getChangeColorClass(product.changeRate)}`}
+              className={`font-pretendard-medium text-xs leading-4 ${getChangeColorClass(product.changeRate)}`}
             >
               {formatRate(product.changeRate)}
             </Text>

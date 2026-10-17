@@ -32,7 +32,7 @@ export function NoticeTabs({ value, onValueChange }: NoticeTabsProps) {
             }`}
           >
             <Text
-              className={`font-inter-semibold text-[13px] leading-4 ${
+              className={`font-pretendard-semibold text-[13px] leading-4 ${
                 isSelected ? 'text-white' : 'text-motu-grey'
               }`}
             >

@@ -17,7 +17,7 @@ export function DevLoginToggle() {
       onPress={handlePress}
       className="items-center rounded-xl border border-dashed border-motu-grey-light py-3 active:opacity-60"
     >
-      <Text className="font-inter-medium text-xs leading-4 text-motu-grey">
+      <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">
         [DEV] {isLoggedIn ? '회원' : '비회원'} 상태 · 눌러서 {isLoggedIn ? '로그아웃' : '로그인'}
       </Text>
     </Pressable>

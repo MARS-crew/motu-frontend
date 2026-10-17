@@ -22,7 +22,7 @@ export default function MarketScreen() {
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <View className="px-6 pb-4 pt-8">
-        <Text className="font-inter-bold text-lg leading-6 text-motu-black">상품 목록</Text>
+        <Text className="font-pretendard-bold text-lg leading-6 text-motu-black">상품 목록</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="h-11">
         <View className="h-11 flex-row items-center gap-2 px-6">
@@ -37,7 +37,7 @@ export default function MarketScreen() {
         </View>
       </ScrollView>
       <View className="flex-1 items-center justify-center">
-        <Text className="font-inter-bold text-xl text-motu-black">{selectedCategory}</Text>
+        <Text className="font-pretendard-bold text-xl text-motu-black">{selectedCategory}</Text>
       </View>
     </SafeAreaView>
   );

@@ -71,7 +71,7 @@ export function Pagination({
             }`}
           >
             <Text
-              className={`font-inter-medium text-xs leading-4 ${
+              className={`font-pretendard-medium text-xs leading-4 ${
                 isSelected ? 'text-white' : 'text-motu-grey'
               }`}
             >
