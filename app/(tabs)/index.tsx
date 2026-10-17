@@ -25,6 +25,8 @@ export default function HomeScreen() {
 
   const handleSearchPress = () => router.push('/search');
 
+  const handleFavoritePress = () => router.push('/favorites');
+
   const handleNotificationPress = () => router.push('/notification');
 
   const handleNoticePress = () => router.push('/notice');
@@ -36,6 +38,7 @@ export default function HomeScreen() {
       <HomeHeader
         hasUnreadNotification={hasUnreadNotification}
         onSearchPress={handleSearchPress}
+        onFavoritePress={handleFavoritePress}
         onNotificationPress={handleNotificationPress}
       />
 

@@ -7,12 +7,14 @@ cssInterop(Image, { className: 'style' });
 type HomeHeaderProps = {
   hasUnreadNotification: boolean;
   onSearchPress: () => void;
+  onFavoritePress: () => void;
   onNotificationPress: () => void;
 };
 
 export function HomeHeader({
   hasUnreadNotification,
   onSearchPress,
+  onFavoritePress,
   onNotificationPress,
 }: HomeHeaderProps) {
   return (
@@ -36,6 +38,7 @@ export function HomeHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="관심 목록"
+          onPress={onFavoritePress}
           className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
         >
           <Image
