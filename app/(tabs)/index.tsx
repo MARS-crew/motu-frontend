@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,12 +21,17 @@ import { useAuthStore } from '@/stores/useAuthStore';
 export default function HomeScreen() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
+  const handleSearchPress = () => router.push('/search');
+
   // 신규 상장 목록 화면이 추가되면 이동을 연결합니다.
   const handleNewListingsMore = () => {};
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
-      <HomeHeader hasUnreadNotification={HAS_UNREAD_NOTIFICATION} />
+      <HomeHeader
+        hasUnreadNotification={HAS_UNREAD_NOTIFICATION}
+        onSearchPress={handleSearchPress}
+      />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="gap-4 px-6 pb-7 pt-1">
