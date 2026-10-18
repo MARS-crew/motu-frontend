@@ -49,7 +49,7 @@ export function TextField({
             setIsFocused(false);
             onBlur?.(event);
           }}
-          className={`h-full px-4 py-0 font-inter-medium text-sm leading-5 text-motu-text-primary placeholder:text-motu-grey ${
+          className={`font-inter-medium h-full px-4 py-0 text-sm leading-5 text-motu-text-primary placeholder:text-motu-grey ${
             editable ? '' : 'text-motu-disabled'
           }`}
           {...inputProps}
