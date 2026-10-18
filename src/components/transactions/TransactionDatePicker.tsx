@@ -3,7 +3,6 @@ import { cssInterop } from 'nativewind';
 import { Fragment, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { getCalendarWeeks, toDateKey, type TransactionDateRange } from '@/utils/transactionDate';
 
 cssInterop(Image, { className: 'style' });
@@ -158,9 +157,13 @@ export function TransactionDatePicker({ value, onApply }: TransactionDatePickerP
           </View>
         ))}
       </View>
-      <View className="mt-4">
-        <Button title="조회하기" size="lg" onPress={() => onApply(range)} />
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => onApply(range)}
+        className="mt-4 items-center rounded-lg bg-motu-black py-[13px] active:opacity-50"
+      >
+        <Text className="font-pretendard-bold text-[13px] text-white">조회하기</Text>
+      </Pressable>
     </View>
   );
 }
