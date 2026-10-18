@@ -1,7 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { cssInterop } from 'nativewind';
 import { useRef, useState } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
@@ -9,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { ListingBasicInfoFields } from '@/components/listingApplication/ListingBasicInfoFields';
+import { ListingFormHeader } from '@/components/listingApplication/ListingFormHeader';
+import { ListingFormStepper } from '@/components/listingApplication/ListingFormStepper';
 import { ListingImageSourceSheet } from '@/components/listingApplication/ListingImageSourceSheet';
 import { EMPTY_LISTING_BASIC_INFO } from '@/constants/listingBasicInfoPreview';
 import { useListingImagePicker } from '@/hooks/useListingImagePicker';
@@ -17,8 +17,6 @@ import {
   type ListingBasicInfoForm,
 } from '@/schemas/listingBasicInfoSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
-
-cssInterop(Image, { className: 'style' });
 
 export default function ListingBasicInfoScreen() {
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
@@ -65,8 +63,14 @@ export default function ListingBasicInfoScreen() {
         animated: true,
       });
   };
-  // 다음 단계 화면은 별도 작업입니다. 현재 단계의 검증과 임시 저장까지 처리합니다.
-  const handleNext = () => void handleSubmit(handleSave, handleInvalid)();
+  const handleNext = () =>
+    void handleSubmit(() => {
+      handleSave();
+      router.push({
+        pathname: '/listing-application/trading-info',
+        params: { draftId: currentDraftId },
+      });
+    }, handleInvalid)();
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -74,38 +78,7 @@ export default function ListingBasicInfoScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View className="flex-row items-center gap-[14px] px-5 pb-5 pt-8">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="뒤로가기"
-            onPress={handleBack}
-            hitSlop={10}
-          >
-            <Image
-              source={require('../../assets/icons/listingApplication/form/backArrow.svg')}
-              className="h-6 w-6"
-              contentFit="contain"
-            />
-          </Pressable>
-          <Text
-            accessibilityRole="header"
-            className="flex-1 font-pretendard-bold text-lg leading-6 text-motu-text-primary"
-          >
-            상장 신청
-          </Text>
-          <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1">
-            {savedAt && !isDirty && (
-              <Image
-                source={require('../../assets/icons/listingApplication/form/savedCheck.svg')}
-                className="h-[14px] w-[14px]"
-                contentFit="contain"
-              />
-            )}
-            <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
-              {savedAt && !isDirty ? `임시 저장됨 ${savedAt}` : '작성 중'}
-            </Text>
-          </View>
-        </View>
+        <ListingFormHeader savedAt={savedAt} isDirty={isDirty} onBack={handleBack} />
         <ScrollView
           ref={scrollRef}
           className="flex-1"
@@ -113,20 +86,7 @@ export default function ListingBasicInfoScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View
-            accessibilityLabel="신청서 작성 4단계 중 1단계"
-            className="h-[14px] flex-row items-center gap-1.5"
-          >
-            {[0, 1, 2, 3].map((step) => (
-              <View
-                key={step}
-                className={`h-1 flex-1 rounded-full ${step === 0 ? 'bg-motu-black' : 'bg-motu-border'}`}
-              />
-            ))}
-            <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-text-tertiary">
-              1/4
-            </Text>
-          </View>
+          <ListingFormStepper step={1} />
           <View className="gap-1.5">
             <Text
               accessibilityRole="header"

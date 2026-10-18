@@ -7,6 +7,7 @@ type TextFieldProps = TextInputProps & {
   errorMessage?: string;
   helperText?: string;
   inputRef?: Ref<TextInput>;
+  multilineSize?: 'default' | 'compact';
 };
 
 export function TextField({
@@ -15,6 +16,7 @@ export function TextField({
   errorMessage,
   helperText,
   multiline = false,
+  multilineSize = 'default',
   inputRef,
   editable = true,
   onBlur,
@@ -35,7 +37,7 @@ export function TextField({
         )}
       </View>
       <View
-        className={`overflow-hidden rounded-xl border ${multiline ? 'h-[120px]' : 'h-[50px]'} ${
+        className={`overflow-hidden rounded-xl border ${multiline ? (multilineSize === 'compact' ? 'h-[110px]' : 'h-[120px]') : 'h-[50px]'} ${
           hasError ? 'border-motu-red' : isFocused ? 'border-motu-black' : 'border-motu-border'
         } ${editable ? 'bg-white' : 'bg-motu-border'}`}
       >
