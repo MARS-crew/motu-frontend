@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Pagination } from '@/components/Pagination';
 import { SortDropdown } from '@/components/SortDropdown';
+import { CancelOrderModal } from '@/components/transactions/CancelOrderModal';
 import { TransactionDatePicker } from '@/components/transactions/TransactionDatePicker';
 import {
   COMPLETED_ORDER_PREVIEW,
@@ -17,6 +18,7 @@ import {
   TRANSACTION_SORT_OPTIONS,
   type TransactionPreview,
 } from '@/constants/transactionPreview';
+import { PENDING_ORDER_PREVIEW, type PendingOrderPreview } from '@/constants/pendingOrderPreview';
 import { formatDateRange, type TransactionDateRange } from '@/utils/transactionDate';
 
 cssInterop(Image, { className: 'style' });
@@ -31,6 +33,28 @@ export default function TransactionsScreen() {
   const [sortValue, setSortValue] = useState(TRANSACTION_SORT_OPTIONS[0].value);
   const [dateRange, setDateRange] = useState<TransactionDateRange>(INITIAL_DATE_RANGE);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const [cancelledOrderIds, setCancelledOrderIds] = useState<string[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<PendingOrderPreview | null>(null);
+  const isPendingTab = activeTab === '미체결주문';
+  const pendingOrders = PENDING_ORDER_PREVIEW.filter((order) => {
+    const date = order.orderedAt.slice(0, 10);
+    return (
+      !cancelledOrderIds.includes(order.id) && date >= dateRange.start && date <= dateRange.end
+    );
+  }).sort((left, right) =>
+    sortValue === 'amount'
+      ? right.orderPrice * right.quantity - left.orderPrice * left.quantity ||
+        right.orderedAt.localeCompare(left.orderedAt)
+      : right.orderedAt.localeCompare(left.orderedAt),
+  );
+  const handleCloseCancelModal = () => setSelectedOrder(null);
+  const handleConfirmCancel = () => {
+    if (!selectedOrder) return;
+    // 서버 연동 전 로컬 목록에서만 취소 처리합니다.
+    setCancelledOrderIds((ids) => [...ids, selectedOrder.id]);
+    setSelectedOrder(null);
+  };
 
   const isCompletedTab = activeTab === '체결주문';
   const source: (TransactionPreview | CompletedOrderPreview)[] = isCompletedTab
@@ -72,7 +96,7 @@ export default function TransactionsScreen() {
   const handleTabPress = (tab: (typeof TABS)[number]) => {
     setActiveTab(tab);
     setCurrentPage(1);
-    if (tab === '체결주문') {
+    if (tab === '체결주문' || tab === '미체결주문') {
       setDateRange({ start: '2026-09-01', end: '2026-09-06' });
       setSortValue('amount');
     } else if (tab === '거래내역') {
@@ -169,7 +193,74 @@ export default function TransactionsScreen() {
               <TransactionDatePicker value={dateRange} onApply={handleApplyDateRange} />
             </View>
           )}
-          {hasTransactions ? (
+          {isPendingTab && pendingOrders.length > 0 ? (
+            <View className="gap-3 pb-6">
+              {pendingOrders.map((order) => (
+                <View
+                  key={order.id}
+                  className="rounded-xl border border-motu-grey-lighter bg-white p-4"
+                >
+                  <View className="flex-row items-center gap-2.5">
+                    <View
+                      className={`h-9 w-9 items-center justify-center rounded-full ${order.badgeClassName}`}
+                    >
+                      <Text className="font-pretendard-bold text-sm text-white">
+                        {order.productName[0]}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-pretendard-bold text-[13px] text-motu-black">
+                        {order.productName}
+                      </Text>
+                      <Text className="mt-0.5 font-pretendard text-[11px] text-motu-grey">
+                        {order.orderedAt.slice(5, 10).replace('-', '.')} {order.orderedAt.slice(11)}
+                      </Text>
+                    </View>
+                    <Text
+                      className={`font-pretendard-bold text-[11px] ${order.side === 'buy' ? 'text-motu-red' : 'text-motu-blue'}`}
+                    >
+                      {order.side === 'buy' ? '매수' : '매도'}
+                    </Text>
+                  </View>
+                  <View className="my-3 h-px bg-motu-grey-lighter" />
+                  <View className="flex-row gap-1">
+                    <View className="flex-1">
+                      <Text className="font-pretendard text-[10px] text-motu-grey">주문가격</Text>
+                      <Text className="mt-0.5 font-pretendard-semibold text-sm text-motu-black">
+                        {order.orderPrice.toLocaleString('ko-KR')} P
+                      </Text>
+                    </View>
+                    <View className="flex-1 items-center">
+                      <Text className="font-pretendard text-[10px] text-motu-grey">주문수량</Text>
+                      <Text className="mt-0.5 font-pretendard-semibold text-sm text-motu-black">
+                        {order.quantity}주
+                      </Text>
+                    </View>
+                    <View className="flex-1 items-center">
+                      <Text className="font-pretendard text-[10px] text-motu-grey">미체결수량</Text>
+                      <Text className="mt-0.5 font-pretendard-semibold text-sm text-motu-black">
+                        {order.remainingQuantity}주
+                      </Text>
+                    </View>
+                    <View className="flex-1 items-end">
+                      <Text className="font-pretendard text-[10px] text-motu-grey">주문금액</Text>
+                      <Text className="mt-0.5 font-pretendard-semibold text-sm text-motu-black">
+                        {(order.orderPrice * order.quantity).toLocaleString('ko-KR')} P
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${order.productName} 주문 취소`}
+                    onPress={() => setSelectedOrder(order)}
+                    className="mt-3 min-h-9 items-center justify-center rounded-lg border border-motu-grey-lighter py-2 active:opacity-60"
+                  >
+                    <Text className="font-pretendard-bold text-sm text-motu-grey">주문 취소</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : hasTransactions ? (
             <>
               <View className="mb-4 h-[77px] flex-row items-center justify-between gap-2 rounded-xl border border-motu-grey-lighter bg-white px-4 py-4">
                 <View>
@@ -316,6 +407,11 @@ export default function TransactionsScreen() {
           )}
         </View>
       </ScrollView>
+      <CancelOrderModal
+        order={selectedOrder}
+        onClose={handleCloseCancelModal}
+        onConfirm={handleConfirmCancel}
+      />
     </SafeAreaView>
   );
 }
