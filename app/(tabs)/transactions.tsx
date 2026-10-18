@@ -8,7 +8,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pagination } from '@/components/Pagination';
 import { SortDropdown } from '@/components/SortDropdown';
 import { TransactionDatePicker } from '@/components/transactions/TransactionDatePicker';
-import { TRANSACTION_PREVIEW, TRANSACTION_SORT_OPTIONS } from '@/constants/transactionPreview';
+import {
+  COMPLETED_ORDER_PREVIEW,
+  type CompletedOrderPreview,
+} from '@/constants/completedOrderPreview';
+import {
+  TRANSACTION_PREVIEW,
+  TRANSACTION_SORT_OPTIONS,
+  type TransactionPreview,
+} from '@/constants/transactionPreview';
 import { formatDateRange, type TransactionDateRange } from '@/utils/transactionDate';
 
 cssInterop(Image, { className: 'style' });
@@ -24,14 +32,20 @@ export default function TransactionsScreen() {
   const [dateRange, setDateRange] = useState<TransactionDateRange>(INITIAL_DATE_RANGE);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const transactions = TRANSACTION_PREVIEW.filter(({ tradedAt }) => {
-    const date = tradedAt.slice(0, 10);
-    return date >= dateRange.start && date <= dateRange.end;
-  }).sort((left, right) =>
-    sortValue === 'amount'
-      ? right.amount - left.amount || right.tradedAt.localeCompare(left.tradedAt)
-      : right.tradedAt.localeCompare(left.tradedAt),
-  );
+  const isCompletedTab = activeTab === '체결주문';
+  const source: (TransactionPreview | CompletedOrderPreview)[] = isCompletedTab
+    ? COMPLETED_ORDER_PREVIEW
+    : TRANSACTION_PREVIEW;
+  const transactions = source
+    .filter(({ tradedAt }) => {
+      const date = tradedAt.slice(0, 10);
+      return date >= dateRange.start && date <= dateRange.end;
+    })
+    .sort((left, right) =>
+      sortValue === 'amount'
+        ? right.amount - left.amount || right.tradedAt.localeCompare(left.tradedAt)
+        : right.tradedAt.localeCompare(left.tradedAt),
+    );
   const buyAmount = transactions.reduce(
     (total, item) => total + (item.side === 'buy' ? item.amount : 0),
     0,
@@ -40,7 +54,7 @@ export default function TransactionsScreen() {
     (total, item) => total + (item.side === 'sell' ? item.amount : 0),
     0,
   );
-  const hasTransactions = activeTab === '거래내역' && transactions.length > 0;
+  const hasTransactions = activeTab !== '미체결주문' && transactions.length > 0;
   const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
   const pageTransactions = transactions.slice(
     (currentPage - 1) * PAGE_SIZE,
@@ -57,6 +71,14 @@ export default function TransactionsScreen() {
   };
   const handleTabPress = (tab: (typeof TABS)[number]) => {
     setActiveTab(tab);
+    setCurrentPage(1);
+    if (tab === '체결주문') {
+      setDateRange({ start: '2026-09-01', end: '2026-09-06' });
+      setSortValue('amount');
+    } else if (tab === '거래내역') {
+      setDateRange(INITIAL_DATE_RANGE);
+      setSortValue('latest');
+    }
     setIsCalendarOpen(false);
   };
 
@@ -171,46 +193,103 @@ export default function TransactionsScreen() {
                   </Text>
                 </View>
               </View>
-              <View className="overflow-hidden rounded-xl border border-motu-grey-lighter bg-white">
-                <View className="flex-row bg-motu-grey-lighter/60 px-3 py-2">
-                  <Text className="w-[28%] font-pretendard-semibold text-[10px] text-motu-grey">
-                    거래일시
-                  </Text>
-                  <Text className="w-[28%] font-pretendard-semibold text-[10px] text-motu-grey">
-                    상품명
-                  </Text>
-                  <Text className="w-[14%] text-center font-pretendard-semibold text-[10px] text-motu-grey">
-                    구분
-                  </Text>
-                  <Text className="w-[30%] text-right font-pretendard-semibold text-[10px] text-motu-grey">
-                    거래금액(P)
-                  </Text>
-                </View>
-                {pageTransactions.map((item, index) => (
-                  <View
-                    key={item.id}
-                    className={`min-h-[52.5px] flex-row items-center px-3 py-3 ${index > 0 ? 'border-t border-motu-grey-lighter' : ''}`}
-                  >
-                    <Text className="w-[28%] font-pretendard text-[11px] text-motu-grey">
-                      {item.tradedAt.slice(5, 10).replace('-', '.')} {item.tradedAt.slice(11)}
+              {isCompletedTab ? (
+                <View className="overflow-hidden rounded-xl border border-motu-grey-lighter bg-white">
+                  <View className="flex-row bg-motu-grey-lighter/60 px-3 py-2">
+                    <Text className="w-[22%] font-pretendard-semibold text-[9px] text-motu-grey">
+                      거래일시
                     </Text>
-                    <Text
-                      numberOfLines={1}
-                      className="w-[28%] pr-2 font-pretendard-semibold text-xs text-motu-black"
-                    >
-                      {item.productName}
+                    <Text className="w-[19%] font-pretendard-semibold text-[9px] text-motu-grey">
+                      상품명
                     </Text>
-                    <Text
-                      className={`w-[14%] text-center font-pretendard-bold text-[11px] ${item.side === 'buy' ? 'text-motu-red' : 'text-motu-blue'}`}
-                    >
-                      {item.side === 'buy' ? '매수' : '매도'}
+                    <Text className="w-[9%] text-center font-pretendard-semibold text-[9px] text-motu-grey">
+                      구분
                     </Text>
-                    <Text className="w-[30%] text-right font-pretendard-semibold text-[11px] text-motu-black">
-                      {item.amount.toLocaleString('ko-KR')} P
+                    <Text className="w-[16%] text-right font-pretendard-semibold text-[9px] text-motu-grey">
+                      주문가격(P)
+                    </Text>
+                    <Text className="w-[12%] text-right font-pretendard-semibold text-[9px] text-motu-grey">
+                      체결수량
+                    </Text>
+                    <Text className="w-[22%] text-right font-pretendard-semibold text-[9px] text-motu-grey">
+                      체결금액(P)
                     </Text>
                   </View>
-                ))}
-              </View>
+                  {pageTransactions.map((item, index) => (
+                    <View
+                      key={item.id}
+                      className={`min-h-[52.5px] flex-row items-center px-3 py-3 ${index > 0 ? 'border-t border-motu-grey-lighter' : ''}`}
+                    >
+                      <Text className="w-[22%] font-pretendard text-[10px] text-motu-grey">
+                        {item.tradedAt.slice(5, 10).replace('-', '.')} {item.tradedAt.slice(11)}
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        className="w-[19%] pr-1 font-pretendard-semibold text-xs text-motu-black"
+                      >
+                        {item.productName}
+                      </Text>
+                      <Text
+                        className={`w-[9%] text-center font-pretendard-bold text-[10px] ${item.side === 'buy' ? 'text-motu-red' : 'text-motu-blue'}`}
+                      >
+                        {item.side === 'buy' ? '매수' : '매도'}
+                      </Text>
+                      <Text className="w-[16%] text-right font-pretendard text-[11px] text-motu-black">
+                        {'orderPrice' in item ? item.orderPrice.toLocaleString('ko-KR') : ''}
+                      </Text>
+                      <Text className="w-[12%] text-right font-pretendard text-[11px] text-motu-grey">
+                        {'filledQuantity' in item
+                          ? item.filledQuantity.toLocaleString('ko-KR')
+                          : ''}
+                      </Text>
+                      <Text className="w-[22%] text-right font-pretendard-semibold text-[11px] text-motu-black">
+                        {item.amount.toLocaleString('ko-KR')}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View className="overflow-hidden rounded-xl border border-motu-grey-lighter bg-white">
+                  <View className="flex-row bg-motu-grey-lighter/60 px-3 py-2">
+                    <Text className="w-[28%] font-pretendard-semibold text-[10px] text-motu-grey">
+                      거래일시
+                    </Text>
+                    <Text className="w-[28%] font-pretendard-semibold text-[10px] text-motu-grey">
+                      상품명
+                    </Text>
+                    <Text className="w-[14%] text-center font-pretendard-semibold text-[10px] text-motu-grey">
+                      구분
+                    </Text>
+                    <Text className="w-[30%] text-right font-pretendard-semibold text-[10px] text-motu-grey">
+                      거래금액(P)
+                    </Text>
+                  </View>
+                  {pageTransactions.map((item, index) => (
+                    <View
+                      key={item.id}
+                      className={`min-h-[52.5px] flex-row items-center px-3 py-3 ${index > 0 ? 'border-t border-motu-grey-lighter' : ''}`}
+                    >
+                      <Text className="w-[28%] font-pretendard text-[11px] text-motu-grey">
+                        {item.tradedAt.slice(5, 10).replace('-', '.')} {item.tradedAt.slice(11)}
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        className="w-[28%] pr-2 font-pretendard-semibold text-xs text-motu-black"
+                      >
+                        {item.productName}
+                      </Text>
+                      <Text
+                        className={`w-[14%] text-center font-pretendard-bold text-[11px] ${item.side === 'buy' ? 'text-motu-red' : 'text-motu-blue'}`}
+                      >
+                        {item.side === 'buy' ? '매수' : '매도'}
+                      </Text>
+                      <Text className="w-[30%] text-right font-pretendard-semibold text-[11px] text-motu-black">
+                        {item.amount.toLocaleString('ko-KR')} P
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
