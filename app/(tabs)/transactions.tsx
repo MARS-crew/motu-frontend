@@ -40,7 +40,7 @@ export default function TransactionsScreen() {
     (total, item) => total + (item.side === 'sell' ? item.amount : 0),
     0,
   );
-  const hasTransactions = activeTab === '거래내역' && transactions.length > 0;
+  const hasTransactions = activeTab !== '미체결주문' && transactions.length > 0;
   const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
   const pageTransactions = transactions.slice(
     (currentPage - 1) * PAGE_SIZE,
