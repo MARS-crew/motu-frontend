@@ -16,6 +16,7 @@ module.exports = {
         'motu-bg': '#F2F4F6',
         'motu-bg-secondary': '#EDEFF2',
         'motu-red': '#F04452',
+        'motu-red-light': '#FDECEE',
         'motu-blue': '#2175F3',
         'motu-grey': '#8B8E96',
         'motu-grey-light': '#BEBFC1',

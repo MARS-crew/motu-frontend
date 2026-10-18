@@ -9,6 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { TopBar } from '@/components/TopBar';
+import { ListingRestrictionModal } from '@/components/listingApplication/ListingRestrictionModal';
+import { IS_LISTING_RESTRICTED_PREVIEW } from '@/constants/listingRestrictionPreview';
 import { ListingCriteriaModal } from '@/components/listingApplication/ListingCriteriaModal';
 import {
   LISTING_APPLICATION_STEPS,
@@ -23,6 +25,7 @@ import {
 cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
+  const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
   const [isCriteriaVisible, setIsCriteriaVisible] = useState(false);
   const {
     control,
@@ -38,9 +41,22 @@ export default function ListingApplicationEntryScreen() {
   const handleOpenCriteria = () => setIsCriteriaVisible(true);
   const handleCloseCriteria = () => setIsCriteriaVisible(false);
   // TODO: 후속 신청서 화면 구현 시 라우트 연결
-  const handleStart = handleSubmit(() => {});
+  const handleStart = () => {
+    if (IS_LISTING_RESTRICTED_PREVIEW) {
+      setIsRestrictionVisible(true);
+      return;
+    }
+    void handleSubmit(() => {})();
+  };
+  const handleCloseRestriction = () => setIsRestrictionVisible(false);
+  const handleRestrictionDetails = () => {
+    setIsRestrictionVisible(false);
+    router.push('/listing-application/restriction');
+  };
   const handleViewAll = () => {};
-  const handleContinue = () => {};
+  const handleContinue = () => {
+    if (IS_LISTING_RESTRICTED_PREVIEW) setIsRestrictionVisible(true);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -187,6 +203,11 @@ export default function ListingApplicationEntryScreen() {
         </View>
       </ScrollView>
       <ListingCriteriaModal isVisible={isCriteriaVisible} onClose={handleCloseCriteria} />
+      <ListingRestrictionModal
+        isVisible={isRestrictionVisible}
+        onClose={handleCloseRestriction}
+        onDetailsPress={handleRestrictionDetails}
+      />
     </SafeAreaView>
   );
 }
