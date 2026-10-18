@@ -38,7 +38,7 @@ export function ListingCriteriaModal({ isVisible, onClose }: ListingCriteriaModa
             <Text className="mt-3 font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary">
               신청 전에 다음 내용을 확인해 주세요.
             </Text>
-            <View className="bg-motu-bg-secondary mt-3 gap-2 rounded-[10px] p-[14px]">
+            <View className="mt-3 gap-2 rounded-[10px] bg-motu-bg-secondary p-[14px]">
               {LISTING_CRITERIA.map((criterion, index) => (
                 <Text
                   key={criterion}
