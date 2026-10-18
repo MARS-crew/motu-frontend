@@ -11,6 +11,8 @@ module.exports = {
       // 공통 색상·폰트는 여기에 등록합니다.
       colors: {
         'motu-black': '#2E3138',
+        'motu-text-primary': '#191F28',
+        'motu-text-secondary': '#4E5968',
         'motu-bg': '#F2F4F6',
         'motu-red': '#F04452',
         'motu-blue': '#2175F3',
@@ -18,6 +20,8 @@ module.exports = {
         'motu-grey-light': '#BEBFC1',
         'motu-grey-lighter': '#EAEAEB',
         'motu-grey-chip': '#E8ECF0',
+        'motu-border': '#E5E8EB',
+        'motu-disabled': '#B0B8C1',
         'motu-green': '#0E9F6E',
         'motu-btn-red': '#E5484D',
       },
