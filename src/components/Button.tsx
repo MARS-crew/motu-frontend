@@ -60,7 +60,7 @@ export function Button({
       ) : (
         <>
           <Text
-            className={`font-inter-bold ${subtitle ? 'text-sm leading-[18px]' : 'text-[15px] leading-5'} ${
+            className={`font-pretendard-bold ${subtitle ? 'text-sm leading-[18px]' : 'text-[15px] leading-5'} ${
               textColorClassName
             }`}
           >
@@ -68,7 +68,7 @@ export function Button({
           </Text>
           {subtitle && (
             <Text
-              className={`font-inter-medium text-[11px] leading-[14px] ${
+              className={`font-pretendard-medium text-[11px] leading-[14px] ${
                 isDisabled ? 'text-motu-disabled' : 'text-white/80'
               }`}
             >
