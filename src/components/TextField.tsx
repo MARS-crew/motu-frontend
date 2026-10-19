@@ -7,6 +7,8 @@ type TextFieldProps = TextInputProps & {
   errorMessage?: string;
   helperText?: string;
   inputRef?: Ref<TextInput>;
+  multilineSize?: 'default' | 'compact';
+  hasBaselineOffset?: boolean;
 };
 
 export function TextField({
@@ -15,6 +17,8 @@ export function TextField({
   errorMessage,
   helperText,
   multiline = false,
+  multilineSize = 'default',
+  hasBaselineOffset = true,
   inputRef,
   editable = true,
   onBlur,
@@ -35,7 +39,7 @@ export function TextField({
         )}
       </View>
       <View
-        className={`overflow-hidden rounded-xl border ${multiline ? 'h-[120px]' : 'h-[50px]'} ${
+        className={`overflow-hidden rounded-xl border ${multiline ? (multilineSize === 'compact' ? 'h-[110px]' : 'h-[120px]') : 'h-[50px]'} ${
           hasError ? 'border-motu-red' : isFocused ? 'border-motu-black' : 'border-motu-border'
         } ${editable ? 'bg-white' : 'bg-motu-border'}`}
       >
@@ -44,11 +48,6 @@ export function TextField({
           accessibilityLabel={label}
           multiline={multiline}
           editable={editable}
-          style={{
-            includeFontPadding: false,
-            textAlignVertical: multiline ? 'top' : 'center',
-            transform: multiline ? [] : [{ translateY: -3 }],
-          }}
           onFocus={(event) => {
             setIsFocused(true);
             onFocus?.(event);
@@ -57,7 +56,7 @@ export function TextField({
             setIsFocused(false);
             onBlur?.(event);
           }}
-          className={`h-full px-4 font-pretendard-medium ${multiline ? 'py-[15px]' : 'py-0'} text-sm leading-5 text-motu-text-primary placeholder:text-motu-grey ${
+          className={`h-full px-4 font-pretendard-medium text-no-font-padding ${multiline ? 'py-[15px] text-vertical-top' : `py-0 text-vertical-center ${hasBaselineOffset ? '-translate-y-[3px]' : ''}`} text-sm leading-5 text-motu-text-primary placeholder:text-motu-grey ${
             editable ? '' : 'text-motu-disabled'
           }`}
           {...inputProps}

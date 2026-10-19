@@ -41,10 +41,7 @@ export function ListingBasicInfoFields({
             onChangeText={onChange}
             onBlur={onBlur}
             inputRef={ref}
-            style={{
-              includeFontPadding: false,
-              textAlignVertical: props.multiline ? 'top' : 'center',
-            }}
+            hasBaselineOffset={false}
             errorMessage={errors[name]?.message}
             {...props}
           />

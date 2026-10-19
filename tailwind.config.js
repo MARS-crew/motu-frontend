@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
@@ -5,6 +7,9 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      boxShadow: {
+        'listing-panel': '0px 4px 6px rgba(0, 0, 0, 0.06)',
+      },
       fontSize: {
         topbar: '17px',
       },
@@ -15,6 +20,8 @@ module.exports = {
         'motu-text-secondary': '#4E5968',
         'motu-bg': '#F2F4F6',
         'motu-bg-secondary': '#EDEFF2',
+        'motu-option-selected': '#F4F4F5',
+        'motu-calendar-blue': '#3182F6',
         'motu-tonal': '#D9DDE3',
         'motu-text-tertiary': '#8B95A1',
         'motu-red': '#F04452',
@@ -39,5 +46,13 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.text-no-font-padding': { '-rn-include-font-padding': 'false' },
+        '.text-vertical-center': { '-rn-text-align-vertical': 'center' },
+        '.text-vertical-top': { '-rn-text-align-vertical': 'top' },
+      });
+    }),
+  ],
 };
