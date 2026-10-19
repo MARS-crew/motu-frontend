@@ -62,8 +62,14 @@ export default function ListingTradingInfoScreen() {
         animated: true,
       });
   };
-  // 3/4 단계는 별도 작업이며, 현재는 유효성 검증과 임시 저장까지 처리합니다.
-  const handleNext = () => void handleSubmit(handleSave, handleInvalid)();
+  const handleNext = () =>
+    void handleSubmit(() => {
+      handleSave();
+      router.push({
+        pathname: '/listing-application/service-metrics',
+        params: { draftId: currentDraftId },
+      });
+    }, handleInvalid)();
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <KeyboardAvoidingView

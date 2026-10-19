@@ -4,6 +4,8 @@ import {
   EMPTY_LISTING_BASIC_INFO,
   LISTING_BASIC_INFO_PREVIEW,
 } from '@/constants/listingBasicInfoPreview';
+import { LISTING_METRICS_PREVIEW } from '@/constants/listingMetricsPreview';
+import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 import { LISTING_TRADING_INFO_PREVIEW } from '@/constants/listingTradingInfoPreview';
 import type { ListingTradingInfoForm } from '@/schemas/listingTradingInfoSchema';
 import type { ListingBasicInfoForm } from '@/schemas/listingBasicInfoSchema';
@@ -12,11 +14,13 @@ type ListingDraft = {
   values: ListingBasicInfoForm;
   savedAt: string;
   tradingValues?: ListingTradingInfoForm;
-  step?: 1 | 2;
+  metricsValues?: ListingMetricsForm;
+  step?: 1 | 2 | 3;
 };
 type ListingDraftState = {
   drafts: Record<string, ListingDraft>;
   saveDraft: (id: string, values: ListingBasicInfoForm) => string;
+  saveMetricsDraft: (id: string, values: ListingMetricsForm) => string;
   saveTradingDraft: (id: string, values: ListingTradingInfoForm) => string;
 };
 
@@ -27,6 +31,7 @@ export const useListingDraftStore = create<ListingDraftState>((set) => ({
       values: LISTING_BASIC_INFO_PREVIEW,
       savedAt: '14:30',
       tradingValues: LISTING_TRADING_INFO_PREVIEW,
+      metricsValues: LISTING_METRICS_PREVIEW,
     },
     'cloud-works': {
       values: { ...LISTING_BASIC_INFO_PREVIEW, serviceName: 'CloudWorks' },
@@ -53,6 +58,23 @@ export const useListingDraftStore = create<ListingDraftState>((set) => ({
           tradingValues,
           savedAt,
           step: 2,
+        },
+      },
+    }));
+    return savedAt;
+  },
+  saveMetricsDraft: (id, metricsValues) => {
+    const date = new Date();
+    const savedAt = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    set((state) => ({
+      drafts: {
+        ...state.drafts,
+        [id]: {
+          ...state.drafts[id],
+          values: state.drafts[id]?.values ?? EMPTY_LISTING_BASIC_INFO,
+          metricsValues,
+          savedAt,
+          step: 3,
         },
       },
     }));
