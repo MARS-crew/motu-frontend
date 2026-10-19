@@ -4,16 +4,20 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChartPeriodSelector } from '@/components/productDetail/ChartPeriodSelector';
+import { OrderBookCard } from '@/components/productDetail/OrderBookCard';
 import { OrderButtons } from '@/components/productDetail/OrderButtons';
 import { PriceChart } from '@/components/productDetail/PriceChart';
 import { ProductDetailHeader } from '@/components/productDetail/ProductDetailHeader';
 import { ProductDetailTabs } from '@/components/productDetail/ProductDetailTabs';
 import { ProductSummary } from '@/components/productDetail/ProductSummary';
+import { RecentTradeList } from '@/components/productDetail/RecentTradeList';
 import { TradeSummaryCard } from '@/components/productDetail/TradeSummaryCard';
 import {
   CHART_PERIOD_OPTIONS,
+  getOrderBook,
   getProductCandles,
   getProductDetail,
+  getRecentTrades,
 } from '@/constants/productDetailPreview';
 import type { ChartPeriod } from '@/types/product';
 
@@ -38,6 +42,8 @@ export default function ProductDetailScreen() {
     () => (product ? getProductCandles(product, period) : []),
     [product, period],
   );
+  const orderBook = useMemo(() => (product ? getOrderBook(product) : undefined), [product]);
+  const recentTrades = useMemo(() => (product ? getRecentTrades(product) : []), [product]);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -106,8 +112,21 @@ export default function ProductDetailScreen() {
               <TradeSummaryCard summary={product.summary} />
             </View>
           </>
+        ) : selectedTab === 'orderBook' && orderBook ? (
+          <>
+            <View className="px-6 pt-4">
+              <OrderBookCard
+                orderBook={orderBook}
+                currentPrice={product.price}
+                changeRate={product.changeRate}
+              />
+            </View>
+            <View className="px-6 pb-8 pt-5">
+              <RecentTradeList trades={recentTrades} />
+            </View>
+          </>
         ) : (
-          // 호가(MOTU-18), 종목 정보(MOTU-20) 탭은 각 작업에서 구현합니다.
+          // 종목 정보(MOTU-20) 탭은 해당 작업에서 구현합니다.
           <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
             준비 중입니다.
           </Text>
