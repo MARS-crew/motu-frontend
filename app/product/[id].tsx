@@ -4,9 +4,11 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChartPeriodSelector } from '@/components/productDetail/ChartPeriodSelector';
+import { LoginRequiredModal } from '@/components/productDetail/LoginRequiredModal';
 import { OrderBookCard } from '@/components/productDetail/OrderBookCard';
 import { OrderButtons } from '@/components/productDetail/OrderButtons';
 import { PriceAlertModal } from '@/components/productDetail/PriceAlertModal';
+import { OrderSheet } from '@/components/productDetail/OrderSheet';
 import { PriceAlertReleaseModal } from '@/components/productDetail/PriceAlertReleaseModal';
 import { PriceChart } from '@/components/productDetail/PriceChart';
 import { ProductDetailHeader } from '@/components/productDetail/ProductDetailHeader';
@@ -23,6 +25,9 @@ import {
   getProductDetail,
   getRecentTrades,
 } from '@/constants/productDetailPreview';
+import { AVAILABLE_POINTS, SELLABLE_QUANTITY } from '@/constants/orderPreview';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { OrderSide } from '@/types/order';
 import type { ChartPeriod } from '@/types/product';
 
 type DetailTab = 'chart' | 'orderBook' | 'info';
@@ -45,6 +50,9 @@ export default function ProductDetailScreen() {
   const [alertPrice, setAlertPrice] = useState<number | null>(null);
   const [alertModal, setAlertModal] = useState<'form' | 'release' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const [orderSide, setOrderSide] = useState<OrderSide | null>(null);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   const candles = useMemo(
     () => (product ? getProductCandles(product, period) : []),
@@ -79,8 +87,24 @@ export default function ProductDetailScreen() {
 
   const handleToastHide = useCallback(() => setToastMessage(null), []);
 
-  // 매수·매도(MOTU-22) 모달이 추가되면 연결합니다.
-  const handleOrderPress = () => {};
+  // 주문은 로그인 상태에서만 가능합니다. (화면설계서 USR-MARKET-02-M02)
+  const handleOrderPress = (side: OrderSide) => {
+    if (!isLoggedIn) {
+      setIsLoginModalVisible(true);
+      return;
+    }
+    setOrderSide(side);
+  };
+
+  const handleLoginPress = () => {
+    setIsLoginModalVisible(false);
+    router.push('/login');
+  };
+
+  const handleOrderHistoryPress = () => {
+    setOrderSide(null);
+    router.push('/transactions');
+  };
 
   if (!product) {
     return (
@@ -166,7 +190,30 @@ export default function ProductDetailScreen() {
         <Toast message={toastMessage} onHide={handleToastHide} />
       </View>
 
-      <OrderButtons onSellPress={handleOrderPress} onBuyPress={handleOrderPress} />
+      <OrderButtons
+        onSellPress={() => handleOrderPress('sell')}
+        onBuyPress={() => handleOrderPress('buy')}
+      />
+
+      {orderSide && (
+        <OrderSheet
+          key={orderSide}
+          side={orderSide}
+          productName={product.name}
+          currentPrice={product.price}
+          changeRate={product.changeRate}
+          tickSize={product.tickSize}
+          availablePoints={AVAILABLE_POINTS}
+          sellableQuantity={SELLABLE_QUANTITY}
+          onClose={() => setOrderSide(null)}
+          onHistoryPress={handleOrderHistoryPress}
+        />
+      )}
+      <LoginRequiredModal
+        isVisible={isLoginModalVisible}
+        onClose={() => setIsLoginModalVisible(false)}
+        onLoginPress={handleLoginPress}
+      />
 
       <PriceAlertModal
         isVisible={alertModal === 'form'}

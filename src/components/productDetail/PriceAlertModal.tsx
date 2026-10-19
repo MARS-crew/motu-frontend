@@ -4,9 +4,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { Text, TextInput, View } from 'react-native';
 
 import {
-  PriceAlertModalButtons,
-  PriceAlertModalLayout,
-} from '@/components/productDetail/PriceAlertModalLayout';
+  ProductDetailDialogButtons,
+  ProductDetailDialog,
+} from '@/components/productDetail/ProductDetailDialog';
 import { priceAlertSchema, type PriceAlertForm } from '@/schemas/priceAlertSchema';
 import { formatPoint, getChangeColorClass } from '@/utils/formatNumber';
 
@@ -57,7 +57,7 @@ export function PriceAlertModal({
     void handleSubmit(({ price }) => onSubmit(Number(price.replaceAll(',', ''))))();
 
   return (
-    <PriceAlertModalLayout
+    <ProductDetailDialog
       isVisible={isVisible}
       title={isEditing ? '지정가 알림' : '지정가 알림 설정'}
       onClose={onClose}
@@ -108,12 +108,12 @@ export function PriceAlertModal({
         {errors.price?.message ?? '설정 가격에 최초 도달 시 1회 알림'}
       </Text>
 
-      <PriceAlertModalButtons
+      <ProductDetailDialogButtons
         secondaryTitle={isEditing ? '알림 해제' : '취소'}
         primaryTitle={isEditing ? '알림 수정' : '알림 설정'}
         onSecondaryPress={isEditing ? onReleasePress : onClose}
         onPrimaryPress={handleConfirm}
       />
-    </PriceAlertModalLayout>
+    </ProductDetailDialog>
   );
 }
