@@ -4,6 +4,8 @@ import {
   EMPTY_LISTING_BASIC_INFO,
   LISTING_BASIC_INFO_PREVIEW,
 } from '@/constants/listingBasicInfoPreview';
+import { LISTING_EVIDENCE_PREVIEW } from '@/constants/listingEvidencePreview';
+import type { ListingEvidenceForm } from '@/schemas/listingEvidenceSchema';
 import { LISTING_METRICS_PREVIEW } from '@/constants/listingMetricsPreview';
 import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 import { LISTING_TRADING_INFO_PREVIEW } from '@/constants/listingTradingInfoPreview';
@@ -15,11 +17,13 @@ type ListingDraft = {
   savedAt: string;
   tradingValues?: ListingTradingInfoForm;
   metricsValues?: ListingMetricsForm;
-  step?: 1 | 2 | 3;
+  evidenceValues?: ListingEvidenceForm;
+  step?: 1 | 2 | 3 | 4;
 };
 type ListingDraftState = {
   drafts: Record<string, ListingDraft>;
   saveDraft: (id: string, values: ListingBasicInfoForm) => string;
+  saveEvidenceDraft: (id: string, values: ListingEvidenceForm) => string;
   saveMetricsDraft: (id: string, values: ListingMetricsForm) => string;
   saveTradingDraft: (id: string, values: ListingTradingInfoForm) => string;
 };
@@ -32,6 +36,7 @@ export const useListingDraftStore = create<ListingDraftState>((set) => ({
       savedAt: '14:30',
       tradingValues: LISTING_TRADING_INFO_PREVIEW,
       metricsValues: LISTING_METRICS_PREVIEW,
+      evidenceValues: LISTING_EVIDENCE_PREVIEW,
     },
     'cloud-works': {
       values: { ...LISTING_BASIC_INFO_PREVIEW, serviceName: 'CloudWorks' },
@@ -75,6 +80,23 @@ export const useListingDraftStore = create<ListingDraftState>((set) => ({
           metricsValues,
           savedAt,
           step: 3,
+        },
+      },
+    }));
+    return savedAt;
+  },
+  saveEvidenceDraft: (id, evidenceValues) => {
+    const date = new Date();
+    const savedAt = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    set((state) => ({
+      drafts: {
+        ...state.drafts,
+        [id]: {
+          ...state.drafts[id],
+          values: state.drafts[id]?.values ?? EMPTY_LISTING_BASIC_INFO,
+          evidenceValues,
+          savedAt,
+          step: 4,
         },
       },
     }));

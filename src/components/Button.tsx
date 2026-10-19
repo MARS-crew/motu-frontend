@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, Text } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary';
 type ButtonSize = 'md' | 'lg';
-type ButtonColor = 'black' | 'red' | 'blue';
+type ButtonColor = 'black' | 'red' | 'blue' | 'danger';
 
 type ButtonProps = {
   title: string;
@@ -18,6 +18,7 @@ type ButtonProps = {
 const PRIMARY_BUTTON_COLOR_STYLE = {
   black: 'bg-motu-black',
   red: 'bg-motu-red',
+  danger: 'bg-motu-btn-red',
   blue: 'bg-motu-blue',
 };
 
