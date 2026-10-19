@@ -112,13 +112,20 @@ export default function ListingEvidenceScreen() {
       params: { draftId: currentDraftId },
     });
   };
-  // 최종 확인/제출 화면은 별도 작업입니다. 여기서는 4단계 검증과 임시 저장을 처리합니다.
   const handleNext = () =>
-    void handleSubmit(handleSave, () =>
-      scrollRef.current?.scrollTo({
-        y: Math.max(0, formOffset.current + descriptionOffset.current - 12),
-        animated: true,
-      }),
+    void handleSubmit(
+      () => {
+        handleSave();
+        router.push({
+          pathname: '/listing-application/review',
+          params: { draftId: currentDraftId },
+        });
+      },
+      () =>
+        scrollRef.current?.scrollTo({
+          y: Math.max(0, formOffset.current + descriptionOffset.current - 12),
+          animated: true,
+        }),
     )();
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
