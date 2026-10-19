@@ -48,7 +48,7 @@ export function ListingTradingSelectField({
         </View>
       </Pressable>
       {isOpen && (
-        <View className="shadow-listing-panel rounded-xl border border-motu-grey-lighter bg-white p-1.5">
+        <View className="rounded-xl border border-motu-grey-lighter bg-white p-1.5 shadow-listing-panel">
           {options.map((option) => (
             <Pressable
               key={option}
