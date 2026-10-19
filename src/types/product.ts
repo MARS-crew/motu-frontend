@@ -41,3 +41,23 @@ export type ProductDetail = Product & {
   isTradable: boolean;
   summary: TradeSummary;
 };
+
+export type OrderBookLevel = {
+  price: number;
+  quantity: number;
+};
+
+export type OrderBook = {
+  asks: OrderBookLevel[];
+  bids: OrderBookLevel[];
+};
+
+export type TradeSide = 'buy' | 'sell';
+
+export type RecentTrade = {
+  id: number;
+  time: string;
+  price: number;
+  quantity: number;
+  side: TradeSide;
+};
