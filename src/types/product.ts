@@ -52,6 +52,7 @@ export type ProductDetail = Product & {
   tradeStatus: TradeStatus;
   summary: TradeSummary;
   info: ProductInfo;
+  tickSize: number;
 };
 
 export type OrderBookLevel = {

@@ -141,6 +141,7 @@ export const getProductDetail = (id: number): ProductDetail | undefined => {
     ...product,
     description: PRODUCT_DESCRIPTIONS[product.name] ?? `${product.category} 분야 상장 상품`,
     tradeStatus: PRODUCT_TRADE_STATUSES[product.name] ?? 'tradable',
+    tickSize: getTickSize(product.price),
     info: {
       ...PRODUCT_INFOS[product.name],
       metrics: PRODUCT_INFOS[product.name]?.metrics ?? [],
