@@ -9,6 +9,8 @@ type MarketSortDropdownProps<T extends string> = {
   options: { label: string; value: T }[];
   value: T;
   onValueChange: (value: T) => void;
+  // 포트폴리오처럼 버튼이 오른쪽에 있으면 메뉴도 오른쪽 기준으로 펼칩니다.
+  align?: 'left' | 'right';
 };
 
 // 메뉴는 공용 SortDropdown과 같은 모양이고, 버튼만 마켓 디자인(테두리 없는 텍스트, 왼쪽 정렬)을 따릅니다.
@@ -16,6 +18,7 @@ export function MarketSortDropdown<T extends string>({
   options,
   value,
   onValueChange,
+  align = 'left',
 }: MarketSortDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value);
@@ -28,7 +31,7 @@ export function MarketSortDropdown<T extends string>({
   };
 
   return (
-    <View className="relative z-10 items-start">
+    <View className={`relative z-10 ${align === 'right' ? 'items-end' : 'items-start'}`}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: isOpen }}
@@ -48,7 +51,9 @@ export function MarketSortDropdown<T extends string>({
       </Pressable>
 
       {isOpen && (
-        <View className="absolute left-0 top-8 w-36 overflow-hidden rounded-xl border border-motu-grey-lighter bg-white py-[5px]">
+        <View
+          className={`absolute top-8 w-36 ${align === 'right' ? 'right-0' : 'left-0'} overflow-hidden rounded-xl border border-motu-grey-lighter bg-white py-[5px]`}
+        >
           {options.map((option) => {
             const isSelected = option.value === value;
 

@@ -4,7 +4,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryChip } from '@/components/CategoryChip';
-import { MarketHeader } from '@/components/market/MarketHeader';
+import { TabHeader } from '@/components/TabHeader';
 import { MarketSortDropdown } from '@/components/market/MarketSortDropdown';
 import { ProductListItem } from '@/components/ProductListItem';
 import { MARKET_CATEGORIES, MARKET_PRODUCTS, MARKET_SORT_OPTIONS } from '@/constants/marketPreview';
@@ -56,7 +56,11 @@ export default function MarketScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
-      <MarketHeader onSearchPress={handleSearchPress} onFavoritePress={handleFavoritePress} />
+      <TabHeader
+        title="상품 목록"
+        onSearchPress={handleSearchPress}
+        onFavoritePress={handleFavoritePress}
+      />
 
       <View>
         <ScrollView
