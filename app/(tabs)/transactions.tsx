@@ -24,6 +24,20 @@ import { formatDateRange, type TransactionDateRange } from '@/utils/transactionD
 cssInterop(Image, { className: 'style' });
 
 const TABS = ['거래내역', '체결주문', '미체결주문'] as const;
+const EMPTY_STATE_CONTENT = {
+  거래내역: {
+    title: '조회 가능한 거래내역이 없습니다.',
+    description: '마켓에서 주문하면 거래내역이 여기에 표시됩니다.',
+  },
+  체결주문: {
+    title: '조회 가능한 체결 주문이 없습니다.',
+    description: '주문이 체결되면 체결 내역이 여기에 표시됩니다.',
+  },
+  미체결주문: {
+    title: '조회 가능한 미체결 주문이 없습니다.',
+    description: '마켓에서 주문하면 체결 전 주문이 여기에 표시됩니다.',
+  },
+};
 const PAGE_SIZE = 10;
 const INITIAL_DATE_RANGE = { start: '2026-09-05', end: '2026-09-06' };
 
@@ -398,10 +412,10 @@ export default function TransactionsScreen() {
                 />
               </View>
               <Text className="mt-3 text-center font-pretendard-semibold text-[13px] text-motu-black">
-                조회 가능한 미체결 주문이 없습니다.
+                {EMPTY_STATE_CONTENT[activeTab].title}
               </Text>
               <Text className="mt-3 text-center font-pretendard text-xs leading-5 text-motu-grey">
-                마켓에서 주문하면 체결 전 주문이 여기에 표시됩니다.
+                {EMPTY_STATE_CONTENT[activeTab].description}
               </Text>
             </View>
           )}
