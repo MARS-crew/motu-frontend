@@ -62,8 +62,14 @@ export default function ListingMetricsScreen() {
         animated: true,
       });
   };
-  // 4/4 증빙 자료 화면은 별도 작업입니다. 현재는 지표 검증과 저장까지 처리합니다.
-  const handleNext = () => void handleSubmit(handleSave, handleInvalid)();
+  const handleNext = () =>
+    void handleSubmit(() => {
+      handleSave();
+      router.push({
+        pathname: '/listing-application/evidence',
+        params: { draftId: currentDraftId },
+      });
+    }, handleInvalid)();
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <KeyboardAvoidingView
