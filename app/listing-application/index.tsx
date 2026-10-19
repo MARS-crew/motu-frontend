@@ -29,8 +29,8 @@ export default function ListingApplicationEntryScreen() {
   const draftItems = Object.entries(drafts).map(([id, draft]) => ({
     id,
     name: draft.values.serviceName || '제목 없는 신청서',
-    step: draft.step === 2 ? '평가·거래' : '기본 정보',
-    progress: draft.step === 2 ? '2/4' : '1/4',
+    step: draft.step === 3 ? '서비스 지표' : draft.step === 2 ? '평가·거래' : '기본 정보',
+    progress: `${draft.step ?? 1}/4`,
     savedAt: draft.savedAt,
   }));
   const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
@@ -68,9 +68,11 @@ export default function ListingApplicationEntryScreen() {
     }
     router.push({
       pathname:
-        drafts[draftId]?.step === 2
-          ? '/listing-application/trading-info'
-          : '/listing-application/basic-info',
+        drafts[draftId]?.step === 3
+          ? '/listing-application/service-metrics'
+          : drafts[draftId]?.step === 2
+            ? '/listing-application/trading-info'
+            : '/listing-application/basic-info',
       params: { draftId },
     });
   };

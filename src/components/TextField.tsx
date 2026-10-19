@@ -1,8 +1,9 @@
-import { useState, type Ref } from 'react';
+import { useState, type Ref, type ReactNode } from 'react';
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 type TextFieldProps = TextInputProps & {
   label: string;
+  labelAccessory?: ReactNode;
   isRequired?: boolean;
   errorMessage?: string;
   helperText?: string;
@@ -13,6 +14,7 @@ type TextFieldProps = TextInputProps & {
 
 export function TextField({
   label,
+  labelAccessory,
   isRequired = false,
   errorMessage,
   helperText,
@@ -30,13 +32,14 @@ export function TextField({
 
   return (
     <View className="gap-2">
-      <View className="flex-row items-center gap-1">
+      <View className={`flex-row items-center gap-1 ${labelAccessory ? 'h-[18px]' : ''}`}>
         <Text className="font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
           {label}
         </Text>
         {isRequired && (
           <Text className="font-pretendard-medium text-xs leading-4 text-motu-red">*</Text>
         )}
+        {labelAccessory && <View className="ml-auto">{labelAccessory}</View>}
       </View>
       <View
         className={`overflow-hidden rounded-xl border ${multiline ? (multilineSize === 'compact' ? 'h-[110px]' : 'h-[120px]') : 'h-[50px]'} ${
