@@ -1,11 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChartPeriodSelector } from '@/components/productDetail/ChartPeriodSelector';
 import { OrderBookCard } from '@/components/productDetail/OrderBookCard';
 import { OrderButtons } from '@/components/productDetail/OrderButtons';
+import { PriceAlertModal } from '@/components/productDetail/PriceAlertModal';
+import { PriceAlertReleaseModal } from '@/components/productDetail/PriceAlertReleaseModal';
 import { PriceChart } from '@/components/productDetail/PriceChart';
 import { ProductDetailHeader } from '@/components/productDetail/ProductDetailHeader';
 import { ProductDetailTabs } from '@/components/productDetail/ProductDetailTabs';
@@ -13,6 +15,7 @@ import { ProductInfoTable } from '@/components/productDetail/ProductInfoTable';
 import { ProductSummary } from '@/components/productDetail/ProductSummary';
 import { RecentTradeList } from '@/components/productDetail/RecentTradeList';
 import { TradeSummaryCard } from '@/components/productDetail/TradeSummaryCard';
+import { Toast } from '@/components/Toast';
 import {
   CHART_PERIOD_OPTIONS,
   getOrderBook,
@@ -38,6 +41,10 @@ export default function ProductDetailScreen() {
   const [selectedTab, setSelectedTab] = useState<DetailTab>('chart');
   const [period, setPeriod] = useState<ChartPeriod>('day');
   const [isFavorite, setIsFavorite] = useState(product?.isFavorite ?? false);
+  // 지정가 알림은 서버 연동 전까지 화면 안에서만 유지합니다.
+  const [alertPrice, setAlertPrice] = useState<number | null>(null);
+  const [alertModal, setAlertModal] = useState<'form' | 'release' | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const candles = useMemo(
     () => (product ? getProductCandles(product, period) : []),
@@ -54,9 +61,25 @@ export default function ProductDetailScreen() {
     }
   };
 
-  // 지정가 알림(MOTU-21), 매수·매도(MOTU-22) 모달이 추가되면 연결합니다.
-  const handleAlertPress = () => {};
+  const handleAlertPress = () => setAlertModal('form');
 
+  const handleAlertModalClose = () => setAlertModal(null);
+
+  const handleAlertSubmit = (price: number) => {
+    setAlertPrice(price);
+    setAlertModal(null);
+  };
+
+  // 해제를 취소하면 수정 모달로 돌아갑니다. (화면설계서 USR-MARKET-02-M01)
+  const handleAlertRelease = () => {
+    setAlertPrice(null);
+    setAlertModal(null);
+    setToastMessage('가격 알림이 해제되었습니다.');
+  };
+
+  const handleToastHide = useCallback(() => setToastMessage(null), []);
+
+  // 매수·매도(MOTU-22) 모달이 추가되면 연결합니다.
   const handleOrderPress = () => {};
 
   if (!product) {
@@ -139,7 +162,31 @@ export default function ProductDetailScreen() {
         )}
       </ScrollView>
 
+      <View pointerEvents="none" className="absolute inset-x-0 bottom-[104px]">
+        <Toast message={toastMessage} onHide={handleToastHide} />
+      </View>
+
       <OrderButtons onSellPress={handleOrderPress} onBuyPress={handleOrderPress} />
+
+      <PriceAlertModal
+        isVisible={alertModal === 'form'}
+        currentPrice={product.price}
+        changeRate={product.changeRate}
+        alertPrice={alertPrice}
+        onClose={handleAlertModalClose}
+        onSubmit={handleAlertSubmit}
+        onReleasePress={() => setAlertModal('release')}
+      />
+      {alertPrice !== null && (
+        <PriceAlertReleaseModal
+          isVisible={alertModal === 'release'}
+          productName={product.name}
+          alertPrice={alertPrice}
+          onClose={handleAlertModalClose}
+          onCancel={() => setAlertModal('form')}
+          onRelease={handleAlertRelease}
+        />
+      )}
     </SafeAreaView>
   );
 }
