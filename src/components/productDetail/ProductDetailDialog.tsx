@@ -5,26 +5,26 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, View } from 're
 
 cssInterop(Image, { className: 'style' });
 
-type PriceAlertModalLayoutProps = {
+type ProductDetailDialogProps = {
   isVisible: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
 };
 
-type PriceAlertModalButtonsProps = {
+type ProductDetailDialogButtonsProps = {
   secondaryTitle: string;
   primaryTitle: string;
   onSecondaryPress: () => void;
   onPrimaryPress: () => void;
 };
 
-export function PriceAlertModalLayout({
+export function ProductDetailDialog({
   isVisible,
   title,
   onClose,
   children,
-}: PriceAlertModalLayoutProps) {
+}: ProductDetailDialogProps) {
   return (
     <Modal
       transparent
@@ -75,12 +75,12 @@ export function PriceAlertModalLayout({
   );
 }
 
-export function PriceAlertModalButtons({
+export function ProductDetailDialogButtons({
   secondaryTitle,
   primaryTitle,
   onSecondaryPress,
   onPrimaryPress,
-}: PriceAlertModalButtonsProps) {
+}: ProductDetailDialogButtonsProps) {
   return (
     <View className="mt-6 flex-row gap-2">
       <Pressable
