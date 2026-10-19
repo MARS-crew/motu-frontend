@@ -22,7 +22,7 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
     if (!hasMinuteError) onApply(`${hour}:${minute.padStart(2, '0')}`);
   };
   return (
-    <View className="shadow-listing-panel gap-[14px] rounded-xl border border-motu-grey-lighter bg-white p-4">
+    <View className="gap-[14px] rounded-xl border border-motu-grey-lighter bg-white p-4 shadow-listing-panel">
       <View className="flex-row items-center gap-2">
         <Pressable
           accessibilityRole="button"
@@ -44,7 +44,7 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
         </Text>
       </View>
       <View className="gap-3">
-        <View className="bg-motu-bg-secondary flex-row items-center gap-2 rounded-[10px] px-[14px] py-3">
+        <View className="flex-row items-center gap-2 rounded-[10px] bg-motu-bg-secondary px-[14px] py-3">
           <Text className="flex-1 font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
             선택 날짜
           </Text>
@@ -85,7 +85,7 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
           <Text className="flex-1 font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
             분
           </Text>
-          <Text className="text-motu-text-tertiary font-pretendard-medium text-[11px] leading-[14px]">
+          <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-text-tertiary">
             기준 시간대: KST
           </Text>
         </View>
@@ -100,7 +100,7 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
             maxLength={2}
             className="h-full flex-1 py-0 font-pretendard-medium text-sm leading-5 text-motu-text-primary outline-none"
           />
-          <Text className="text-motu-text-tertiary font-pretendard-medium text-sm leading-5">
+          <Text className="font-pretendard-medium text-sm leading-5 text-motu-text-tertiary">
             분
           </Text>
         </View>
@@ -113,7 +113,7 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
           </Text>
         )}
       </View>
-      <View className="bg-motu-bg-secondary rounded-[10px] px-[14px] py-3">
+      <View className="rounded-[10px] bg-motu-bg-secondary px-[14px] py-3">
         <Text className="font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
           입력한 날짜와 시간은 희망값이며 관리자 심사 후 변경될 수 있습니다.
         </Text>

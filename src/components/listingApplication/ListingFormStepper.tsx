@@ -14,7 +14,7 @@ export function ListingFormStepper({ step }: ListingFormStepperProps) {
           className={`h-1 flex-1 rounded-full ${item <= step ? 'bg-motu-black' : 'bg-motu-border'}`}
         />
       ))}
-      <Text className="text-motu-text-tertiary font-pretendard-medium text-[11px] leading-[14px]">
+      <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-text-tertiary">
         {step}/4
       </Text>
     </View>

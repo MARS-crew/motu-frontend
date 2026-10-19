@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
@@ -44,5 +46,13 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.text-no-font-padding': { '-rn-include-font-padding': 'false' },
+        '.text-vertical-center': { '-rn-text-align-vertical': 'center' },
+        '.text-vertical-top': { '-rn-text-align-vertical': 'top' },
+      });
+    }),
+  ],
 };

@@ -65,7 +65,7 @@ export function ListingTradingInfoFields({
                 }}
                 inputRef={ref}
                 errorMessage={errors[name]?.message}
-                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                hasBaselineOffset={false}
               />
             )}
           />

@@ -30,7 +30,7 @@ export function ListingDatePicker({
   onChange,
 }: ListingDatePickerProps) {
   return (
-    <View className="shadow-listing-panel gap-[14px] rounded-xl border border-motu-grey-lighter bg-white p-4">
+    <View className="gap-[14px] rounded-xl border border-motu-grey-lighter bg-white p-4 shadow-listing-panel">
       <View className="flex-row items-center gap-2">
         <Text
           accessibilityRole="header"
