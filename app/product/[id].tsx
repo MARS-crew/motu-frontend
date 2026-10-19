@@ -9,6 +9,7 @@ import { OrderButtons } from '@/components/productDetail/OrderButtons';
 import { PriceChart } from '@/components/productDetail/PriceChart';
 import { ProductDetailHeader } from '@/components/productDetail/ProductDetailHeader';
 import { ProductDetailTabs } from '@/components/productDetail/ProductDetailTabs';
+import { ProductInfoTable } from '@/components/productDetail/ProductInfoTable';
 import { ProductSummary } from '@/components/productDetail/ProductSummary';
 import { RecentTradeList } from '@/components/productDetail/RecentTradeList';
 import { TradeSummaryCard } from '@/components/productDetail/TradeSummaryCard';
@@ -112,24 +113,29 @@ export default function ProductDetailScreen() {
               <TradeSummaryCard summary={product.summary} />
             </View>
           </>
-        ) : selectedTab === 'orderBook' && orderBook ? (
+        ) : selectedTab === 'orderBook' ? (
           <>
-            <View className="px-6 pt-4">
-              <OrderBookCard
-                orderBook={orderBook}
-                currentPrice={product.price}
-                changeRate={product.changeRate}
-              />
-            </View>
+            {orderBook && (
+              <View className="px-6 pt-4">
+                <OrderBookCard
+                  orderBook={orderBook}
+                  currentPrice={product.price}
+                  changeRate={product.changeRate}
+                />
+              </View>
+            )}
             <View className="px-6 pb-8 pt-5">
               <RecentTradeList trades={recentTrades} />
             </View>
           </>
         ) : (
-          // 종목 정보(MOTU-20) 탭은 해당 작업에서 구현합니다.
-          <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
-            준비 중입니다.
-          </Text>
+          <View className="px-6 pb-8 pt-4">
+            <ProductInfoTable
+              info={product.info}
+              category={product.category}
+              tradeStatus={product.tradeStatus}
+            />
+          </View>
         )}
       </ScrollView>
 
