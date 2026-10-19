@@ -36,10 +36,22 @@ export type TradeSummary = {
   tradeAmount: number;
 };
 
+export type TradeStatus = 'waiting' | 'tradable' | 'suspended' | 'ended';
+
+// 상장 신청 시 입력한 정보라 비어 있을 수 있습니다.
+export type ProductInfo = {
+  introduction?: string;
+  operator?: string;
+  officialUrl?: string;
+  metrics: string[];
+  listedAt?: string;
+};
+
 export type ProductDetail = Product & {
   description: string;
-  isTradable: boolean;
+  tradeStatus: TradeStatus;
   summary: TradeSummary;
+  info: ProductInfo;
 };
 
 export type OrderBookLevel = {

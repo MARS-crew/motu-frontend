@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 
+import { TRADE_STATUS_STYLES } from '@/constants/tradeStatus';
 import type { ProductDetail } from '@/types/product';
 import { formatPoint } from '@/utils/formatNumber';
 
@@ -8,6 +9,8 @@ type ProductSummaryProps = {
 };
 
 export function ProductSummary({ product }: ProductSummaryProps) {
+  const tradeStatus = TRADE_STATUS_STYLES[product.tradeStatus];
+
   return (
     <View className="px-6 pt-0.5">
       <View className="flex-row items-center gap-2">
@@ -40,11 +43,9 @@ export function ProductSummary({ product }: ProductSummaryProps) {
         {formatPoint(product.price)}
       </Text>
       <Text
-        className={`pt-1.5 font-pretendard-bold text-[13px] leading-[18px] ${
-          product.isTradable ? 'text-motu-green' : 'text-motu-grey'
-        }`}
+        className={`pt-1.5 font-pretendard-bold text-[13px] leading-[18px] ${tradeStatus.textClassName}`}
       >
-        {product.isTradable ? '거래 가능' : '거래 불가'}
+        {tradeStatus.label}
       </Text>
     </View>
   );

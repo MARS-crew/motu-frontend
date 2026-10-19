@@ -38,6 +38,7 @@ module.exports = {
         'motu-success': '#1A7F5A',
         'motu-success-light': '#E6F4EE',
         'motu-slate': '#6B7280',
+        'motu-amber': '#F59E0B',
         'motu-brown': '#B28A6B',
         'motu-btn-red': '#E5484D',
       },
