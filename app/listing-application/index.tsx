@@ -10,11 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { TopBar } from '@/components/TopBar';
 import { ListingRestrictionModal } from '@/components/listingApplication/ListingRestrictionModal';
+import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { IS_LISTING_RESTRICTED_PREVIEW } from '@/constants/listingRestrictionPreview';
 import { ListingCriteriaModal } from '@/components/listingApplication/ListingCriteriaModal';
 import {
   LISTING_APPLICATION_STEPS,
-  LISTING_DRAFT_PREVIEW,
   MAX_LISTING_DRAFTS,
 } from '@/constants/listingApplicationPreview';
 import {
@@ -25,6 +25,14 @@ import {
 cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
+  const drafts = useListingDraftStore((state) => state.drafts);
+  const draftItems = Object.entries(drafts).map(([id, draft]) => ({
+    id,
+    name: draft.values.serviceName || '제목 없는 신청서',
+    step: '기본 정보',
+    progress: '1/4',
+    savedAt: draft.savedAt,
+  }));
   const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
   const [isCriteriaVisible, setIsCriteriaVisible] = useState(false);
   const {
@@ -40,13 +48,12 @@ export default function ListingApplicationEntryScreen() {
   const handleBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)/my'));
   const handleOpenCriteria = () => setIsCriteriaVisible(true);
   const handleCloseCriteria = () => setIsCriteriaVisible(false);
-  // TODO: 후속 신청서 화면 구현 시 라우트 연결
   const handleStart = () => {
     if (IS_LISTING_RESTRICTED_PREVIEW) {
       setIsRestrictionVisible(true);
       return;
     }
-    void handleSubmit(() => {})();
+    void handleSubmit(() => router.push('/listing-application/basic-info'))();
   };
   const handleCloseRestriction = () => setIsRestrictionVisible(false);
   const handleRestrictionDetails = () => {
@@ -54,8 +61,12 @@ export default function ListingApplicationEntryScreen() {
     router.push('/listing-application/restriction');
   };
   const handleViewAll = () => {};
-  const handleContinue = () => {
-    if (IS_LISTING_RESTRICTED_PREVIEW) setIsRestrictionVisible(true);
+  const handleContinue = (draftId: string) => {
+    if (IS_LISTING_RESTRICTED_PREVIEW) {
+      setIsRestrictionVisible(true);
+      return;
+    }
+    router.push({ pathname: '/listing-application/basic-info', params: { draftId } });
   };
 
   return (
@@ -153,16 +164,16 @@ export default function ListingApplicationEntryScreen() {
             작성 중인 신청서{' '}
             <Text className="text-motu-grey-light">
               {' '}
-              {LISTING_DRAFT_PREVIEW.length}/{MAX_LISTING_DRAFTS}
+              {draftItems.length}/{MAX_LISTING_DRAFTS}
             </Text>
           </Text>
           <View className="rounded-xl bg-white px-[14px]">
-            {LISTING_DRAFT_PREVIEW.map((draft, index) => (
+            {draftItems.map((draft, index) => (
               <Pressable
                 key={draft.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${draft.name} 이어서 작성`}
-                onPress={handleContinue}
+                onPress={() => handleContinue(draft.id)}
                 className={`flex-row items-center justify-between gap-1 py-[10px] ${index > 0 ? 'border-t border-motu-grey-lighter' : ''}`}
               >
                 <View className="flex-1">

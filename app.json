@@ -29,7 +29,15 @@
       "expo-secure-store",
       "expo-font",
       "expo-splash-screen",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "상장 신청서에 첨부할 이미지를 선택합니다.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
