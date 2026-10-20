@@ -79,7 +79,11 @@ export function ListingApplicationCard({
       )}
     </>
   );
-  if (application.status === 'received') {
+  if (
+    application.status === 'received' ||
+    application.status === 'supplementRequested' ||
+    application.status === 'reviewing'
+  ) {
     return (
       <Pressable
         accessibilityRole="button"

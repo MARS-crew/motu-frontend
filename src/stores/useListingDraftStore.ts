@@ -5,7 +5,7 @@ import {
   LISTING_BASIC_INFO_PREVIEW,
 } from '@/constants/listingBasicInfoPreview';
 import { LISTING_EVIDENCE_PREVIEW } from '@/constants/listingEvidencePreview';
-import type { ListingEvidenceForm } from '@/schemas/listingEvidenceSchema';
+import { listingEvidenceSchema, type ListingEvidenceForm } from '@/schemas/listingEvidenceSchema';
 import { LISTING_METRICS_PREVIEW } from '@/constants/listingMetricsPreview';
 import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 import { LISTING_TRADING_INFO_PREVIEW } from '@/constants/listingTradingInfoPreview';
@@ -29,6 +29,9 @@ type ListingDraft = {
 type ListingDraftState = {
   drafts: Record<string, ListingDraft>;
   applications: Record<string, ListingSubmittedApplication>;
+  supplementDrafts: Record<string, ListingEvidenceForm>;
+  saveSupplementDraft: (id: string, values: ListingEvidenceForm) => boolean;
+  resubmitSupplementPreview: (id: string) => boolean;
   deleteDraft: (id: string) => void;
   submitDraftPreview: (id: string) => boolean;
   saveDraft: (id: string, values: ListingBasicInfoForm) => string;
@@ -40,6 +43,45 @@ type ListingDraftState = {
 // 서버 연결 전, 화면 이동 간에만 유지하는 임시 신청서입니다.
 export const useListingDraftStore = create<ListingDraftState>((set, get) => ({
   applications: LISTING_SUBMITTED_APPLICATIONS_PREVIEW,
+  supplementDrafts: {},
+  saveSupplementDraft: (id, values) => {
+    const state = get();
+    const parsed = listingEvidenceSchema.safeParse(values);
+    if (state.applications[id]?.status !== 'supplementRequested' || !parsed.success) return false;
+    set({ supplementDrafts: { ...state.supplementDrafts, [id]: parsed.data } });
+    return true;
+  },
+  // 서버 연결 전 보완 자료 재제출과 검토중 상태를 재현합니다.
+  resubmitSupplementPreview: (id) => {
+    const state = get();
+    const application = state.applications[id];
+    if (application?.status === 'reviewing') return true;
+    if (application?.status !== 'supplementRequested') return false;
+    const parsed = listingEvidenceSchema.safeParse(
+      state.supplementDrafts[id] ?? application.evidence,
+    );
+    if (!parsed.success) return false;
+    const date = new Date();
+    const submittedAt = `${formatListingDate(date)} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    const supplementDrafts = { ...state.supplementDrafts };
+    delete supplementDrafts[id];
+    set({
+      applications: {
+        ...state.applications,
+        [id]: {
+          id: application.id,
+          name: application.name,
+          submittedDate: application.submittedDate,
+          receiptNumber: application.receiptNumber,
+          status: 'reviewing',
+          supplementSubmittedAt: submittedAt,
+          evidence: parsed.data,
+        },
+      },
+      supplementDrafts,
+    });
+    return true;
+  },
   drafts: {
     'saas-index': {
       values: LISTING_BASIC_INFO_PREVIEW,
