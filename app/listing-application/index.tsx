@@ -11,6 +11,7 @@ import { Button } from '@/components/Button';
 import { TopBar } from '@/components/TopBar';
 import { ListingRestrictionModal } from '@/components/listingApplication/ListingRestrictionModal';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { getListingDraftRoute } from '@/utils/listingApplication';
 import { IS_LISTING_RESTRICTED_PREVIEW } from '@/constants/listingRestrictionPreview';
 import { ListingCriteriaModal } from '@/components/listingApplication/ListingCriteriaModal';
 import {
@@ -26,20 +27,23 @@ cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
   const drafts = useListingDraftStore((state) => state.drafts);
-  const draftItems = Object.entries(drafts).map(([id, draft]) => ({
-    id,
-    name: draft.values.serviceName || '제목 없는 신청서',
-    step:
-      draft.step === 4
-        ? '증빙 자료'
-        : draft.step === 3
-          ? '서비스 지표'
-          : draft.step === 2
-            ? '평가·거래'
-            : '기본 정보',
-    progress: `${draft.step ?? 1}/4`,
-    savedAt: draft.savedAt,
-  }));
+  const applications = useListingDraftStore((state) => state.applications);
+  const draftItems = Object.entries(drafts)
+    .filter(([id]) => !applications[id])
+    .map(([id, draft]) => ({
+      id,
+      name: draft.values.serviceName || '제목 없는 신청서',
+      step:
+        draft.step === 4
+          ? '증빙 자료'
+          : draft.step === 3
+            ? '서비스 지표'
+            : draft.step === 2
+              ? '평가·거래'
+              : '기본 정보',
+      progress: `${draft.step ?? 1}/4`,
+      savedAt: draft.savedAt,
+    }));
   const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
   const [isCriteriaVisible, setIsCriteriaVisible] = useState(false);
   const {
@@ -67,21 +71,14 @@ export default function ListingApplicationEntryScreen() {
     setIsRestrictionVisible(false);
     router.push('/listing-application/restriction');
   };
-  const handleViewAll = () => {};
+  const handleViewAll = () => router.push('/listing-application/my-applications');
   const handleContinue = (draftId: string) => {
     if (IS_LISTING_RESTRICTED_PREVIEW) {
       setIsRestrictionVisible(true);
       return;
     }
     router.push({
-      pathname:
-        drafts[draftId]?.step === 4
-          ? '/listing-application/evidence'
-          : drafts[draftId]?.step === 3
-            ? '/listing-application/service-metrics'
-            : drafts[draftId]?.step === 2
-              ? '/listing-application/trading-info'
-              : '/listing-application/basic-info',
+      pathname: getListingDraftRoute(drafts[draftId]?.step),
       params: { draftId },
     });
   };

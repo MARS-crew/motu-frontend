@@ -14,6 +14,7 @@ cssInterop(Image, { className: 'style' });
 export default function ListingReviewScreen() {
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
+  const submitDraftPreview = useListingDraftStore((state) => state.submitDraftPreview);
   const steps = [
     {
       title: '기본 정보',
@@ -40,7 +41,7 @@ export default function ListingReviewScreen() {
     router.dismissTo({ pathname: '/listing-application/evidence', params: { draftId } });
   };
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || !draftId || !submitDraftPreview(draftId)) return;
     // 퍼블리싱용 이동입니다. 실제 접수 API 및 2차 보안 인증은 서버 연동 시 연결합니다.
     router.replace({ pathname: '/listing-application/complete', params: { draftId } });
   };

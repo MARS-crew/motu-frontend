@@ -10,7 +10,7 @@ import { useListingDraftStore } from '@/stores/useListingDraftStore';
 export default function ListingCompleteScreen() {
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
-  const handleViewApplications = () => router.dismissTo('/listing-application');
+  const handleViewApplications = () => router.dismissTo('/listing-application/my-applications');
   const handleNewApplication = () => router.replace('/listing-application/basic-info');
 
   if (!draft) return <Redirect href="/listing-application" />;
