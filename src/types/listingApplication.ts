@@ -1,4 +1,4 @@
-import type { EvidenceItem } from '@/schemas/listingEvidenceSchema';
+import type { EvidenceItem, ListingEvidenceForm } from '@/schemas/listingEvidenceSchema';
 
 export type ListingApplicationStatus =
   'draft' | 'received' | 'reviewing' | 'supplementRequested' | 'approved' | 'rejected';
@@ -15,7 +15,21 @@ type ListingSubmittedApplicationBase = {
 export type ListingSubmittedApplication = ListingSubmittedApplicationBase &
   (
     | { status: 'received'; submittedAt: string; evidenceItems: EvidenceItem[] }
-    | { status: Exclude<ListingApplicationStatus, 'draft' | 'received'> }
+    | {
+        status: 'supplementRequested';
+        receiptNumber: string;
+        supplementDeadline: string;
+        adminOpinion: string;
+        evidence: ListingEvidenceForm;
+      }
+    | {
+        status: 'reviewing';
+        receiptNumber: string;
+        supplementSubmittedAt: string;
+        evidence: ListingEvidenceForm;
+      }
+    | { status: 'approved' }
+    | { status: 'rejected' }
   );
 
 export type ListingApplicationListItem =

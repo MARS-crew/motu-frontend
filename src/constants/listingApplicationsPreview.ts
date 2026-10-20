@@ -37,6 +37,10 @@ export const LISTING_SUBMITTED_APPLICATIONS_PREVIEW: Record<string, ListingSubmi
     name: 'Creator Index',
     status: 'supplementRequested',
     submittedDate: '2026.08.30',
+    receiptNumber: 'LST-260831-018',
+    supplementDeadline: '2026.09.05',
+    adminOpinion: '거래액 산정 기준 자료를 추가해 주세요.',
+    evidence: LISTING_EVIDENCE_PREVIEW,
   },
   'local-commerce': {
     id: 'local-commerce',

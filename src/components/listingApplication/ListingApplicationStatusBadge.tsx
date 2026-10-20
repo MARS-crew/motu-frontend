@@ -6,7 +6,7 @@ import type { ListingApplicationStatus } from '@/types/listingApplication';
 const STATUS_STYLES: Record<ListingApplicationStatus, { background: string; text: string }> = {
   draft: { background: 'bg-motu-tonal', text: 'text-motu-black' },
   received: { background: 'bg-motu-bg-secondary', text: 'text-motu-text-secondary' },
-  reviewing: { background: 'bg-motu-grey-chip', text: 'text-motu-text-secondary' },
+  reviewing: { background: 'bg-motu-bg-secondary', text: 'text-motu-text-secondary' },
   supplementRequested: { background: 'bg-motu-red-light', text: 'text-motu-btn-red' },
   approved: { background: 'bg-motu-success-light', text: 'text-motu-success' },
   rejected: { background: 'bg-motu-red-light', text: 'text-motu-btn-red' },
