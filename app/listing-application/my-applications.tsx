@@ -38,6 +38,9 @@ export default function MyListingApplicationsScreen() {
     router.push({ pathname: getListingDraftRoute(drafts[draftId]?.step), params: { draftId } });
   };
   const handleDelete = (draftId: string) => deleteDraft(draftId);
+  const handleOpen = (applicationId: string) => {
+    router.push({ pathname: '/listing-application/application-detail', params: { applicationId } });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -55,6 +58,7 @@ export default function MyListingApplicationsScreen() {
               application={application}
               onContinue={handleContinue}
               onDelete={handleDelete}
+              onOpen={handleOpen}
             />
           ))}
           {items.length === 0 && (

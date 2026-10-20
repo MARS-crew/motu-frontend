@@ -1,15 +1,22 @@
+import type { EvidenceItem } from '@/schemas/listingEvidenceSchema';
+
 export type ListingApplicationStatus =
   'draft' | 'received' | 'reviewing' | 'supplementRequested' | 'approved' | 'rejected';
 
 export type ListingApplicationFilter = 'all' | ListingApplicationStatus;
 
-export type ListingSubmittedApplication = {
+type ListingSubmittedApplicationBase = {
   id: string;
   name: string;
-  status: Exclude<ListingApplicationStatus, 'draft'>;
   submittedDate: string;
   receiptNumber?: string;
 };
+
+export type ListingSubmittedApplication = ListingSubmittedApplicationBase &
+  (
+    | { status: 'received'; submittedAt: string; evidenceItems: EvidenceItem[] }
+    | { status: Exclude<ListingApplicationStatus, 'draft' | 'received'> }
+  );
 
 export type ListingApplicationListItem =
   | ListingSubmittedApplication

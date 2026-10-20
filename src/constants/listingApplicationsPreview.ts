@@ -1,3 +1,5 @@
+import { LISTING_EVIDENCE_PREVIEW } from '@/constants/listingEvidencePreview';
+
 import type {
   ListingApplicationFilter,
   ListingSubmittedApplication,
@@ -22,6 +24,14 @@ export const LISTING_DRAFT_STEP_LABELS = [
 
 // 서버 연결 전, 내 상장 신청 목록의 상태를 확인하기 위한 예시 데이터입니다.
 export const LISTING_SUBMITTED_APPLICATIONS_PREVIEW: Record<string, ListingSubmittedApplication> = {
+  'saas-index-received': {
+    id: 'saas-index-received',
+    name: 'SaaS Index',
+    status: 'received',
+    submittedDate: '2026.08.31',
+    submittedAt: '2026.08.31 22:30',
+    evidenceItems: LISTING_EVIDENCE_PREVIEW.items,
+  },
   'creator-index': {
     id: 'creator-index',
     name: 'Creator Index',
