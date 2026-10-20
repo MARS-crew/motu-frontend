@@ -70,6 +70,9 @@ export const useListingDraftStore = create<ListingDraftState>((set, get) => ({
     if (state.applications[id]) return true;
     const draft = state.drafts[id];
     if (!listingSubmissionSchema.safeParse(draft).success) return false;
+    const date = new Date();
+    const submittedDate = formatListingDate(date);
+    const submittedTime = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     set({
       applications: {
         ...state.applications,
@@ -77,7 +80,9 @@ export const useListingDraftStore = create<ListingDraftState>((set, get) => ({
           id,
           name: draft.values.serviceName,
           status: 'received',
-          submittedDate: formatListingDate(new Date()),
+          submittedDate,
+          submittedAt: `${submittedDate} ${submittedTime}`,
+          evidenceItems: draft.evidenceValues?.items.map((item) => ({ ...item })) ?? [],
           receiptNumber: LISTING_RECEIPT_NUMBER_PREVIEW,
         },
       },

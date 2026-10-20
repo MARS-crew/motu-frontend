@@ -2,43 +2,30 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 
-import {
-  LISTING_APPLICATION_FILTERS,
-  LISTING_DRAFT_STEP_LABELS,
-} from '@/constants/listingApplicationsPreview';
-import type {
-  ListingApplicationListItem,
-  ListingApplicationStatus,
-} from '@/types/listingApplication';
+import { ListingApplicationStatusBadge } from '@/components/listingApplication/ListingApplicationStatusBadge';
+import { LISTING_DRAFT_STEP_LABELS } from '@/constants/listingApplicationsPreview';
+import type { ListingApplicationListItem } from '@/types/listingApplication';
 
 cssInterop(Image, { className: 'style' });
 
-const STATUS_STYLES: Record<ListingApplicationStatus, { background: string; text: string }> = {
-  draft: { background: 'bg-motu-tonal', text: 'text-motu-black' },
-  received: { background: 'bg-motu-grey-chip', text: 'text-motu-text-secondary' },
-  reviewing: { background: 'bg-motu-grey-chip', text: 'text-motu-text-secondary' },
-  supplementRequested: { background: 'bg-motu-red-light', text: 'text-motu-btn-red' },
-  approved: { background: 'bg-motu-success-light', text: 'text-motu-success' },
-  rejected: { background: 'bg-motu-red-light', text: 'text-motu-btn-red' },
-};
+const CARD_CLASS_NAME =
+  'gap-3 rounded-[14px] border border-motu-border bg-white px-[15px] py-[15px]';
 
 type ListingApplicationCardProps = {
   application: ListingApplicationListItem;
   onContinue: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpen: (id: string) => void;
 };
 
 export function ListingApplicationCard({
   application,
   onContinue,
   onDelete,
+  onOpen,
 }: ListingApplicationCardProps) {
-  const statusStyle = STATUS_STYLES[application.status];
-  const statusLabel = LISTING_APPLICATION_FILTERS.find(
-    (filter) => filter.value === application.status,
-  )?.label;
-  return (
-    <View className="gap-3 rounded-[14px] border border-motu-border bg-white px-[15px] py-[15px]">
+  const content = (
+    <>
       <View className="flex-row items-center gap-2.5">
         <View className="min-w-0 flex-1 gap-1">
           <Text
@@ -56,13 +43,7 @@ export function ListingApplicationCard({
               : `신청일 ${application.submittedDate}`}
           </Text>
         </View>
-        <View
-          className={`h-7 items-center justify-center rounded-full px-3.5 ${application.status === 'draft' || application.status === 'supplementRequested' ? 'min-w-[76px]' : application.status === 'reviewing' ? 'min-w-[62px]' : 'min-w-[51px]'} ${statusStyle.background}`}
-        >
-          <Text className={`font-pretendard-medium text-xs leading-4 ${statusStyle.text}`}>
-            {statusLabel}
-          </Text>
-        </View>
+        <ListingApplicationStatusBadge status={application.status} />
         {application.status !== 'draft' && (
           <View className="h-5 w-5 items-center justify-center">
             <Image
@@ -96,6 +77,19 @@ export function ListingApplicationCard({
           </Pressable>
         </View>
       )}
-    </View>
+    </>
   );
+  if (application.status === 'received') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${application.name} 신청 상세 보기`}
+        onPress={() => onOpen(application.id)}
+        className={`${CARD_CLASS_NAME} active:opacity-60`}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+  return <View className={CARD_CLASS_NAME}>{content}</View>;
 }

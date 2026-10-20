@@ -7,14 +7,14 @@ cssInterop(Image, { className: 'style' });
 type TopBarProps = {
   title: string;
   onBack: () => void;
-  variant?: 'default' | 'listing';
+  variant?: 'default' | 'listing' | 'listing-detail';
 };
 
 export function TopBar({ title, onBack, variant = 'default' }: TopBarProps) {
-  const isListing = variant === 'listing';
+  const isListing = variant !== 'default';
   return (
     <View
-      className={`flex-row items-center pt-8 ${isListing ? 'gap-3.5 pb-5 pl-6 pr-5' : 'gap-1 px-4 pb-4'}`}
+      className={`flex-row items-center pt-8 ${isListing ? 'gap-3.5 pb-5' : 'gap-1 pb-4'} ${variant === 'listing' ? 'pl-6 pr-5' : variant === 'listing-detail' ? 'px-5' : 'px-4'}`}
     >
       <Pressable
         accessibilityRole="button"
