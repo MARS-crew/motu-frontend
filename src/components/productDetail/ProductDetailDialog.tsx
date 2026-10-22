@@ -86,7 +86,7 @@ export function ProductDetailDialogButtons({
       <Pressable
         accessibilityRole="button"
         onPress={onSecondaryPress}
-        className="h-[45.5px] flex-1 items-center justify-center rounded-md border border-motu-grey-lighter bg-white active:opacity-70"
+        className="h-11 flex-1 items-center justify-center rounded-lg border border-motu-grey-lighter bg-white active:opacity-70"
       >
         <Text className="font-pretendard-bold text-[13px] leading-[18px] text-motu-black">
           {secondaryTitle}

@@ -30,8 +30,9 @@ export function ProductSummary({ product }: ProductSummaryProps) {
         >
           {product.name}
         </Text>
-        <View className="rounded-full bg-motu-grey-lighter px-2 pb-[1.1px] pt-[2.9px]">
-          <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
+        {/* 칩은 높이를 고정하고 글자 위아래 여백(font padding)을 없애, 플랫폼과 관계없이 위아래 여백을 같게 맞춥니다. */}
+        <View className="h-[18px] justify-center rounded-full bg-motu-grey-lighter px-2">
+          <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey text-no-font-padding text-vertical-center">
             {product.category}
           </Text>
         </View>
