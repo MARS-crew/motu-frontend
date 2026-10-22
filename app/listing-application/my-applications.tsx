@@ -1,19 +1,23 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
 import { ListingApplicationCard } from '@/components/listingApplication/ListingApplicationCard';
+import { ListingApplicationEmpty } from '@/components/listingApplication/ListingApplicationEmpty';
 import { ListingApplicationFilters } from '@/components/listingApplication/ListingApplicationFilters';
+import { LISTING_APPLICATION_FILTERS } from '@/constants/listingApplicationsPreview';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import type {
   ListingApplicationFilter,
   ListingApplicationListItem,
 } from '@/types/listingApplication';
 import { getListingDraftRoute } from '@/utils/listingApplication';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function MyListingApplicationsScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [filter, setFilter] = useState<ListingApplicationFilter>('all');
   const drafts = useListingDraftStore((state) => state.drafts);
   const applications = useListingDraftStore((state) => state.applications);
@@ -30,22 +34,26 @@ export default function MyListingApplicationsScreen() {
   const submittedItems = Object.values(applications).sort((a, b) =>
     b.submittedDate.localeCompare(a.submittedDate),
   );
-  const items = [...draftItems, ...submittedItems].filter(
-    (application) => filter === 'all' || application.status === filter,
-  );
+  const allItems = [...draftItems, ...submittedItems];
+  const items = allItems.filter((application) => filter === 'all' || application.status === filter);
+  const hasNoApplication = allItems.length === 0;
+  const filterLabel = LISTING_APPLICATION_FILTERS.find((option) => option.value === filter)?.label;
   const handleBack = () => router.dismissTo('/listing-application');
   const handleContinue = (draftId: string) => {
     router.push({ pathname: getListingDraftRoute(drafts[draftId]?.step), params: { draftId } });
   };
   const handleDelete = (draftId: string) => deleteDraft(draftId);
+  const handleApply = () => router.dismissTo('/listing-application');
   const handleOpen = (applicationId: string) => {
     router.push({ pathname: '/listing-application/application-detail', params: { applicationId } });
   };
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="내 상장 신청" onBack={handleBack} variant="listing" />
+      <TopBar isScrolled={isScrolled} title="내 상장 신청" onBack={handleBack} variant="listing" />
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="flex-grow gap-4 px-6 pb-7 pt-3"
         showsVerticalScrollIndicator={false}
@@ -61,14 +69,12 @@ export default function MyListingApplicationsScreen() {
               onOpen={handleOpen}
             />
           ))}
-          {items.length === 0 && (
-            <Text
-              accessibilityLiveRegion="polite"
-              className="py-10 text-center font-pretendard-medium text-[13px] leading-[18px] text-motu-text-tertiary"
-            >
-              해당 상태의 상장 신청이 없습니다.
-            </Text>
-          )}
+          {items.length === 0 &&
+            (hasNoApplication ? (
+              <ListingApplicationEmpty onApplyPress={handleApply} />
+            ) : (
+              <ListingApplicationEmpty filterLabel={filterLabel} />
+            ))}
         </View>
       </ScrollView>
     </SafeAreaView>
