@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       boxShadow: {
+        'floating-button': '0px 4px 10px rgba(0, 0, 0, 0.12)',
         'listing-metrics-panel': '0px 6px 8px rgba(0, 0, 0, 0.08)',
         'listing-panel': '0px 4px 6px rgba(0, 0, 0, 0.06)',
       },
