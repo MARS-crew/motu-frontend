@@ -5,8 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
 
 import { usePointPreviewStore } from '@/stores/usePointPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function AssetManagementScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const balance = usePointPreviewStore((state) => state.balance);
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -22,9 +24,14 @@ export default function AssetManagementScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="자산관리" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="자산관리" onBack={handleBack} />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="gap-3 px-6 pt-2">
           <View className="rounded-xl border border-motu-grey-lighter bg-white p-4">
             <Text className="font-pretendard text-xs text-motu-grey">보유 포인트</Text>

@@ -9,6 +9,7 @@ type HomeHeaderProps = {
   onSearchPress: () => void;
   onFavoritePress: () => void;
   onNotificationPress: () => void;
+  isScrolled?: boolean;
 };
 
 export function HomeHeader({
@@ -16,9 +17,12 @@ export function HomeHeader({
   onSearchPress,
   onFavoritePress,
   onNotificationPress,
+  isScrolled = false,
 }: HomeHeaderProps) {
   return (
-    <View className="h-20 flex-row items-center justify-between px-6 pb-3 pt-8">
+    <View
+      className={`h-20 flex-row items-center justify-between border-b bg-motu-bg px-6 pb-3 pt-8 ${isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'}`}
+    >
       <Text accessibilityRole="header" className="font-pretendard-bold text-lg text-motu-black">
         모투
       </Text>

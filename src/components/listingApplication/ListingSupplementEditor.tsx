@@ -19,6 +19,7 @@ import {
 } from '@/schemas/listingEvidenceSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { createEvidenceId } from '@/utils/listingEvidence';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 type ListingSupplementEditorProps = {
   applicationId: string;
@@ -29,6 +30,7 @@ export function ListingSupplementEditor({
   applicationId,
   initialValues,
 }: ListingSupplementEditorProps) {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const saveSupplementDraft = useListingDraftStore((state) => state.saveSupplementDraft);
   const [isHelpVisible, setIsHelpVisible] = useState(false);
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
@@ -121,8 +123,15 @@ export function ListingSupplementEditor({
       className="flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TopBar title="보완 자료 수정" variant="listing-detail" onBack={handleBack} />
+      <TopBar
+        isScrolled={isScrolled}
+        title="보완 자료 수정"
+        variant="listing-detail"
+        onBack={handleBack}
+      />
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         ref={scrollRef}
         className="flex-1"
         contentContainerClassName="flex-grow gap-6 px-6 pb-7 pt-3"

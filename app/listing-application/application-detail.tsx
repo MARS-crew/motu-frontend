@@ -9,8 +9,10 @@ import { ListingApplicationInfoCard } from '@/components/listingApplication/List
 import { ListingApplicationStatusBadge } from '@/components/listingApplication/ListingApplicationStatusBadge';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { getListingEvidenceSummary } from '@/utils/listingApplication';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingApplicationDetailScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { applicationId } = useLocalSearchParams<{ applicationId?: string }>();
   const application = useListingDraftStore((state) =>
     applicationId ? state.applications[applicationId] : undefined,
@@ -40,8 +42,15 @@ export default function ListingApplicationDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="신청 상세" variant="listing-detail" onBack={handleBack} />
+      <TopBar
+        isScrolled={isScrolled}
+        title="신청 상세"
+        variant="listing-detail"
+        onBack={handleBack}
+      />
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="flex-grow gap-5 px-6 pb-7 pt-3"
         showsVerticalScrollIndicator={false}

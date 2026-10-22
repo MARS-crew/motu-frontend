@@ -7,15 +7,19 @@ import {
   LISTING_RESTRICTION_DESCRIPTION,
   LISTING_RESTRICTION_LABEL,
 } from '@/constants/listingRestrictionPreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingRestrictionScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const handleBack = () =>
     router.canGoBack() ? router.back() : router.replace('/listing-application');
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="상장 신청 제한" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="상장 신청 제한" onBack={handleBack} />
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="px-6 pb-6 pt-4"
         showsVerticalScrollIndicator={false}

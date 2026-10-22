@@ -5,8 +5,10 @@ import { Image } from 'expo-image';
 
 import { TopBar } from '@/components/TopBar';
 import { POINT_RESET_INTERVAL, usePointPreviewStore } from '@/stores/usePointPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointResetCompleteScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const receipt = usePointPreviewStore((state) => state.resetReceipt);
   const handleConfirm = () => router.replace('/asset-management');
   if (!receipt) return <Redirect href="/asset-management/point-reset" />;
@@ -15,8 +17,13 @@ export default function PointResetCompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="포인트 리셋" onBack={handleConfirm} />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <TopBar isScrolled={isScrolled} title="포인트 리셋" onBack={handleConfirm} />
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pb-10">
           <View className="items-center pb-8 pt-10">
             <View className="h-11 w-11 items-center justify-center rounded-full bg-motu-green/10">

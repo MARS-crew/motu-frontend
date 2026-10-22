@@ -8,11 +8,19 @@ type ListingFormHeaderProps = {
   savedAt: string | null;
   isDirty: boolean;
   onBack: () => void;
+  isScrolled?: boolean;
 };
 
-export function ListingFormHeader({ savedAt, isDirty, onBack }: ListingFormHeaderProps) {
+export function ListingFormHeader({
+  savedAt,
+  isDirty,
+  onBack,
+  isScrolled = false,
+}: ListingFormHeaderProps) {
   return (
-    <View className="flex-row items-center gap-[14px] px-5 pb-5 pt-8">
+    <View
+      className={`flex-row items-center gap-[14px] border-b bg-motu-bg px-5 pb-5 pt-8 ${isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'}`}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="뒤로가기"

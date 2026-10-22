@@ -13,8 +13,10 @@ import { ListingMetricsFields } from '@/components/listingApplication/ListingMet
 import { EMPTY_LISTING_METRICS } from '@/constants/listingMetricsPreview';
 import { listingMetricsSchema, type ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingMetricsScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const [currentDraftId] = useState(() => draftId || `draft-${Date.now()}`);
   const [initialDraft] = useState(() => useListingDraftStore.getState().drafts[currentDraftId]);
@@ -76,8 +78,15 @@ export default function ListingMetricsScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ListingFormHeader savedAt={savedAt} isDirty={isDirty} onBack={handlePrevious} />
+        <ListingFormHeader
+          isScrolled={isScrolled}
+          savedAt={savedAt}
+          isDirty={isDirty}
+          onBack={handlePrevious}
+        />
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           ref={scrollRef}
           className="flex-1"
           contentContainerClassName={`gap-6 px-6 pt-3 ${hasOpenPopover ? 'pb-[420px]' : 'pb-7'}`}

@@ -7,8 +7,10 @@ import { NewListingEmpty } from '@/components/newListing/NewListingEmpty';
 import { NewListingItem } from '@/components/newListing/NewListingItem';
 import { TopBar } from '@/components/TopBar';
 import { NEW_LISTING_LIST } from '@/constants/newListingPreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function NewListingsScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [listings, setListings] = useState(NEW_LISTING_LIST);
 
   const handleBack = () => {
@@ -29,10 +31,12 @@ export default function NewListingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="신규 상장 목록" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="신규 상장 목록" onBack={handleBack} />
 
       {listings.length > 0 ? (
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           className="flex-1"
           contentContainerClassName="px-6 pb-8 pt-3"
           showsVerticalScrollIndicator={false}

@@ -9,8 +9,10 @@ import {
   POINT_GRANT_INTERVAL,
   usePointPreviewStore,
 } from '@/stores/usePointPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointGrantCompleteScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const receipt = usePointPreviewStore((state) => state.receipt);
   const handleConfirm = () => router.replace('/asset-management');
   if (!receipt) return <Redirect href="/asset-management/point-grant" />;
@@ -19,8 +21,13 @@ export default function PointGrantCompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="포인트 추가 지급" onBack={handleConfirm} />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <TopBar isScrolled={isScrolled} title="포인트 추가 지급" onBack={handleConfirm} />
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pb-10">
           <View className="items-center pb-8 pt-10">
             <View className="h-11 w-11 items-center justify-center rounded-full bg-motu-green/10">

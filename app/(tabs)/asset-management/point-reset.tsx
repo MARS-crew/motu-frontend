@@ -5,8 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
 import { getPointResetReason, usePointPreviewStore } from '@/stores/usePointPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointResetScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const state = usePointPreviewStore();
   const { resetPoints } = state;
   const [now, setNow] = useState(() => Date.now());
@@ -23,8 +25,13 @@ export default function PointResetScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="포인트 리셋" onBack={handleBack} />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <TopBar isScrolled={isScrolled} title="포인트 리셋" onBack={handleBack} />
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="gap-6 px-6 pb-10 pt-2">
           <View className="rounded-xl border border-motu-grey-lighter bg-white p-4">
             <Text className="font-pretendard text-xs text-motu-grey">보유 포인트</Text>

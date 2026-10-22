@@ -22,8 +22,10 @@ import {
 } from '@/schemas/listingEvidenceSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { createEvidenceId } from '@/utils/listingEvidence';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingEvidenceScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const [currentDraftId] = useState(() => draftId || `draft-${Date.now()}`);
   const [initialDraft] = useState(() => useListingDraftStore.getState().drafts[currentDraftId]);
@@ -133,8 +135,15 @@ export default function ListingEvidenceScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ListingFormHeader savedAt={savedAt} isDirty={isDirty} onBack={handlePrevious} />
+        <ListingFormHeader
+          isScrolled={isScrolled}
+          savedAt={savedAt}
+          isDirty={isDirty}
+          onBack={handlePrevious}
+        />
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           ref={scrollRef}
           className="flex-1"
           contentContainerClassName="flex-grow gap-6 px-6 pb-7 pt-3"

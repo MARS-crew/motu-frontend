@@ -7,8 +7,10 @@ import { FavoriteEmpty } from '@/components/favorite/FavoriteEmpty';
 import { FavoriteProductItem } from '@/components/favorite/FavoriteProductItem';
 import { TopBar } from '@/components/TopBar';
 import { FAVORITE_PRODUCTS } from '@/constants/favoritePreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function FavoritesScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [favorites, setFavorites] = useState(FAVORITE_PRODUCTS);
 
   const handleBack = () => {
@@ -26,10 +28,12 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="관심 상품 목록" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="관심 상품 목록" onBack={handleBack} />
 
       {favorites.length > 0 ? (
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           className="flex-1"
           contentContainerClassName="px-6 pb-8 pt-2"
           showsVerticalScrollIndicator={false}

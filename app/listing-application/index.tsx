@@ -22,10 +22,12 @@ import {
   listingApplicationEntrySchema,
   type ListingApplicationEntryForm,
 } from '@/schemas/listingApplicationSchema';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const drafts = useListingDraftStore((state) => state.drafts);
   const applications = useListingDraftStore((state) => state.applications);
   const draftItems = Object.entries(drafts)
@@ -85,8 +87,10 @@ export default function ListingApplicationEntryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="상장 신청" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="상장 신청" onBack={handleBack} />
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="flex-grow justify-between px-6 pb-6 pt-3"
         showsVerticalScrollIndicator={false}
