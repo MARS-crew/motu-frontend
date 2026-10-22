@@ -22,8 +22,12 @@ export function ProductListItem({ product, rank, onPress, onFavoritePress }: Pro
         onPress={onPress}
         className="flex-1 flex-row items-center active:opacity-60"
       >
+        {/* 두 자리 순위도 한 줄에 들어가도록 너비를 넓히고, 늘린 만큼 오른쪽 간격을 줄여 위치를 유지합니다. */}
         {rank !== undefined && (
-          <Text className="mr-4 w-4 text-center font-pretendard-bold text-[13px] leading-[18px] text-motu-grey">
+          <Text
+            numberOfLines={1}
+            className="mr-2 w-6 text-center font-pretendard-bold text-[13px] leading-[18px] text-motu-grey"
+          >
             {rank}
           </Text>
         )}

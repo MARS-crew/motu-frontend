@@ -103,29 +103,32 @@ export function PriceChart({ candles, currentPrice, period }: PriceChartProps) {
         <View style={{ width: chartWidth }}>
           {chartWidth > 0 && (
             <>
-              <Svg width={chartWidth} height={CANDLE_HEIGHT} className="absolute left-0 top-0">
-                {ticks.map((tick) => (
+              {/* Svg는 네이티브에서 className을 받지 못해 겹치기 위치를 감싼 View에 지정합니다. */}
+              <View className="absolute left-0 top-0">
+                <Svg width={chartWidth} height={CANDLE_HEIGHT}>
+                  {ticks.map((tick) => (
+                    <Line
+                      key={tick}
+                      x1={0}
+                      x2={chartWidth}
+                      y1={getY(tick)}
+                      y2={getY(tick)}
+                      stroke={GRID_COLOR}
+                      strokeWidth={1}
+                    />
+                  ))}
                   <Line
-                    key={tick}
                     x1={0}
                     x2={chartWidth}
-                    y1={getY(tick)}
-                    y2={getY(tick)}
-                    stroke={GRID_COLOR}
+                    y1={currentPriceY}
+                    y2={currentPriceY}
+                    stroke={RISE_COLOR}
+                    strokeOpacity={0.45}
                     strokeWidth={1}
+                    strokeDasharray="3,3"
                   />
-                ))}
-                <Line
-                  x1={0}
-                  x2={chartWidth}
-                  y1={currentPriceY}
-                  y2={currentPriceY}
-                  stroke={RISE_COLOR}
-                  strokeOpacity={0.45}
-                  strokeWidth={1}
-                  strokeDasharray="3,3"
-                />
-              </Svg>
+                </Svg>
+              </View>
               <CandlestickChart.Provider data={candles} valueRangeY={domain}>
                 <CandlestickChart width={chartWidth} height={CANDLE_HEIGHT}>
                   <CandlestickChart.Candles
