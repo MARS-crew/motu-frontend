@@ -12,8 +12,10 @@ import { TabHeader } from '@/components/TabHeader';
 import { HOLDING_SORT_OPTIONS, HOLDINGS, PORTFOLIO_SUMMARY } from '@/constants/portfolioPreview';
 import type { HoldingSort } from '@/types/portfolio';
 import { getAssetComposition, sortHoldings } from '@/utils/portfolio';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PortfolioScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [sort, setSort] = useState<HoldingSort>('valuation');
 
   const valuation = HOLDINGS.reduce((sum, holding) => sum + holding.valuation, 0);
@@ -33,12 +35,18 @@ export default function PortfolioScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <TabHeader
+        isScrolled={isScrolled}
         title="포트폴리오"
         onSearchPress={handleSearchPress}
         onFavoritePress={handleFavoritePress}
       />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="px-6 pt-2">
           <PortfolioSummaryCard
             totalAsset={cash + valuation}

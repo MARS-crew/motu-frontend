@@ -18,6 +18,7 @@ import {
   TRANSACTION_SORT_OPTIONS,
   type TransactionPreview,
 } from '@/constants/transactionPreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { PENDING_ORDER_PREVIEW, type PendingOrderPreview } from '@/constants/pendingOrderPreview';
 import { formatDateRange, type TransactionDateRange } from '@/utils/transactionDate';
 
@@ -42,6 +43,7 @@ const PAGE_SIZE = 10;
 const INITIAL_DATE_RANGE = { start: '2026-09-05', end: '2026-09-06' };
 
 export default function TransactionsScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('거래내역');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortValue, setSortValue] = useState(TRANSACTION_SORT_OPTIONS[0].value);
@@ -122,7 +124,11 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-motu-bg">
-      <View className="flex-row items-center justify-between px-6 pb-4 pt-6">
+      <View
+        className={`flex-row items-center justify-between border-b bg-motu-bg px-6 pb-4 pt-6 ${
+          isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'
+        }`}
+      >
         <Text accessibilityRole="header" className="font-pretendard-bold text-lg text-motu-black">
           거래내역
         </Text>
@@ -153,27 +159,32 @@ export default function TransactionsScreen() {
           </Pressable>
         </View>
       </View>
-      <View
-        accessibilityRole="tablist"
-        className="mx-6 mb-4 flex-row rounded-full border border-motu-grey-lighter bg-white p-1"
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {TABS.map((tab) => (
-          <Pressable
-            key={tab}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: activeTab === tab }}
-            onPress={() => handleTabPress(tab)}
-            className={`min-h-11 flex-1 items-center justify-center rounded-full px-1 py-[5px] ${activeTab === tab ? 'bg-motu-black' : ''}`}
-          >
-            <Text
-              className={`font-pretendard-bold text-xs ${activeTab === tab ? 'text-white' : 'text-motu-grey'}`}
+        <View
+          accessibilityRole="tablist"
+          className="mx-6 mb-4 flex-row rounded-full border border-motu-grey-lighter bg-white p-1"
+        >
+          {TABS.map((tab) => (
+            <Pressable
+              key={tab}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeTab === tab }}
+              onPress={() => handleTabPress(tab)}
+              className={`min-h-11 flex-1 items-center justify-center rounded-full px-1 py-[5px] ${activeTab === tab ? 'bg-motu-black' : ''}`}
             >
-              {tab}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              <Text
+                className={`font-pretendard-bold text-xs ${activeTab === tab ? 'text-white' : 'text-motu-grey'}`}
+              >
+                {tab}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <View className="px-6">
           <View className="z-20 mb-4 flex-row gap-2">
             <Pressable

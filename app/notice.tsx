@@ -10,11 +10,13 @@ import { NoticeTabs, type NoticeTab } from '@/components/notice/NoticeTabs';
 import { Pagination } from '@/components/Pagination';
 import { TopBar } from '@/components/TopBar';
 import { NOTICE_PAGE_SIZE, NOTICES } from '@/constants/noticePreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 // 중요 공지를 목록 상단에 먼저 보여줍니다. 서버 연동 시 API 정렬 결과를 그대로 사용합니다
 const SORTED_NOTICES = [...NOTICES].sort((a, b) => Number(b.isImportant) - Number(a.isImportant));
 
 export default function NoticeScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [selectedTab, setSelectedTab] = useState<NoticeTab>('notice');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -37,9 +39,11 @@ export default function NoticeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="공지사항 및 FAQ" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="공지사항 및 FAQ" onBack={handleBack} />
 
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="px-6 pb-10 pt-1"
         showsVerticalScrollIndicator={false}

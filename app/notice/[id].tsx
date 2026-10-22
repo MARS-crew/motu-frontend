@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
 import { getNoticeDetail } from '@/constants/noticePreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function NoticeDetailScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { id } = useLocalSearchParams<{ id: string }>();
   const notice = getNoticeDetail(Number(id));
 
@@ -19,10 +21,12 @@ export default function NoticeDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="공지" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="공지" onBack={handleBack} />
 
       {notice ? (
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           className="flex-1"
           contentContainerClassName="px-6 pb-10"
           showsVerticalScrollIndicator={false}

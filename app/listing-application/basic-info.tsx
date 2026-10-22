@@ -17,8 +17,10 @@ import {
   type ListingBasicInfoForm,
 } from '@/schemas/listingBasicInfoSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingBasicInfoScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const [currentDraftId] = useState(() => draftId || `draft-${Date.now()}`);
   const [initialDraft] = useState(() => useListingDraftStore.getState().drafts[currentDraftId]);
@@ -78,8 +80,15 @@ export default function ListingBasicInfoScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ListingFormHeader savedAt={savedAt} isDirty={isDirty} onBack={handleBack} />
+        <ListingFormHeader
+          isScrolled={isScrolled}
+          savedAt={savedAt}
+          isDirty={isDirty}
+          onBack={handleBack}
+        />
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           ref={scrollRef}
           className="flex-1"
           contentContainerClassName="gap-6 px-6 pb-7 pt-3"

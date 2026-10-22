@@ -6,8 +6,10 @@ import { NotificationEmpty } from '@/components/notification/NotificationEmpty';
 import { NotificationItem } from '@/components/notification/NotificationItem';
 import { TopBar } from '@/components/TopBar';
 import { useNotificationPreviewStore } from '@/stores/useNotificationPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function NotificationScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const notifications = useNotificationPreviewStore((state) => state.notifications);
   const markAsRead = useNotificationPreviewStore((state) => state.markAsRead);
 
@@ -23,10 +25,12 @@ export default function NotificationScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="알림" onBack={handleBack} />
+      <TopBar isScrolled={isScrolled} title="알림" onBack={handleBack} />
 
       {notifications.length > 0 ? (
         <ScrollView
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           className="flex-1"
           contentContainerClassName="px-6 pb-8 pt-4"
           showsVerticalScrollIndicator={false}

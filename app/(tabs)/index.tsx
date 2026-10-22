@@ -13,11 +13,13 @@ import { StockListItem } from '@/components/home/StockListItem';
 import { ASSET_SUMMARY, LATEST_NOTICE, NEW_LISTINGS, RECENT_STOCKS } from '@/constants/homePreview';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNotificationPreviewStore } from '@/stores/useNotificationPreviewStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 // 화면설계서 기준으로 최근 본 종목과 신규 상장은 최신순 3개까지만 보여줍니다.
 const HOME_LIST_LIMIT = 3;
 
 export default function HomeScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const hasUnreadNotification = useNotificationPreviewStore((state) =>
     state.notifications.some((notification) => !notification.isRead),
@@ -36,13 +38,19 @@ export default function HomeScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <HomeHeader
+        isScrolled={isScrolled}
         hasUnreadNotification={hasUnreadNotification}
         onSearchPress={handleSearchPress}
         onFavoritePress={handleFavoritePress}
         onNotificationPress={handleNotificationPress}
       />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="gap-4 px-6 pb-7 pt-1">
           <AssetSummaryCard summary={isLoggedIn ? ASSET_SUMMARY : null} />
 

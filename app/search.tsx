@@ -12,8 +12,10 @@ import { TopBar } from '@/components/TopBar';
 import { PRODUCTS } from '@/constants/productPreview';
 import { MAX_RECENT_SEARCH_COUNT, RECENT_SEARCHES } from '@/constants/searchPreview';
 import { searchSchema, type SearchForm } from '@/schemas/searchSchema';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function SearchScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
   const [products, setProducts] = useState(PRODUCTS);
   const [searchedKeyword, setSearchedKeyword] = useState<string | null>(null);
@@ -71,29 +73,31 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <TopBar title="검색" onBack={handleBack} />
-
-      <View className="px-6">
-        <Controller
-          control={control}
-          name="keyword"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <SearchBar
-              value={value}
-              onChangeText={(keyword) => handleKeywordChange(keyword, onChange)}
-              onBlur={onBlur}
-              onSubmit={handleSearch}
-            />
-          )}
-        />
-      </View>
+      <TopBar isScrolled={isScrolled} title="검색" onBack={handleBack} />
 
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="pb-8"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <View className="px-6">
+          <Controller
+            control={control}
+            name="keyword"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <SearchBar
+                value={value}
+                onChangeText={(keyword) => handleKeywordChange(keyword, onChange)}
+                onBlur={onBlur}
+                onSubmit={handleSearch}
+              />
+            )}
+          />
+        </View>
+
         {searchedKeyword ? (
           <SearchResultList products={searchResults} onFavoritePress={handleFavoritePress} />
         ) : (

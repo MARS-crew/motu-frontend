@@ -8,13 +8,15 @@ type TopBarProps = {
   title: string;
   onBack: () => void;
   variant?: 'default' | 'listing' | 'listing-detail';
+  isScrolled?: boolean;
 };
 
-export function TopBar({ title, onBack, variant = 'default' }: TopBarProps) {
+// 본문이 스크롤되면 하단 구분선을 보여 고정된 상단바와 본문을 구분합니다.
+export function TopBar({ title, onBack, variant = 'default', isScrolled = false }: TopBarProps) {
   const isListing = variant !== 'default';
   return (
     <View
-      className={`flex-row items-center pt-8 ${isListing ? 'gap-3.5 pb-5' : 'gap-1 pb-4'} ${variant === 'listing' ? 'pl-6 pr-5' : variant === 'listing-detail' ? 'px-5' : 'px-4'}`}
+      className={`flex-row items-center border-b bg-motu-bg pt-8 ${isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'} ${isListing ? 'gap-3.5 pb-5' : 'gap-1 pb-4'} ${variant === 'listing' ? 'pl-6 pr-5' : variant === 'listing-detail' ? 'px-5' : 'px-4'}`}
     >
       <Pressable
         accessibilityRole="button"

@@ -8,10 +8,12 @@ import { Button } from '@/components/Button';
 import { ListingReviewSummary } from '@/components/listingApplication/ListingReviewSummary';
 import { listingSubmissionSchema } from '@/schemas/listingSubmissionSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 cssInterop(Image, { className: 'style' });
 
 export default function ListingReviewScreen() {
+  const { isScrolled, handleScroll } = useHeaderScroll();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
   const submitDraftPreview = useListingDraftStore((state) => state.submitDraftPreview);
@@ -50,7 +52,11 @@ export default function ListingReviewScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
-      <View className="h-[76px] justify-center px-5 pb-5 pt-8">
+      <View
+        className={`h-[76px] justify-center border-b bg-motu-bg px-5 pb-5 pt-8 ${
+          isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'
+        }`}
+      >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="뒤로가기"
@@ -66,6 +72,8 @@ export default function ListingReviewScreen() {
         </Pressable>
       </View>
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="flex-grow gap-5 px-6 pb-7 pt-3"
         showsVerticalScrollIndicator={false}
