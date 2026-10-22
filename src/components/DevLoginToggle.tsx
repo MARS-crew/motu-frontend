@@ -1,13 +1,15 @@
 import { Pressable, Text } from 'react-native';
 
+import { SHOW_DEV_TOOLS } from '@/constants/env';
 import { useAuthStore } from '@/stores/useAuthStore';
 
-// 개발 모드에서 회원/비회원 화면을 확인하기 위한 버튼입니다. 배포 빌드에서는 표시되지 않습니다.
+// 개발 모드에서 회원/비회원 화면을 확인하기 위한 버튼입니다.
+// 배포 빌드에서는 숨기고, EXPO_PUBLIC_SHOW_DEV_TOOLS=true로 만든 테스트 빌드에서만 보입니다.
 export function DevLoginToggle() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const setLoggedIn = useAuthStore((state) => state.setLoggedIn);
 
-  if (!__DEV__) return null;
+  if (!SHOW_DEV_TOOLS) return null;
 
   const handlePress = () => setLoggedIn(!isLoggedIn);
 
