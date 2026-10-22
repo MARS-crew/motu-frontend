@@ -31,9 +31,10 @@ export function NewListingItem({ listing, onPress, onFavoritePress }: NewListing
               {listing.name.charAt(0)}
             </Text>
           </View>
+          {/* 칩은 높이를 고정하고 글자 위아래 여백(font padding)을 없애, 플랫폼과 관계없이 위아래 여백을 같게 맞춥니다. */}
           {listing.isNew && (
-            <View className="absolute -left-1.5 -top-1.5 h-[13.25px] justify-center rounded-full bg-motu-green px-1.5 pt-[0.9px] shadow">
-              <Text className="font-pretendard-semibold text-[11px] leading-[13.25px] text-white">
+            <View className="absolute -left-1.5 -top-1.5 h-4 justify-center rounded-full bg-motu-green px-1.5 shadow">
+              <Text className="font-pretendard-semibold text-[11px] leading-[14px] text-white text-no-font-padding text-vertical-center">
                 New
               </Text>
             </View>
