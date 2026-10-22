@@ -18,12 +18,12 @@ export function NoticeListItem({ notice, onPress }: NoticeListItemProps) {
       onPress={onPress}
       className="flex-row items-center gap-3 rounded-2xl border border-motu-grey-lighter bg-white p-4 active:opacity-80"
     >
-      {/* Pretendard 한글은 줄 높이 안에서 위로 치우쳐 보여서, 칩은 위 패딩을 더 줘 글자를 가운데로 맞춥니다. */}
+      {/* 칩은 높이를 고정하고 글자 위아래 여백(font padding)을 없애, 플랫폼과 관계없이 위아래 여백을 같게 맞춥니다. */}
       <View className="flex-1">
         <View className="flex-row items-center gap-1.5">
           {notice.isImportant && (
-            <View className="rounded-md bg-motu-red/10 px-1.5 pb-[1.1px] pt-[2.9px]">
-              <Text className="font-pretendard-bold text-[10.5px] leading-[12.6px] text-motu-red">
+            <View className="h-[18px] justify-center rounded-md bg-motu-red/10 px-1.5">
+              <Text className="font-pretendard-bold text-[10.5px] leading-[14px] text-motu-red text-no-font-padding text-vertical-center">
                 중요
               </Text>
             </View>
@@ -36,8 +36,8 @@ export function NoticeListItem({ notice, onPress }: NoticeListItemProps) {
           </Text>
         </View>
         <View className="mt-1.5 flex-row items-center gap-1.5">
-          <View className="rounded-md bg-motu-grey-lighter/70 px-1.5 pb-[1.1px] pt-[2.9px]">
-            <Text className="font-pretendard-medium text-[11.5px] leading-[13.8px] text-motu-grey">
+          <View className="h-[18px] justify-center rounded-md bg-motu-grey-lighter/70 px-1.5">
+            <Text className="font-pretendard-medium text-[11.5px] leading-[14px] text-motu-grey text-no-font-padding text-vertical-center">
               {notice.category}
             </Text>
           </View>

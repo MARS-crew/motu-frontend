@@ -31,16 +31,16 @@ export default function NoticeDetailScreen() {
           contentContainerClassName="px-6 pb-10"
           showsVerticalScrollIndicator={false}
         >
-          {/* 칩은 Pretendard 한글이 줄 높이 안에서 위로 치우쳐 보여서 위 패딩을 더 줘 가운데로 맞춥니다. */}
+          {/* 칩은 높이를 고정하고 글자 위아래 여백(font padding)을 없애, 플랫폼과 관계없이 위아래 여백을 같게 맞춥니다. */}
           <View className="flex-row items-center gap-2">
-            <View className="rounded-md bg-motu-grey-lighter/70 px-2 pb-[1.1px] pt-[2.9px]">
-              <Text className="font-pretendard-medium text-[11px] leading-[16.5px] text-motu-grey">
+            <View className="h-[22px] justify-center rounded-md bg-motu-grey-lighter/70 px-2">
+              <Text className="font-pretendard-medium text-[11px] leading-[16.5px] text-motu-grey text-no-font-padding text-vertical-center">
                 {notice.category}
               </Text>
             </View>
             {notice.isImportant && (
-              <View className="rounded-md bg-motu-red/10 px-2 pb-[1.1px] pt-[2.9px]">
-                <Text className="font-pretendard-bold text-[11px] leading-[16.5px] text-motu-red">
+              <View className="h-[22px] justify-center rounded-md bg-motu-red/10 px-2">
+                <Text className="font-pretendard-bold text-[11px] leading-[16.5px] text-motu-red text-no-font-padding text-vertical-center">
                   중요
                 </Text>
               </View>
