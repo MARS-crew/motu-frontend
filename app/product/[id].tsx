@@ -26,16 +26,17 @@ import {
   getRecentTrades,
 } from '@/constants/productDetailPreview';
 import { AVAILABLE_POINTS, SELLABLE_QUANTITY } from '@/constants/orderPreview';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { OrderSide } from '@/types/order';
 import type { ChartPeriod } from '@/types/product';
 
 type DetailTab = 'chart' | 'orderBook' | 'info';
 
-// 탭 순서는 피그마 기준(차트 · 호가 · 종목 정보)이며 차트 탭을 기본으로 엽니다.
+// 탭 순서는 화면설계서 기준(호가 · 차트 · 종목 정보)이며, 진입 시에는 차트 탭을 먼저 엽니다.
 const DETAIL_TABS: { label: string; value: DetailTab }[] = [
-  { label: '차트', value: 'chart' },
   { label: '호가', value: 'orderBook' },
+  { label: '차트', value: 'chart' },
   { label: '종목 정보', value: 'info' },
 ];
 
@@ -53,6 +54,7 @@ export default function ProductDetailScreen() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [orderSide, setOrderSide] = useState<OrderSide | null>(null);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const { isScrolled, handleScroll } = useHeaderScroll();
 
   const candles = useMemo(
     () => (product ? getProductCandles(product, period) : []),
@@ -126,12 +128,19 @@ export default function ProductDetailScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <ProductDetailHeader
         isFavorite={isFavorite}
+        hasAlert={alertPrice !== null}
+        isScrolled={isScrolled}
         onBack={handleBack}
         onAlertPress={handleAlertPress}
         onFavoritePress={() => setIsFavorite((previousIsFavorite) => !previousIsFavorite)}
       />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         <ProductSummary product={product} />
 
         <View className="pt-5">
