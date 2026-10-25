@@ -22,6 +22,7 @@ export function SearchBar({ value, onChangeText, onBlur, onSubmit }: SearchBarPr
         placeholder="상품명/카테고리를 입력해 주세요."
         placeholderClassName="text-motu-grey-light"
         returnKeyType="search"
+        maxLength={50}
         autoFocus
         accessibilityLabel="검색어 입력"
         className="flex-1 px-1 font-pretendard-medium text-[13px] text-motu-black"

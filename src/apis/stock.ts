@@ -18,3 +18,15 @@ export const getRecentlyViewed = async () => {
   const { data } = await api.get<ApiResponse<{ items: StockItem[] }>>('/stocks/recently-viewed');
   return data.data.items;
 };
+
+type SearchStocksParams = CursorParams & {
+  keyword: string;
+};
+
+// 로그인 상태면 첫 페이지 조회 시 서버가 검색어를 최근 검색에 저장합니다.
+export const searchStocks = async (params: SearchStocksParams) => {
+  const { data } = await api.get<ApiResponse<CursorPage<StockItem>>>('/stocks/search', {
+    params,
+  });
+  return data.data;
+};
