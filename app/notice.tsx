@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FaqSection } from '@/components/faq/FaqSection';
@@ -9,22 +9,15 @@ import { NoticeListItem } from '@/components/notice/NoticeListItem';
 import { NoticeTabs, type NoticeTab } from '@/components/notice/NoticeTabs';
 import { Pagination } from '@/components/Pagination';
 import { TopBar } from '@/components/TopBar';
-import { NOTICE_PAGE_SIZE, NOTICES } from '@/constants/noticePreview';
+import { useNoticesQuery } from '@/queries/useNoticesQuery';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-
-// 중요 공지를 목록 상단에 먼저 보여줍니다. 서버 연동 시 API 정렬 결과를 그대로 사용합니다
-const SORTED_NOTICES = [...NOTICES].sort((a, b) => Number(b.isImportant) - Number(a.isImportant));
 
 export default function NoticeScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [selectedTab, setSelectedTab] = useState<NoticeTab>('notice');
   const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(SORTED_NOTICES.length / NOTICE_PAGE_SIZE);
-  const pageNotices = SORTED_NOTICES.slice(
-    (currentPage - 1) * NOTICE_PAGE_SIZE,
-    currentPage * NOTICE_PAGE_SIZE,
-  );
+  // 서버가 중요 공지를 먼저, 그다음 최근 게시순으로 정렬해서 내려줍니다.
+  const { data, isPending, isError } = useNoticesQuery(currentPage);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -52,10 +45,18 @@ export default function NoticeScreen() {
 
         {selectedTab === 'faq' && <FaqSection />}
         {selectedTab === 'notice' &&
-          (SORTED_NOTICES.length > 0 ? (
+          (isPending ? (
+            <View className="items-center py-24">
+              <ActivityIndicator />
+            </View>
+          ) : isError ? (
+            <Text className="py-24 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
+              공지사항을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+            </Text>
+          ) : data.notices.length > 0 ? (
             <>
               <View className="mt-5 gap-2.5">
-                {pageNotices.map((notice) => (
+                {data.notices.map((notice) => (
                   <NoticeListItem
                     key={notice.id}
                     notice={notice}
@@ -65,7 +66,7 @@ export default function NoticeScreen() {
               </View>
               <Pagination
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalPages={data.totalPages}
                 visiblePageCount={5}
                 onPageChange={setCurrentPage}
               />

@@ -1,15 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { isAxiosError } from 'axios';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
-import { getNoticeDetail } from '@/constants/noticePreview';
+import { useNoticeDetailQuery } from '@/queries/useNoticeDetailQuery';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function NoticeDetailScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const notice = getNoticeDetail(Number(id));
+  const { data: notice, isLoading, error } = useNoticeDetailQuery(Number(id));
+  // 404는 삭제되었거나 게시 기간이 끝난 공지입니다.
+  const isNotFound = isAxiosError(error) && error.response?.status === 404;
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -23,7 +26,11 @@ export default function NoticeDetailScreen() {
     <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar isScrolled={isScrolled} title="공지" onBack={handleBack} />
 
-      {notice ? (
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
+      ) : notice ? (
         <ScrollView
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -66,7 +73,9 @@ export default function NoticeDetailScreen() {
       ) : (
         <View className="flex-1 items-center justify-center px-8">
           <Text className="text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
-            공지를 찾을 수 없어요.
+            {isNotFound || !error
+              ? '공지를 찾을 수 없어요.'
+              : '공지를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}
           </Text>
         </View>
       )}

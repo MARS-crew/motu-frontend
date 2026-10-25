@@ -20,3 +20,15 @@ export type NoticeItem = {
   isImportant: boolean;
   postDate: string;
 };
+
+export type NoticeDetailItem = NoticeItem & {
+  // 줄바꿈이 포함된 텍스트입니다.
+  content: string;
+};
+
+export type NoticePage = {
+  items: NoticeItem[];
+  page: number;
+  size: number;
+  totalCount: number;
+};
