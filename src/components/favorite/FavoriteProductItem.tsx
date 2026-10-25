@@ -25,15 +25,23 @@ export function FavoriteProductItem({
         onPress={onPress}
         className="flex-1 flex-row items-center gap-3 active:opacity-60"
       >
-        {/* 종목별 색상은 서버 데이터라 style로 지정합니다. 한글 첫 글자가 위로 치우쳐 보여서 위 패딩을 더 줍니다. */}
-        <View
-          className="h-11 w-11 items-center justify-center rounded-full pt-[1.5px]"
-          style={{ backgroundColor: product.color }}
-        >
-          <Text className="font-pretendard-bold text-base leading-4 text-white">
-            {product.name.charAt(0)}
-          </Text>
-        </View>
+        {product.logoImageUrl ? (
+          <Image
+            source={{ uri: product.logoImageUrl }}
+            contentFit="cover"
+            className="h-11 w-11 rounded-full"
+          />
+        ) : (
+          // 종목별 색상은 서버 데이터라 style로 지정합니다. 한글 첫 글자가 위로 치우쳐 보여서 위 패딩을 더 줍니다.
+          <View
+            className="h-11 w-11 items-center justify-center rounded-full bg-motu-black pt-[1.5px]"
+            style={product.color ? { backgroundColor: product.color } : undefined}
+          >
+            <Text className="font-pretendard-bold text-base leading-4 text-white">
+              {product.name.charAt(0)}
+            </Text>
+          </View>
+        )}
         <View className="flex-1">
           <Text
             numberOfLines={1}
