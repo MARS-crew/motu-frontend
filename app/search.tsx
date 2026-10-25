@@ -2,34 +2,45 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RecentSearchList } from '@/components/search/RecentSearchList';
 import { SearchBar } from '@/components/search/SearchBar';
 import { SearchResultList } from '@/components/search/SearchResultList';
 import { TopBar } from '@/components/TopBar';
-import { PRODUCTS } from '@/constants/productPreview';
-import { MAX_RECENT_SEARCH_COUNT, RECENT_SEARCHES } from '@/constants/searchPreview';
+import {
+  useDeleteAllSearchHistoriesMutation,
+  useDeleteSearchHistoryMutation,
+} from '@/queries/useDeleteSearchHistoryMutation';
+import { useSearchHistoriesQuery } from '@/queries/useSearchHistoriesQuery';
+import { useStockSearchQuery } from '@/queries/useStockSearchQuery';
+import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { searchSchema, type SearchForm } from '@/schemas/searchSchema';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import type { Product } from '@/types/product';
+import { toProduct } from '@/utils/stock';
+
+// 목록 끝에서 이 거리(px) 안으로 스크롤하면 다음 검색 결과를 불러옵니다.
+const LOAD_MORE_THRESHOLD = 200;
 
 export default function SearchScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const [recentSearches, setRecentSearches] = useState(RECENT_SEARCHES);
-  const [products, setProducts] = useState(PRODUCTS);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [searchedKeyword, setSearchedKeyword] = useState<string | null>(null);
   const { control, handleSubmit, setValue } = useForm<SearchForm>({
     resolver: zodResolver(searchSchema),
     defaultValues: { keyword: '' },
   });
 
-  // 상품명 또는 카테고리에 검색어가 포함된 상품을 보여줍니다. 서버 연동 시 검색 API로 대체합니다
-  const searchResults = searchedKeyword
-    ? products.filter(({ name, category }) =>
-        [name, category].some((text) => text.toLowerCase().includes(searchedKeyword.toLowerCase())),
-      )
-    : [];
+  const { data: searchHistories = [] } = useSearchHistoriesQuery();
+  const searchQuery = useStockSearchQuery(searchedKeyword);
+  const { mutate: deleteSearchHistory } = useDeleteSearchHistoryMutation();
+  const { mutate: deleteAllSearchHistories } = useDeleteAllSearchHistoriesMutation();
+  const { mutate: toggleWishlist } = useWishlistMutation();
+
+  const searchResults = searchQuery.data?.pages.flatMap((page) => page.items.map(toProduct)) ?? [];
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -39,11 +50,13 @@ export default function SearchScreen() {
     }
   };
 
+  // 같은 검색어를 다시 검색해도 결과와 최근 검색이 갱신되도록 다시 조회합니다.
   const handleSearch = handleSubmit(({ keyword }) => {
+    if (keyword === searchedKeyword) {
+      void searchQuery.refetch();
+      return;
+    }
     setSearchedKeyword(keyword);
-    setRecentSearches((prev) =>
-      [keyword, ...prev.filter((item) => item !== keyword)].slice(0, MAX_RECENT_SEARCH_COUNT),
-    );
   });
 
   // 검색어를 모두 지우면 최근 검색 목록으로 돌아갑니다.
@@ -57,18 +70,30 @@ export default function SearchScreen() {
     void handleSearch();
   };
 
-  const handleRemove = (keyword: string) => {
-    setRecentSearches((prev) => prev.filter((item) => item !== keyword));
+  const handleRemove = (searchHistoryId: number) => deleteSearchHistory(searchHistoryId);
+
+  const handleClearAll = () => deleteAllSearchHistories();
+
+  const handleProductPress = (productId: number) =>
+    router.push({ pathname: '/product/[id]', params: { id: String(productId) } });
+
+  // 관심 상품은 회원만 등록할 수 있어 비회원은 로그인 화면으로 보냅니다.
+  const handleFavoritePress = (product: Product) => {
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+    toggleWishlist({ stockId: product.id, isWishlisted: product.isFavorite });
   };
 
-  const handleClearAll = () => setRecentSearches([]);
-
-  const handleFavoritePress = (productId: number) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === productId ? { ...product, isFavorite: !product.isFavorite } : product,
-      ),
-    );
+  const handleScrollWithLoadMore = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    handleScroll(event);
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isNearBottom =
+      contentOffset.y + layoutMeasurement.height >= contentSize.height - LOAD_MORE_THRESHOLD;
+    if (isNearBottom && searchQuery.hasNextPage && !searchQuery.isFetchingNextPage) {
+      void searchQuery.fetchNextPage();
+    }
   };
 
   return (
@@ -76,7 +101,7 @@ export default function SearchScreen() {
       <TopBar isScrolled={isScrolled} title="검색" onBack={handleBack} />
 
       <ScrollView
-        onScroll={handleScroll}
+        onScroll={handleScrollWithLoadMore}
         scrollEventThrottle={16}
         className="flex-1"
         contentContainerClassName="pb-8"
@@ -99,10 +124,18 @@ export default function SearchScreen() {
         </View>
 
         {searchedKeyword ? (
-          <SearchResultList products={searchResults} onFavoritePress={handleFavoritePress} />
+          <SearchResultList
+            products={searchResults}
+            isLoading={searchQuery.isPending}
+            isError={searchQuery.isError}
+            isFetchingNextPage={searchQuery.isFetchingNextPage}
+            onProductPress={handleProductPress}
+            onFavoritePress={handleFavoritePress}
+          />
         ) : (
+          // 비회원은 검색어가 저장되지 않아 최근 검색이 비어 있습니다.
           <RecentSearchList
-            keywords={recentSearches}
+            histories={searchHistories}
             onSelect={handleSelect}
             onRemove={handleRemove}
             onClearAll={handleClearAll}

@@ -2,22 +2,24 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 
+import type { SearchHistory } from '@/types/search';
+
 cssInterop(Image, { className: 'style' });
 
 type RecentSearchListProps = {
-  keywords: string[];
+  histories: SearchHistory[];
   onSelect: (keyword: string) => void;
-  onRemove: (keyword: string) => void;
+  onRemove: (searchHistoryId: number) => void;
   onClearAll: () => void;
 };
 
 export function RecentSearchList({
-  keywords,
+  histories,
   onSelect,
   onRemove,
   onClearAll,
 }: RecentSearchListProps) {
-  const hasKeywords = keywords.length > 0;
+  const hasKeywords = histories.length > 0;
 
   return (
     <View className="px-6 pt-6">
@@ -43,9 +45,9 @@ export function RecentSearchList({
 
       {hasKeywords ? (
         <View className="mt-3 gap-2">
-          {keywords.map((keyword) => (
+          {histories.map(({ searchHistoryId, keyword }) => (
             <View
-              key={keyword}
+              key={searchHistoryId}
               className="flex-row items-center rounded-xl border border-motu-grey-lighter bg-white"
             >
               <Pressable
@@ -63,7 +65,7 @@ export function RecentSearchList({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${keyword} 삭제`}
-                onPress={() => onRemove(keyword)}
+                onPress={() => onRemove(searchHistoryId)}
                 className="h-full w-10 items-center justify-center active:opacity-60"
               >
                 <Image
