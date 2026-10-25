@@ -31,15 +31,23 @@ export function ProductListItem({ product, rank, onPress, onFavoritePress }: Pro
             {rank}
           </Text>
         )}
-        {/* 종목별 색상은 서버 데이터라 style로 지정합니다. */}
-        <View
-          className="mr-3 h-10 w-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: product.color }}
-        >
-          <Text className="font-pretendard-bold text-[15px] leading-5 text-white">
-            {product.name.charAt(0)}
-          </Text>
-        </View>
+        {product.logoImageUrl ? (
+          <Image
+            source={{ uri: product.logoImageUrl }}
+            contentFit="cover"
+            className="mr-3 h-10 w-10 rounded-full"
+          />
+        ) : (
+          // 종목별 색상은 서버 데이터라 style로 지정합니다.
+          <View
+            className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-motu-black"
+            style={product.color ? { backgroundColor: product.color } : undefined}
+          >
+            <Text className="font-pretendard-bold text-[15px] leading-5 text-white">
+              {product.name.charAt(0)}
+            </Text>
+          </View>
+        )}
         <View className="flex-1">
           {/* 이름이 길면 이름을 말줄임하고 카테고리는 끝까지 보이게 합니다. */}
           <View className="flex-row items-center gap-1.5">
