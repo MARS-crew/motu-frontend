@@ -1,13 +1,9 @@
-import { MARKET_PRODUCTS } from '@/constants/marketPreview';
-import { PRODUCTS } from '@/constants/productPreview';
 import type {
   ChartPeriod,
   OrderBook,
   ProductCandle,
-  ProductDetail,
-  ProductInfo,
   RecentTrade,
-  TradeStatus,
+  TradeSummary,
 } from '@/types/product';
 
 export const CHART_PERIOD_OPTIONS: { label: string; value: ChartPeriod }[] = [
@@ -18,61 +14,8 @@ export const CHART_PERIOD_OPTIONS: { label: string; value: ChartPeriod }[] = [
   { label: '1개월', value: 'month' },
 ];
 
-// 퍼블리싱 확인용 데이터입니다. 서버 연동 시 Query로 대체합니다
+// 호가·체결·차트 API가 나오기 전까지 쓰는 확인용 데이터입니다. 서버 현재가를 기준으로 만듭니다
 const CANDLE_COUNT = 40;
-
-const PRODUCT_DESCRIPTIONS: Record<string, string> = {
-  삼성전자: '반도체·모바일·가전을 아우르는 글로벌 전자 기업',
-  카카오: '메신저·플랫폼·콘텐츠 사업을 운영하는 IT 기업',
-  NAVER: '검색·커머스·핀테크 서비스를 운영하는 IT 기업',
-  쌍방울: '의류·섬유 제조와 유통을 함께 운영하는 생활 소재 기업',
-};
-
-// 종목 정보 탭 확인용 데이터입니다. 없는 상품은 '정보없음'으로 표시됩니다.
-const PRODUCT_INFOS: Record<string, Omit<ProductInfo, 'listedAt'>> = {
-  삼성전자: {
-    introduction:
-      '반도체·모바일·가전을 아우르는 글로벌 전자 기업입니다. 메모리 반도체와 파운드리, 스마트폰 사업을 중심으로 세계 시장을 선도하며 차세대 기술 투자를 이어가고 있습니다.',
-    operator: '삼성전자',
-    officialUrl: 'https://www.samsung.com/sec',
-    metrics: ['글로벌 임직원: 27만 명', '특허 등록: 12만 건 이상', '평균 수익률: +4.06%'],
-  },
-  쌍방울: {
-    introduction:
-      '의류·섬유 제조와 유통을 함께 운영하는 생활 소재 기업입니다. 봉제 의류 생산과 브랜드 유통 사업을 병행하며 온라인 커머스 채널을 확장하고 있습니다.',
-    operator: '쌍방울',
-    officialUrl: 'https://www.ssangbangwool.com',
-    metrics: ['생산 라인: 국내외 6개', '유통 채널: 210개', '평균 수익률: +1.55%'],
-  },
-  PLI: {
-    introduction:
-      'PLI는 AI를 활용해 사용자의 취향과 여행 조건을 분석하고, 맞춤형 여행 일정과 장소를 추천해주는 여행 플래닝 앱입니다. 여행지 탐색부터 일정 구성까지 쉽고 빠르게 계획할 수 있도록 지원합니다.',
-    operator: '마스외전',
-    officialUrl: 'https://mars-pli.kro.kr',
-    metrics: [
-      '누적 가입자: 20만 명',
-      '월간 활성 사용자(MAU): 10만 명',
-      '누적 모의 투자 금액: 1,234,567 P',
-      '평균 수익률: +2.5%',
-    ],
-  },
-};
-
-// 거래 상태별 화면 확인을 위해 일부 상품의 상태를 바꿔 둡니다.
-const PRODUCT_TRADE_STATUSES: Record<string, TradeStatus> = {
-  쌍방울: 'suspended',
-  대유플러스: 'waiting',
-  대신정보통신: 'ended',
-};
-
-const LISTED_DATES: Record<string, string> = {
-  삼성전자: '2026.01.05',
-  쌍방울: '2026.02.11',
-  PLI: '2026.08.28',
-};
-
-// '2026.01.05' 형식을 피그마 표기인 '2026. 01. 05'로 바꿉니다.
-const formatListedAt = (value: string) => value.split('.').join('. ');
 
 const PERIOD_STARTS: Record<ChartPeriod, Date> = {
   minute: new Date(2026, 7, 7, 9, 0),
@@ -126,35 +69,20 @@ export const getProductCandles = (
   return candles;
 };
 
-export const getProductDetail = (id: number): ProductDetail | undefined => {
-  const product =
-    MARKET_PRODUCTS.find((item) => item.id === id) ?? PRODUCTS.find((item) => item.id === id);
-  if (!product) return undefined;
-
+// 거래 요약(시가·고가·저가·종가)은 1일 차트의 마지막 봉으로 만듭니다.
+export const getTradeSummary = (product: { id: number; price: number }): TradeSummary => {
   const latest = getProductCandles(product, 'day').at(-1);
-  if (!latest) return undefined;
-
-  const listedAt =
-    LISTED_DATES[product.name] ?? ('listedAt' in product ? product.listedAt : undefined);
-
+  if (!latest) {
+    const { price } = product;
+    return { open: price, high: price, low: price, close: price, volume: 0, tradeAmount: 0 };
+  }
   return {
-    ...product,
-    description: PRODUCT_DESCRIPTIONS[product.name] ?? `${product.category} 분야 상장 상품`,
-    tradeStatus: PRODUCT_TRADE_STATUSES[product.name] ?? 'tradable',
-    tickSize: getTickSize(product.price),
-    info: {
-      ...PRODUCT_INFOS[product.name],
-      metrics: PRODUCT_INFOS[product.name]?.metrics ?? [],
-      listedAt: listedAt ? formatListedAt(listedAt) : undefined,
-    },
-    summary: {
-      open: latest.open,
-      high: latest.high,
-      low: latest.low,
-      close: latest.close,
-      volume: latest.volume,
-      tradeAmount: latest.volume * latest.close,
-    },
+    open: latest.open,
+    high: latest.high,
+    low: latest.low,
+    close: latest.close,
+    volume: latest.volume,
+    tradeAmount: latest.volume * latest.close,
   };
 };
 
@@ -162,7 +90,7 @@ const ORDER_BOOK_DEPTH = 5;
 const RECENT_TRADE_COUNT = 5;
 
 // 가격대별 호가 단위입니다. 실제 단위는 상장 심사에서 확정된 값을 서버에서 받습니다.
-const getTickSize = (price: number) => {
+export const getTickSize = (price: number) => {
   if (price < 1_000) return 1;
   if (price < 5_000) return 5;
   if (price < 50_000) return 50;

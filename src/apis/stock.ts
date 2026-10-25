@@ -1,7 +1,7 @@
 import { api } from '@/apis/instance';
 import type { ApiResponse, CursorPage } from '@/types/api';
 import type { MarketSort } from '@/types/product';
-import type { NewListingItem, StockItem } from '@/types/stock';
+import type { NewListingItem, StockDetail, StockItem } from '@/types/stock';
 
 type CursorParams = {
   cursor?: string;
@@ -40,5 +40,11 @@ type GetStocksParams = CursorParams & {
 
 export const getStocks = async (params: GetStocksParams) => {
   const { data } = await api.get<ApiResponse<CursorPage<StockItem>>>('/stocks', { params });
+  return data.data;
+};
+
+// 로그인 상태면 서버가 최근 본 종목에 기록합니다.
+export const getStockDetail = async (stockId: number) => {
+  const { data } = await api.get<ApiResponse<StockDetail>>(`/stocks/${stockId}`);
   return data.data;
 };

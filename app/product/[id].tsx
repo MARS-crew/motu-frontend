@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { isAxiosError } from 'axios';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChartPeriodSelector } from '@/components/productDetail/ChartPeriodSelector';
@@ -22,11 +23,14 @@ import {
   CHART_PERIOD_OPTIONS,
   getOrderBook,
   getProductCandles,
-  getProductDetail,
   getRecentTrades,
+  getTickSize,
+  getTradeSummary,
 } from '@/constants/productDetailPreview';
 import { AVAILABLE_POINTS, SELLABLE_QUANTITY } from '@/constants/orderPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useStockDetailQuery } from '@/queries/useStockDetailQuery';
+import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { OrderSide } from '@/types/order';
 import type { ChartPeriod } from '@/types/product';
@@ -42,11 +46,11 @@ const DETAIL_TABS: { label: string; value: DetailTab }[] = [
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const product = useMemo(() => getProductDetail(Number(id)), [id]);
+  const { data: product, isLoading, error } = useStockDetailQuery(Number(id));
+  const { mutate: toggleWishlist } = useWishlistMutation();
 
   const [selectedTab, setSelectedTab] = useState<DetailTab>('chart');
   const [period, setPeriod] = useState<ChartPeriod>('day');
-  const [isFavorite, setIsFavorite] = useState(product?.isFavorite ?? false);
   // 지정가 알림은 서버 연동 전까지 화면 안에서만 유지합니다.
   const [alertPrice, setAlertPrice] = useState<number | null>(null);
   const [alertModal, setAlertModal] = useState<'form' | 'release' | null>(null);
@@ -62,6 +66,8 @@ export default function ProductDetailScreen() {
   );
   const orderBook = useMemo(() => (product ? getOrderBook(product) : undefined), [product]);
   const recentTrades = useMemo(() => (product ? getRecentTrades(product) : []), [product]);
+  // 거래 요약은 시세 API가 나오기 전까지 미리보기 데이터로 보여줍니다.
+  const tradeSummary = useMemo(() => (product ? getTradeSummary(product) : undefined), [product]);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -98,6 +104,16 @@ export default function ProductDetailScreen() {
     setOrderSide(side);
   };
 
+  // 관심 상품은 회원만 등록할 수 있습니다.
+  const handleFavoritePress = () => {
+    if (!product) return;
+    if (!isLoggedIn) {
+      setIsLoginModalVisible(true);
+      return;
+    }
+    toggleWishlist({ stockId: product.id, isWishlisted: product.isFavorite });
+  };
+
   const handleLoginPress = () => {
     setIsLoginModalVisible(false);
     router.push('/login');
@@ -108,7 +124,24 @@ export default function ProductDetailScreen() {
     router.push('/transactions');
   };
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-motu-bg">
+        <ProductDetailHeader
+          isFavorite={false}
+          onBack={handleBack}
+          onAlertPress={handleAlertPress}
+          onFavoritePress={() => {}}
+        />
+        <ActivityIndicator className="pt-20" />
+      </SafeAreaView>
+    );
+  }
+
   if (!product) {
+    // 404는 없는 상품이고, 그 밖의 오류는 다시 시도하도록 안내합니다.
+    const isNotFound = !error || (isAxiosError(error) && error.response?.status === 404);
+
     return (
       <SafeAreaView className="flex-1 bg-motu-bg">
         <ProductDetailHeader
@@ -118,7 +151,9 @@ export default function ProductDetailScreen() {
           onFavoritePress={() => {}}
         />
         <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
-          상품 정보를 찾을 수 없습니다.
+          {isNotFound
+            ? '상품 정보를 찾을 수 없습니다.'
+            : '상품 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}
         </Text>
       </SafeAreaView>
     );
@@ -127,12 +162,12 @@ export default function ProductDetailScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <ProductDetailHeader
-        isFavorite={isFavorite}
+        isFavorite={product.isFavorite}
         hasAlert={alertPrice !== null}
         isScrolled={isScrolled}
         onBack={handleBack}
         onAlertPress={handleAlertPress}
-        onFavoritePress={() => setIsFavorite((previousIsFavorite) => !previousIsFavorite)}
+        onFavoritePress={handleFavoritePress}
       />
 
       <ScrollView
@@ -166,7 +201,7 @@ export default function ProductDetailScreen() {
               </View>
             </View>
             <View className="px-6 pb-8 pt-5">
-              <TradeSummaryCard summary={product.summary} />
+              {tradeSummary && <TradeSummaryCard summary={tradeSummary} />}
             </View>
           </>
         ) : selectedTab === 'orderBook' ? (
@@ -211,7 +246,7 @@ export default function ProductDetailScreen() {
           productName={product.name}
           currentPrice={product.price}
           changeRate={product.changeRate}
-          tickSize={product.tickSize}
+          tickSize={getTickSize(product.price)}
           availablePoints={AVAILABLE_POINTS}
           sellableQuantity={SELLABLE_QUANTITY}
           onClose={() => setOrderSide(null)}
