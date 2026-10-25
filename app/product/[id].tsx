@@ -27,8 +27,9 @@ import {
   getTickSize,
   getTradeSummary,
 } from '@/constants/productDetailPreview';
-import { AVAILABLE_POINTS, SELLABLE_QUANTITY } from '@/constants/orderPreview';
+import { SELLABLE_QUANTITY } from '@/constants/orderPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
 import { useStockDetailQuery } from '@/queries/useStockDetailQuery';
 import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -48,6 +49,7 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: product, isLoading, error } = useStockDetailQuery(Number(id));
   const { mutate: toggleWishlist } = useWishlistMutation();
+  const { data: account, refetch: refetchAccount } = useMyAccountQuery();
 
   const [selectedTab, setSelectedTab] = useState<DetailTab>('chart');
   const [period, setPeriod] = useState<ChartPeriod>('day');
@@ -96,10 +98,21 @@ export default function ProductDetailScreen() {
   const handleToastHide = useCallback(() => setToastMessage(null), []);
 
   // 주문은 로그인 상태에서만 가능합니다. (화면설계서 USR-MARKET-02-M02)
-  const handleOrderPress = (side: OrderSide) => {
+  const handleOrderPress = async (side: OrderSide) => {
     if (!isLoggedIn) {
       setIsLoginModalVisible(true);
       return;
+    }
+    // 매수는 사용 가능 포인트를 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
+    if (side === 'buy') {
+      const refetchPromise = refetchAccount();
+      if (!account) {
+        const { data } = await refetchPromise;
+        if (!data) {
+          setToastMessage('주문 가능 포인트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
+      }
     }
     setOrderSide(side);
   };
@@ -235,8 +248,8 @@ export default function ProductDetailScreen() {
       </View>
 
       <OrderButtons
-        onSellPress={() => handleOrderPress('sell')}
-        onBuyPress={() => handleOrderPress('buy')}
+        onSellPress={() => void handleOrderPress('sell')}
+        onBuyPress={() => void handleOrderPress('buy')}
       />
 
       {orderSide && (
@@ -247,7 +260,7 @@ export default function ProductDetailScreen() {
           currentPrice={product.price}
           changeRate={product.changeRate}
           tickSize={getTickSize(product.price)}
-          availablePoints={AVAILABLE_POINTS}
+          availablePoints={account?.availableCash ?? 0}
           sellableQuantity={SELLABLE_QUANTITY}
           onClose={() => setOrderSide(null)}
           onHistoryPress={handleOrderHistoryPress}
