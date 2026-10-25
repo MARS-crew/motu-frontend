@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   ScrollView,
@@ -14,48 +15,42 @@ import { TabHeader } from '@/components/TabHeader';
 import { MarketSortDropdown } from '@/components/market/MarketSortDropdown';
 import { ProductListItem } from '@/components/ProductListItem';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
-import { MARKET_CATEGORIES, MARKET_PRODUCTS, MARKET_SORT_OPTIONS } from '@/constants/marketPreview';
-import type { MarketProduct, MarketSort } from '@/types/product';
+import { MARKET_SORT_OPTIONS } from '@/constants/market';
+import { useSectorsQuery } from '@/queries/useSectorsQuery';
+import { useStocksQuery } from '@/queries/useStocksQuery';
+import { useWishlistMutation } from '@/queries/useWishlistMutation';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { MarketSort, Product } from '@/types/product';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { isNearBottom } from '@/utils/scroll';
 
 // 이 높이 이상 내려가면 맨 위로 이동 버튼을 보여 줍니다.
 const SCROLL_TO_TOP_VISIBLE_OFFSET = 300;
-
-// 서버 연동 시 카테고리·정렬 값을 API 파라미터로 넘기고, 응답 순서를 그대로 사용합니다
-const sortProducts = (products: MarketProduct[], sort: MarketSort) => {
-  const sorted = [...products];
-  switch (sort) {
-    case 'rateDesc':
-      return sorted.sort((a, b) => b.changeRate - a.changeRate);
-    case 'rateAsc':
-      return sorted.sort((a, b) => a.changeRate - b.changeRate);
-    case 'volume':
-      return sorted.sort((a, b) => b.volume - a.volume);
-    case 'listedAt':
-      return sorted.sort((a, b) => b.listedAt.localeCompare(a.listedAt));
-    default:
-      return sorted.sort((a, b) => b.tradeAmount - a.tradeAmount);
-  }
-};
 
 export default function MarketScreen() {
   const { isScrolled, handleScroll: handleHeaderScroll } = useHeaderScroll();
   const scrollRef = useRef<ScrollView>(null);
   const [isScrollToTopVisible, setIsScrollToTopVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(MARKET_CATEGORIES[0]);
-  const [sort, setSort] = useState<MarketSort>('tradeAmount');
-  const [products, setProducts] = useState(MARKET_PRODUCTS);
-
-  const visibleProducts = sortProducts(
-    selectedCategory === '전체'
-      ? products
-      : products.filter((product) => product.category === selectedCategory),
-    sort,
-  );
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  // null이면 전체 카테고리입니다.
+  const [selectedSectorCode, setSelectedSectorCode] = useState<number | null>(null);
+  const [sort, setSort] = useState<MarketSort>('TRADE_AMOUNT');
+  const { data: sectors = [] } = useSectorsQuery();
+  // 서버가 카테고리·정렬을 적용한 순서를 그대로 보여줍니다.
+  const {
+    data: products = [],
+    isPending,
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useStocksQuery({ sectorCode: selectedSectorCode, sort });
+  const { mutate: toggleWishlist } = useWishlistMutation();
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     handleHeaderScroll(event);
     setIsScrollToTopVisible(event.nativeEvent.contentOffset.y > SCROLL_TO_TOP_VISIBLE_OFFSET);
+    if (isNearBottom(event) && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   };
 
   const handleScrollToTop = () => scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -67,12 +62,13 @@ export default function MarketScreen() {
   const handleProductPress = (id: number) =>
     router.push({ pathname: '/product/[id]', params: { id: String(id) } });
 
-  const handleProductFavoritePress = (id: number) => {
-    setProducts((prev) =>
-      prev.map((product) =>
-        product.id === id ? { ...product, isFavorite: !product.isFavorite } : product,
-      ),
-    );
+  // 관심 상품은 회원만 등록할 수 있어 비회원은 로그인 화면으로 보냅니다.
+  const handleProductFavoritePress = (product: Product) => {
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+    toggleWishlist({ stockId: product.id, isWishlisted: product.isFavorite });
   };
 
   return (
@@ -98,12 +94,17 @@ export default function MarketScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerClassName="gap-2 px-6 pb-3"
           >
-            {MARKET_CATEGORIES.map((category) => (
+            <CategoryChip
+              label="전체"
+              isSelected={selectedSectorCode === null}
+              onPress={() => setSelectedSectorCode(null)}
+            />
+            {sectors.map(({ sectorCode, sectorName }) => (
               <CategoryChip
-                key={category}
-                label={category}
-                isSelected={selectedCategory === category}
-                onPress={() => setSelectedCategory(category)}
+                key={sectorCode}
+                label={sectorName}
+                isSelected={selectedSectorCode === sectorCode}
+                onPress={() => setSelectedSectorCode(sectorCode)}
               />
             ))}
           </ScrollView>
@@ -117,17 +118,24 @@ export default function MarketScreen() {
           </View>
 
           <View className="px-6 pt-2">
-            {visibleProducts.length > 0 ? (
+            {isPending ? (
+              <ActivityIndicator className="pt-20" />
+            ) : isError ? (
+              <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
+                상품 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+              </Text>
+            ) : products.length > 0 ? (
               <View className="gap-2">
-                {visibleProducts.map((product, index) => (
+                {products.map((product, index) => (
                   <ProductListItem
                     key={product.id}
                     product={product}
                     rank={index + 1}
                     onPress={() => handleProductPress(product.id)}
-                    onFavoritePress={() => handleProductFavoritePress(product.id)}
+                    onFavoritePress={() => handleProductFavoritePress(product)}
                   />
                 ))}
+                {isFetchingNextPage && <ActivityIndicator className="py-4" />}
               </View>
             ) : (
               <Text className="pt-20 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">

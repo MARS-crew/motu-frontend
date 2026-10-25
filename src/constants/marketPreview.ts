@@ -1,29 +1,6 @@
-import type { MarketProduct, MarketSort } from '@/types/product';
+import type { MarketProduct } from '@/types/product';
 
-// 상장 신청에서 사용하는 카테고리 값으로 고정됩니다. (화면설계서 USR-MARKET-01)
-export const MARKET_CATEGORIES = [
-  '전체',
-  'SaaS / 소프트웨어',
-  'AI / 데이터',
-  '핀테크',
-  '커머스 / 유통',
-  '콘텐츠 / 미디어',
-  '헬스케어',
-  '교육',
-  '모빌리티',
-  '기타',
-];
-
-// '전체'는 기본 정렬인 거래대금 많은순입니다.
-export const MARKET_SORT_OPTIONS: { label: string; value: MarketSort }[] = [
-  { label: '전체', value: 'tradeAmount' },
-  { label: '등락률 높은순', value: 'rateDesc' },
-  { label: '등락률 낮은순', value: 'rateAsc' },
-  { label: '거래량 많은순', value: 'volume' },
-  { label: '최근 상장순', value: 'listedAt' },
-];
-
-// 퍼블리싱 확인용 데이터입니다. 서버 연동 시 Query로 대체합니다
+// 상품 상세 퍼블리싱 확인용 데이터입니다. 상품 상세 API 연동 시 삭제합니다
 export const MARKET_PRODUCTS: MarketProduct[] = [
   {
     id: 9,
