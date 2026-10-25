@@ -8,3 +8,15 @@ export type Faq = {
   question: string;
   answer: string;
 };
+
+// FAQ API 응답 타입입니다. (스웨거 기준)
+export type FaqCategoryCode = 'TRADE' | 'POINT' | 'ACCOUNT' | 'LISTING' | 'ETC';
+
+export type FaqFilterCode = 'ALL' | FaqCategoryCode;
+
+export type FaqItem = {
+  faqId: number;
+  category: FaqCategoryCode;
+  question: string;
+  answer: string;
+};
