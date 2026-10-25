@@ -22,15 +22,23 @@ export function NewListingItem({ listing, onPress, onFavoritePress }: NewListing
         className="flex-1 flex-row items-center gap-3 active:opacity-60"
       >
         <View>
-          {/* 종목별 색상은 서버 데이터라 style로 지정합니다. */}
-          <View
-            className="h-11 w-11 items-center justify-center rounded-full"
-            style={{ backgroundColor: listing.color }}
-          >
-            <Text className="font-pretendard-bold text-base leading-[22px] text-white">
-              {listing.name.charAt(0)}
-            </Text>
-          </View>
+          {listing.logoImageUrl ? (
+            <Image
+              source={{ uri: listing.logoImageUrl }}
+              contentFit="cover"
+              className="h-11 w-11 rounded-full"
+            />
+          ) : (
+            // 종목별 색상은 서버 데이터라 style로 지정합니다.
+            <View
+              className="h-11 w-11 items-center justify-center rounded-full bg-motu-black"
+              style={listing.color ? { backgroundColor: listing.color } : undefined}
+            >
+              <Text className="font-pretendard-bold text-base leading-[22px] text-white">
+                {listing.name.charAt(0)}
+              </Text>
+            </View>
+          )}
           {/* 칩은 높이를 고정하고 글자 위아래 여백(font padding)을 없애, 플랫폼과 관계없이 위아래 여백을 같게 맞춥니다. */}
           {listing.isNew && (
             <View className="absolute -left-1.5 -top-1.5 h-4 justify-center rounded-full bg-motu-green px-1.5 shadow">

@@ -20,10 +20,8 @@ import { searchSchema, type SearchForm } from '@/schemas/searchSchema';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import type { Product } from '@/types/product';
+import { isNearBottom } from '@/utils/scroll';
 import { toProduct } from '@/utils/stock';
-
-// 목록 끝에서 이 거리(px) 안으로 스크롤하면 다음 검색 결과를 불러옵니다.
-const LOAD_MORE_THRESHOLD = 200;
 
 export default function SearchScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
@@ -88,10 +86,7 @@ export default function SearchScreen() {
 
   const handleScrollWithLoadMore = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     handleScroll(event);
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const isNearBottom =
-      contentOffset.y + layoutMeasurement.height >= contentSize.height - LOAD_MORE_THRESHOLD;
-    if (isNearBottom && searchQuery.hasNextPage && !searchQuery.isFetchingNextPage) {
+    if (isNearBottom(event) && searchQuery.hasNextPage && !searchQuery.isFetchingNextPage) {
       void searchQuery.fetchNextPage();
     }
   };
