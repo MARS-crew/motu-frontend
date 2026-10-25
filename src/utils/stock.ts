@@ -1,5 +1,7 @@
+import type { NewListing } from '@/types/newListing';
 import type { Product } from '@/types/product';
-import type { StockItem } from '@/types/stock';
+import type { NewListingItem, StockItem } from '@/types/stock';
+import { formatDotDate } from '@/utils/formatDate';
 
 // 상품 API 응답을 공용 상품 목록 아이템 형태로 바꿉니다.
 export const toProduct = (stock: StockItem): Product => ({
@@ -9,5 +11,17 @@ export const toProduct = (stock: StockItem): Product => ({
   price: stock.currentPrice,
   changeRate: stock.changeRate,
   logoImageUrl: stock.logoImageUrl,
+  isFavorite: stock.isWishlisted,
+});
+
+export const toNewListing = (stock: NewListingItem): NewListing => ({
+  id: stock.stockId,
+  name: stock.name,
+  description: stock.summary,
+  listedAt: formatDotDate(stock.listingDate),
+  price: stock.currentPrice,
+  changeRate: stock.changeRate,
+  logoImageUrl: stock.logoImageUrl,
+  isNew: stock.isNew,
   isFavorite: stock.isWishlisted,
 });
