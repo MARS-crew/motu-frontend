@@ -1,8 +1,12 @@
+import { Image } from 'expo-image';
+import { cssInterop } from 'nativewind';
 import { Text, View } from 'react-native';
 
 import { TRADE_STATUS_STYLES } from '@/constants/tradeStatus';
 import type { ProductDetail } from '@/types/product';
 import { formatPoint } from '@/utils/formatNumber';
+
+cssInterop(Image, { className: 'style' });
 
 type ProductSummaryProps = {
   product: ProductDetail;
@@ -14,15 +18,23 @@ export function ProductSummary({ product }: ProductSummaryProps) {
   return (
     <View className="px-6 pt-0.5">
       <View className="flex-row items-center gap-2">
-        {/* 종목별 색상은 서버 데이터라 style로 지정하고, 한글이 위로 치우쳐 보여서 위 패딩으로 가운데를 맞춥니다. */}
-        <View
-          className="h-6 w-6 items-center justify-center rounded-full pt-0.5"
-          style={{ backgroundColor: product.color }}
-        >
-          <Text className="font-pretendard-semibold text-[11px] leading-[14px] text-white">
-            {product.name.charAt(0)}
-          </Text>
-        </View>
+        {product.logoImageUrl ? (
+          <Image
+            source={{ uri: product.logoImageUrl }}
+            contentFit="cover"
+            className="h-6 w-6 rounded-full"
+          />
+        ) : (
+          // 종목별 색상은 서버 데이터라 style로 지정하고, 한글이 위로 치우쳐 보여서 위 패딩으로 가운데를 맞춥니다.
+          <View
+            className="h-6 w-6 items-center justify-center rounded-full bg-motu-black pt-0.5"
+            style={product.color ? { backgroundColor: product.color } : undefined}
+          >
+            <Text className="font-pretendard-semibold text-[11px] leading-[14px] text-white">
+              {product.name.charAt(0)}
+            </Text>
+          </View>
+        )}
         <Text
           accessibilityRole="header"
           numberOfLines={1}

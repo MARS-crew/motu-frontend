@@ -51,12 +51,11 @@ export type ProductInfo = {
   listedAt?: string;
 };
 
+// 거래 요약·호가 단위는 시세 API에서 따로 받습니다.
 export type ProductDetail = Product & {
   description: string;
   tradeStatus: TradeStatus;
-  summary: TradeSummary;
   info: ProductInfo;
-  tickSize: number;
 };
 
 export type OrderBookLevel = {
