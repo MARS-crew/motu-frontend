@@ -16,7 +16,9 @@ export type MarketProduct = Product & {
   listedAt: string;
 };
 
-export type MarketSort = 'tradeAmount' | 'rateDesc' | 'rateAsc' | 'volume' | 'listedAt';
+// 마켓 정렬 값은 서버 sort 파라미터를 그대로 사용합니다.
+export type MarketSort =
+  'TRADE_AMOUNT' | 'CHANGE_RATE_DESC' | 'CHANGE_RATE_ASC' | 'VOLUME' | 'LISTING_DATE';
 
 export type ChartPeriod = 'minute' | 'hour' | 'day' | 'week' | 'month';
 

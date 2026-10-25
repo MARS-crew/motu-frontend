@@ -1,5 +1,6 @@
 import { api } from '@/apis/instance';
 import type { ApiResponse, CursorPage } from '@/types/api';
+import type { MarketSort } from '@/types/product';
 import type { NewListingItem, StockItem } from '@/types/stock';
 
 type CursorParams = {
@@ -28,5 +29,16 @@ export const searchStocks = async (params: SearchStocksParams) => {
   const { data } = await api.get<ApiResponse<CursorPage<StockItem>>>('/stocks/search', {
     params,
   });
+  return data.data;
+};
+
+type GetStocksParams = CursorParams & {
+  // 비우면 전체 카테고리입니다.
+  sectorCode?: number;
+  sort: MarketSort;
+};
+
+export const getStocks = async (params: GetStocksParams) => {
+  const { data } = await api.get<ApiResponse<CursorPage<StockItem>>>('/stocks', { params });
   return data.data;
 };
