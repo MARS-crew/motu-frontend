@@ -19,15 +19,23 @@ export function StockListItem({ stock, onPress }: StockListItemProps) {
       onPress={onPress}
       className="flex-row items-center gap-3 rounded-lg border border-motu-grey-lighter px-3.5 py-3 active:opacity-60"
     >
-      {/* 종목별 색상은 서버 데이터라 style로 지정합니다. */}
-      <View
-        className="h-9 w-9 items-center justify-center rounded-full"
-        style={{ backgroundColor: stock.color }}
-      >
-        <Text className="font-pretendard-bold text-base leading-[22px] text-white">
-          {stock.name.charAt(0)}
-        </Text>
-      </View>
+      {stock.logoImageUrl ? (
+        <Image
+          source={{ uri: stock.logoImageUrl }}
+          contentFit="cover"
+          className="h-9 w-9 rounded-full"
+        />
+      ) : (
+        // 종목별 색상은 서버 데이터라 style로 지정합니다.
+        <View
+          className="h-9 w-9 items-center justify-center rounded-full bg-motu-black"
+          style={stock.color ? { backgroundColor: stock.color } : undefined}
+        >
+          <Text className="font-pretendard-bold text-base leading-[22px] text-white">
+            {stock.name.charAt(0)}
+          </Text>
+        </View>
+      )}
       <View className="flex-1 gap-0.5">
         <Text
           numberOfLines={1}
