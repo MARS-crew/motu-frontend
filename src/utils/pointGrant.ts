@@ -1,9 +1,7 @@
 import { isAxiosError } from 'axios';
 
-import type { PointGrantStatus } from '@/schemas/pointGrantSchema';
-
 export function getPointGrantRemainingSeconds(
-  status: PointGrantStatus,
+  status: { remainingSeconds: number },
   receivedAt: number,
   now: number,
 ) {

@@ -4,16 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 
 import { TopBar } from '@/components/TopBar';
-import { POINT_RESET_INTERVAL, usePointPreviewStore } from '@/stores/usePointPreviewStore';
+import { usePointResetResultQuery } from '@/queries/usePointResetMutation';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { formatPointGrantDate } from '@/utils/pointGrant';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointResetCompleteScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const receipt = usePointPreviewStore((state) => state.resetReceipt);
+  const { data: receipt } = usePointResetResultQuery();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const handleConfirm = () => router.replace('/asset-management');
-  if (!receipt) return <Redirect href="/asset-management/point-reset" />;
-  const nextResetAt = new Date(receipt.resetAt + POINT_RESET_INTERVAL);
-  const nextResetLabel = `${nextResetAt.getFullYear()}.${String(nextResetAt.getMonth() + 1).padStart(2, '0')}.${String(nextResetAt.getDate()).padStart(2, '0')} ${String(nextResetAt.getHours()).padStart(2, '0')}:${String(nextResetAt.getMinutes()).padStart(2, '0')}`;
+  if (!receipt || !isLoggedIn) return <Redirect href="/asset-management/point-reset" />;
+  const nextResetLabel = formatPointGrantDate(receipt.nextAvailableAt);
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -36,20 +38,20 @@ export default function PointResetCompleteScreen() {
               포인트 리셋이 완료되었습니다
             </Text>
             <Text className="mt-2 font-pretendard-bold text-[22px] text-motu-black">
-              {receipt.balance.toLocaleString('ko-KR')} P
+              {receipt.cashAfter.toLocaleString('ko-KR')} P
             </Text>
           </View>
           <View className="gap-3.5">
             <View className="flex-row justify-between">
               <Text className="font-pretendard text-xs text-motu-grey">리셋 전</Text>
               <Text className="font-pretendard-semibold text-xs text-motu-black">
-                {receipt.previousBalance.toLocaleString('ko-KR')} P
+                {receipt.cashBefore.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
               <Text className="font-pretendard text-xs text-motu-grey">리셋 후</Text>
               <Text className="font-pretendard-semibold text-xs text-motu-black">
-                {receipt.balance.toLocaleString('ko-KR')} P
+                {receipt.cashAfter.toLocaleString('ko-KR')} P
               </Text>
             </View>
             <View className="flex-row justify-between">
