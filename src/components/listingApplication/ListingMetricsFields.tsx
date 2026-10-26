@@ -6,11 +6,15 @@ import { TextField } from '@/components/TextField';
 import { ListingMetricsBasisField } from '@/components/listingApplication/ListingMetricsBasisField';
 import { ListingMetricsDateField } from '@/components/listingApplication/ListingMetricsDateField';
 import { ListingMetricsNumberField } from '@/components/listingApplication/ListingMetricsNumberField';
+import type { ListingMetricDateRange } from '@/utils/listingMetricsDate';
 import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 
 type ListingMetricsFieldsProps = {
   control: Control<ListingMetricsForm>;
   errors: FieldErrors<ListingMetricsForm>;
+  isSaving?: boolean;
+  savedTransactionBasis?: string | null;
+  savedTransactionPeriod?: ListingMetricDateRange;
   onHelpPress: (type: 'terms' | 'criteria') => void;
   onFieldLayout: (field: keyof ListingMetricsForm, offset: number) => void;
   onPopoverChange: (isOpen: boolean) => void;
@@ -22,6 +26,9 @@ type MetricsPopoverField =
 export function ListingMetricsFields({
   control,
   errors,
+  isSaving = false,
+  savedTransactionBasis,
+  savedTransactionPeriod,
   onHelpPress,
   onFieldLayout,
   onPopoverChange,
@@ -49,6 +56,7 @@ export function ListingMetricsFields({
           <ListingMetricsNumberField
             label={label}
             value={field.value}
+            disabled={isSaving}
             isCurrency={name === 'annualRevenue' || name === 'transactionAmount'}
             onChange={field.onChange}
             onBlur={field.onBlur}
@@ -82,6 +90,8 @@ export function ListingMetricsFields({
             onBlur={field.onBlur}
             inputRef={field.ref}
             onFocus={handleClose}
+            editable={!isSaving}
+            errorMessage={errors[name]?.message}
             hasBaselineOffset={false}
           />
         )}
@@ -103,7 +113,8 @@ export function ListingMetricsFields({
               name === 'revenueExtractedAt' ? '매출 추출일 선택' : '거래액 추출일 선택'
             }
             value={{ start: field.value, end: field.value }}
-            isOpen={openField === name}
+            disabled={isSaving}
+            isOpen={!isSaving && openField === name}
             onToggle={() => handleToggle(name)}
             onClose={handleClose}
             onChange={(range) => field.onChange(range.start)}
@@ -137,11 +148,16 @@ export function ListingMetricsFields({
               accessibilityLabel="매출 집계 기간 선택"
               value={field.value}
               isRange
-              isOpen={openField === 'revenuePeriod'}
+              disabled={isSaving}
+              isOpen={!isSaving && openField === 'revenuePeriod'}
               onToggle={() => handleToggle('revenuePeriod')}
               onClose={handleClose}
               onChange={field.onChange}
-              errorMessage={errors.revenuePeriod?.message}
+              errorMessage={
+                errors.revenuePeriod?.message ||
+                errors.revenuePeriod?.start?.message ||
+                errors.revenuePeriod?.end?.message
+              }
             />
           )}
         />
@@ -165,7 +181,11 @@ export function ListingMetricsFields({
           render={({ field }) => (
             <ListingMetricsBasisField
               value={field.value}
-              isOpen={openField === 'transactionBasis'}
+              savedBasis={savedTransactionBasis}
+              savedPeriod={savedTransactionPeriod}
+              disabled={isSaving}
+              errorMessage={errors.transactionBasis?.message}
+              isOpen={!isSaving && openField === 'transactionBasis'}
               onToggle={() => handleToggle('transactionBasis')}
               onChange={(value) => {
                 field.onChange(value);
