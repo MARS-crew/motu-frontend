@@ -14,7 +14,7 @@ const CARD_CLASS_NAME =
 type ListingApplicationCardProps = {
   application: ListingApplicationListItem;
   onContinue: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
   onOpen: (id: string) => void;
 };
 
@@ -70,7 +70,8 @@ export function ListingApplicationCard({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${application.name} 삭제`}
-            onPress={() => onDelete(application.id)}
+            disabled={!onDelete}
+            onPress={() => onDelete?.(application.id)}
             className="h-9 flex-1 items-center justify-center rounded-lg border border-motu-grey-lighter bg-white active:opacity-60"
           >
             <Text className="font-pretendard-medium text-xs leading-4 text-motu-black">삭제</Text>

@@ -10,14 +10,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { TopBar } from '@/components/TopBar';
 import { ListingRestrictionModal } from '@/components/listingApplication/ListingRestrictionModal';
-import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useListingDraftsQuery } from '@/queries/useListingDraftsQuery';
+import { toListingDraftSummaryItem } from '@/utils/listingDraft';
 import { getListingDraftRoute } from '@/utils/listingApplication';
 import { IS_LISTING_RESTRICTED_PREVIEW } from '@/constants/listingRestrictionPreview';
 import { ListingCriteriaModal } from '@/components/listingApplication/ListingCriteriaModal';
-import {
-  LISTING_APPLICATION_STEPS,
-  MAX_LISTING_DRAFTS,
-} from '@/constants/listingApplicationPreview';
+import { LISTING_APPLICATION_STEPS } from '@/constants/listingApplicationPreview';
 import {
   listingApplicationEntrySchema,
   type ListingApplicationEntryForm,
@@ -28,24 +26,10 @@ cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const drafts = useListingDraftStore((state) => state.drafts);
-  const applications = useListingDraftStore((state) => state.applications);
-  const draftItems = Object.entries(drafts)
-    .filter(([id]) => !applications[id])
-    .map(([id, draft]) => ({
-      id,
-      name: draft.values.serviceName || '제목 없는 신청서',
-      step:
-        draft.step === 4
-          ? '증빙 자료'
-          : draft.step === 3
-            ? '서비스 지표'
-            : draft.step === 2
-              ? '평가·거래'
-              : '기본 정보',
-      progress: `${draft.step ?? 1}/4`,
-      savedAt: draft.savedAt,
-    }));
+  const draftsQuery = useListingDraftsQuery(2);
+  const summary = draftsQuery.isSuccess ? draftsQuery.data : undefined;
+  const draftItems = summary?.items.map(toListingDraftSummaryItem) ?? [];
+  const canCreate = Boolean(summary?.canCreate) && !draftsQuery.isFetching;
   const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
   const [isCriteriaVisible, setIsCriteriaVisible] = useState(false);
   const {
@@ -66,6 +50,7 @@ export default function ListingApplicationEntryScreen() {
       setIsRestrictionVisible(true);
       return;
     }
+    if (!canCreate) return;
     void handleSubmit(() => router.push('/listing-application/basic-info'))();
   };
   const handleCloseRestriction = () => setIsRestrictionVisible(false);
@@ -80,7 +65,9 @@ export default function ListingApplicationEntryScreen() {
       return;
     }
     router.push({
-      pathname: getListingDraftRoute(drafts[draftId]?.step),
+      pathname: getListingDraftRoute(
+        summary?.items.find((draft) => String(draft.id) === draftId)?.currentStep,
+      ),
       params: { draftId },
     });
   };
@@ -172,7 +159,7 @@ export default function ListingApplicationEntryScreen() {
             <Button
               title="신청 시작"
               size="lg"
-              disabled={!hasConfirmedCriteria}
+              disabled={!hasConfirmedCriteria || !canCreate}
               onPress={handleStart}
             />
           </View>
@@ -182,7 +169,11 @@ export default function ListingApplicationEntryScreen() {
             작성 중인 신청서{' '}
             <Text className="text-motu-grey-light">
               {' '}
-              {draftItems.length}/{MAX_LISTING_DRAFTS}
+              {summary
+                ? `${summary.totalCount}/${summary.maxCount}`
+                : draftsQuery.isError
+                  ? '조회 실패'
+                  : '-/-'}
             </Text>
           </Text>
           <View className="rounded-xl bg-white px-[14px]">
@@ -224,6 +215,7 @@ export default function ListingApplicationEntryScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={handleStart}
+              disabled={!canCreate}
               className="min-h-11 flex-1 items-center justify-center rounded-xl bg-motu-grey-lighter py-3 active:opacity-50"
             >
               <Text className="font-pretendard-bold text-sm text-motu-black">새 신청서 작성</Text>

@@ -14,23 +14,17 @@ import type {
   ListingApplicationListItem,
 } from '@/types/listingApplication';
 import { getListingDraftRoute } from '@/utils/listingApplication';
+import { useListingDraftsQuery } from '@/queries/useListingDraftsQuery';
+import { toListingDraftListItem } from '@/utils/listingDraft';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function MyListingApplicationsScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [filter, setFilter] = useState<ListingApplicationFilter>('all');
-  const drafts = useListingDraftStore((state) => state.drafts);
+  const draftsQuery = useListingDraftsQuery(5);
+  const summary = draftsQuery.isSuccess ? draftsQuery.data : undefined;
   const applications = useListingDraftStore((state) => state.applications);
-  const deleteDraft = useListingDraftStore((state) => state.deleteDraft);
-  const draftItems: ListingApplicationListItem[] = Object.entries(drafts)
-    .filter(([id]) => !applications[id])
-    .map(([id, draft]) => ({
-      id,
-      name: draft.values.serviceName || '제목 없는 신청서',
-      status: 'draft',
-      savedDate: draft.savedDate ?? '',
-      step: draft.step ?? 1,
-    }));
+  const draftItems: ListingApplicationListItem[] = summary?.items.map(toListingDraftListItem) ?? [];
   const submittedItems = Object.values(applications).sort((a, b) =>
     b.submittedDate.localeCompare(a.submittedDate),
   );
@@ -40,9 +34,13 @@ export default function MyListingApplicationsScreen() {
   const filterLabel = LISTING_APPLICATION_FILTERS.find((option) => option.value === filter)?.label;
   const handleBack = () => router.dismissTo('/listing-application');
   const handleContinue = (draftId: string) => {
-    router.push({ pathname: getListingDraftRoute(drafts[draftId]?.step), params: { draftId } });
+    router.push({
+      pathname: getListingDraftRoute(
+        summary?.items.find((draft) => String(draft.id) === draftId)?.currentStep,
+      ),
+      params: { draftId },
+    });
   };
-  const handleDelete = (draftId: string) => deleteDraft(draftId);
   const handleApply = () => router.dismissTo('/listing-application');
   const handleOpen = (applicationId: string) => {
     router.push({ pathname: '/listing-application/application-detail', params: { applicationId } });
@@ -65,11 +63,12 @@ export default function MyListingApplicationsScreen() {
               key={application.id}
               application={application}
               onContinue={handleContinue}
-              onDelete={handleDelete}
               onOpen={handleOpen}
             />
           ))}
           {items.length === 0 &&
+            !draftsQuery.isPending &&
+            !draftsQuery.isError &&
             (hasNoApplication ? (
               <ListingApplicationEmpty onApplyPress={handleApply} />
             ) : (
