@@ -8,6 +8,7 @@ const positiveInteger = (message: string) =>
     .string()
     .trim()
     .min(1, message)
+    .max(40, '40자 이하로 입력해 주세요.')
     .refine(
       (value) =>
         !value ||
@@ -20,8 +21,8 @@ const positiveInteger = (message: string) =>
 export const listingTradingInfoSchema = z.object({
   listingPrice: positiveInteger('희망 상장가를 입력해 주세요.'),
   totalQuantity: positiveInteger('총 발행 수량을 입력해 주세요.'),
-  minimumOrderQuantity: z.enum(MIN_ORDER_QUANTITIES),
-  tickSize: z.enum(PRICE_TICK_SIZES),
+  minimumOrderQuantity: z.enum(MIN_ORDER_QUANTITIES, { error: '최소 주문 수량을 선택해 주세요.' }),
+  tickSize: z.enum(PRICE_TICK_SIZES, { error: '호가 단위를 선택해 주세요.' }),
   tradingStartAt: z.string().refine((value) => {
     if (!/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}$/.test(value)) return false;
     const date = new Date(`${value.slice(0, 10).replaceAll('.', '-')}T${value.slice(11)}:00+09:00`);
@@ -32,7 +33,11 @@ export const listingTradingInfoSchema = z.object({
       month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth && hour <= 23 && minute <= 59
     );
   }, '날짜와 시간을 선택해 주세요.'),
-  priceReason: z.string().trim().min(1, '가격 산정 근거를 입력해 주세요.'),
+  priceReason: z
+    .string()
+    .trim()
+    .min(1, '가격 산정 근거를 입력해 주세요.')
+    .max(5000, '가격 산정 근거는 5,000자 이하로 입력해 주세요.'),
 });
 
 export type ListingTradingInfoForm = z.infer<typeof listingTradingInfoSchema>;

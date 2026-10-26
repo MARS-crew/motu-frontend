@@ -14,12 +14,14 @@ import {
 type ListingTradingInfoFieldsProps = {
   control: Control<ListingTradingInfoForm>;
   errors: FieldErrors<ListingTradingInfoForm>;
+  isSaving?: boolean;
   onFieldLayout: (name: keyof ListingTradingInfoForm, offset: number) => void;
 };
 
 export function ListingTradingInfoFields({
   control,
   errors,
+  isSaving = false,
   onFieldLayout,
 }: ListingTradingInfoFieldsProps) {
   const [focusedNumberField, setFocusedNumberField] = useState<
@@ -43,6 +45,7 @@ export function ListingTradingInfoFields({
                 isRequired
                 placeholder="입력해 주세요."
                 keyboardType="number-pad"
+                editable={!isSaving}
                 value={
                   focusedNumberField === name
                     ? value
@@ -52,7 +55,7 @@ export function ListingTradingInfoFields({
                 }
                 onChangeText={(text) => onChange(text.replace(/[P주]/g, ''))}
                 onBlur={() => {
-                  if (/^\d+$/.test(value.replaceAll(',', ''))) {
+                  if (/^(?:\d+|\d{1,3}(?:,\d{3})+)$/.test(value)) {
                     const number = Number(value.replaceAll(',', ''));
                     if (Number.isSafeInteger(number)) onChange(number.toLocaleString('en-US'));
                   }
@@ -82,7 +85,9 @@ export function ListingTradingInfoFields({
                 value={field.value}
                 options={name === 'minimumOrderQuantity' ? MIN_ORDER_QUANTITIES : PRICE_TICK_SIZES}
                 unit={name === 'minimumOrderQuantity' ? '주' : 'P'}
-                isOpen={openField === name}
+                disabled={isSaving}
+                errorMessage={errors[name]?.message}
+                isOpen={!isSaving && openField === name}
                 onToggle={() => handleToggle(name)}
                 onChange={(value) => {
                   field.onChange(value);
@@ -101,7 +106,8 @@ export function ListingTradingInfoFields({
             <ListingDateTimeField
               value={field.value}
               errorMessage={errors.tradingStartAt?.message}
-              isOpen={openField === 'tradingStartAt'}
+              disabled={isSaving}
+              isOpen={!isSaving && openField === 'tradingStartAt'}
               onToggle={() => handleToggle('tradingStartAt')}
               onClose={() => setOpenField(null)}
               onChange={field.onChange}
@@ -117,6 +123,7 @@ export function ListingTradingInfoFields({
             <TextField
               label="가격 산정 근거"
               isRequired
+              editable={!isSaving}
               multiline
               multilineSize="compact"
               placeholder="최근 매출, 이용자 수, 성장률 등 가격 근거를 입력해 주세요."
