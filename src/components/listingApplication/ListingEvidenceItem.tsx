@@ -7,9 +7,13 @@ import { formatEvidenceSize } from '@/utils/listingEvidence';
 
 cssInterop(Image, { className: 'style' });
 
-type ListingEvidenceItemProps = { item: EvidenceItem; onDelete: () => void };
+type ListingEvidenceItemProps = { item: EvidenceItem; disabled?: boolean; onDelete: () => void };
 
-export function ListingEvidenceItem({ item, onDelete }: ListingEvidenceItemProps) {
+export function ListingEvidenceItem({
+  item,
+  onDelete,
+  disabled = false,
+}: ListingEvidenceItemProps) {
   const name = item.kind === 'file' ? item.name : item.url;
   return (
     <View className="flex-row items-center gap-2.5 rounded-[10px] bg-motu-bg-secondary px-[14px] py-3">
@@ -28,6 +32,7 @@ export function ListingEvidenceItem({ item, onDelete }: ListingEvidenceItemProps
         accessibilityRole="button"
         accessibilityLabel={`${name} 삭제`}
         onPress={onDelete}
+        disabled={disabled}
         hitSlop={10}
       >
         <Image

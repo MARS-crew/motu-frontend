@@ -7,6 +7,7 @@ export const listingAttachmentSchema = z.object({
   contentType: z.string().nullish(),
   size: z.union([z.number().nonnegative(), z.string().regex(/^\d+$/).transform(Number)]).nullish(),
   saved: z.boolean(),
+  url: z.string().nullish(),
   downloadPath: z.string().nullable(),
 });
 export const listingFileCollectionSchema = z.object({

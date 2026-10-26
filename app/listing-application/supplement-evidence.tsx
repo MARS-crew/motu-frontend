@@ -1,27 +1,19 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 
-import { ListingSupplementEditor } from '@/components/listingApplication/ListingSupplementEditor';
+import { ListingServerSupplement } from '@/components/listingApplication/ListingServerSupplement';
+import { ListingPreviewSupplementEvidence } from '@/components/listingApplication/ListingPreviewSupplementEvidence';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 
-export default function ListingSupplementEvidenceScreen() {
+export default function SupplementEvidenceScreen() {
   const { applicationId } = useLocalSearchParams<{ applicationId?: string }>();
-  const application = useListingDraftStore((state) =>
-    applicationId ? state.applications[applicationId] : undefined,
+  const parsedId = Number(applicationId);
+  const id = Number.isSafeInteger(parsedId) && parsedId > 0 ? parsedId : null;
+  const hasPreview = useListingDraftStore((state) =>
+    Boolean(applicationId && state.applications[applicationId]),
   );
-  const supplementDraft = useListingDraftStore((state) =>
-    applicationId ? state.supplementDrafts[applicationId] : undefined,
-  );
-  if (!applicationId || application?.status !== 'supplementRequested') {
-    return <Redirect href="/listing-application/my-applications" />;
-  }
-  return (
-    <SafeAreaView className="flex-1 bg-motu-bg">
-      <ListingSupplementEditor
-        key={applicationId}
-        applicationId={applicationId}
-        initialValues={supplementDraft ?? application.evidence}
-      />
-    </SafeAreaView>
+  return id === null && hasPreview ? (
+    <ListingPreviewSupplementEvidence />
+  ) : (
+    <ListingServerSupplement applicationId={id} mode="editor" />
   );
 }
