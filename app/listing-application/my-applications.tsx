@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useListingAccess } from '@/hooks/useListingAccess';
+
 import { TopBar } from '@/components/TopBar';
 import { ListingApplicationCard } from '@/components/listingApplication/ListingApplicationCard';
 import { ListingApplicationEmpty } from '@/components/listingApplication/ListingApplicationEmpty';
@@ -21,6 +23,7 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 export default function MyListingApplicationsScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [filter, setFilter] = useState<ListingApplicationFilter>('all');
+  const access = useListingAccess();
   const draftsQuery = useListingDraftsQuery(5);
   const summary = draftsQuery.isSuccess ? draftsQuery.data : undefined;
   const applications = useListingDraftStore((state) => state.applications);
@@ -33,7 +36,11 @@ export default function MyListingApplicationsScreen() {
   const hasNoApplication = allItems.length === 0;
   const filterLabel = LISTING_APPLICATION_FILTERS.find((option) => option.value === filter)?.label;
   const handleBack = () => router.dismissTo('/listing-application');
-  const handleContinue = (draftId: string) => {
+  const handleContinue = async (draftId: string) => {
+    const result = await access.verifyAccess();
+    if (result === 'login') router.push('/(auth)/login');
+    if (result === 'restricted') router.dismissTo('/listing-application');
+    if (result !== 'allowed') return;
     router.push({
       pathname: getListingDraftRoute(
         summary?.items.find((draft) => String(draft.id) === draftId)?.currentStep,

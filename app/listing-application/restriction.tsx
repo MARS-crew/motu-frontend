@@ -1,18 +1,23 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
-import {
-  LISTING_RESTRICTION_DESCRIPTION,
-  LISTING_RESTRICTION_LABEL,
-} from '@/constants/listingRestrictionPreview';
+import { LISTING_RESTRICTION_DESCRIPTION } from '@/constants/listingRestrictionPreview';
+import { useListingAccess } from '@/hooks/useListingAccess';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingRestrictionScreen() {
+  const access = useListingAccess();
   const { isScrolled, handleScroll } = useHeaderScroll();
   const handleBack = () =>
     router.canGoBack() ? router.back() : router.replace('/listing-application');
+
+  if (!access.isLoggedIn) return <Redirect href="/(auth)/login" />;
+  if (!access.restriction) {
+    if (access.isChecking) return null;
+    return <Redirect href="/listing-application" />;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -26,7 +31,7 @@ export default function ListingRestrictionScreen() {
       >
         <View className="self-start rounded-full bg-motu-red-light px-[14px] py-1.5">
           <Text className="font-pretendard-medium text-xs text-motu-btn-red">
-            {LISTING_RESTRICTION_LABEL}
+            {access.restriction.label}
           </Text>
         </View>
         <Text

@@ -9,12 +9,14 @@ cssInterop(Image, { className: 'style' });
 
 type ListingRestrictionModalProps = {
   isVisible: boolean;
+  label?: string;
   onClose: () => void;
   onDetailsPress: () => void;
 };
 
 export function ListingRestrictionModal({
   isVisible,
+  label = LISTING_RESTRICTION_LABEL,
   onClose,
   onDetailsPress,
 }: ListingRestrictionModalProps) {
@@ -50,9 +52,7 @@ export function ListingRestrictionModal({
               />
             </View>
             <View className="mt-4 rounded-full bg-motu-red-light px-[14px] py-1.5">
-              <Text className="font-pretendard-medium text-xs text-motu-btn-red">
-                {LISTING_RESTRICTION_LABEL}
-              </Text>
+              <Text className="font-pretendard-medium text-xs text-motu-btn-red">{label}</Text>
             </View>
             <Text
               accessibilityRole="header"

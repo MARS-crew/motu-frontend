@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -13,7 +13,7 @@ import { ListingRestrictionModal } from '@/components/listingApplication/Listing
 import { useListingDraftsQuery } from '@/queries/useListingDraftsQuery';
 import { toListingDraftSummaryItem } from '@/utils/listingDraft';
 import { getListingDraftRoute } from '@/utils/listingApplication';
-import { IS_LISTING_RESTRICTED_PREVIEW } from '@/constants/listingRestrictionPreview';
+import { useListingAccess } from '@/hooks/useListingAccess';
 import { ListingCriteriaModal } from '@/components/listingApplication/ListingCriteriaModal';
 import { LISTING_APPLICATION_STEPS } from '@/constants/listingApplicationPreview';
 import {
@@ -26,11 +26,15 @@ cssInterop(Image, { className: 'style' });
 
 export default function ListingApplicationEntryScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
+  const access = useListingAccess();
+  const isFocused = useIsFocused();
   const draftsQuery = useListingDraftsQuery(2);
   const summary = draftsQuery.isSuccess ? draftsQuery.data : undefined;
   const draftItems = summary?.items.map(toListingDraftSummaryItem) ?? [];
   const canCreate = Boolean(summary?.canCreate) && !draftsQuery.isFetching;
-  const [isRestrictionVisible, setIsRestrictionVisible] = useState(IS_LISTING_RESTRICTED_PREVIEW);
+  const [dismissedRestrictionKey, setDismissedRestrictionKey] = useState<string | null>(null);
+  const isRestrictionVisible =
+    isFocused && Boolean(access.restriction) && dismissedRestrictionKey !== access.restrictionKey;
   const [isCriteriaVisible, setIsCriteriaVisible] = useState(false);
   const {
     control,
@@ -46,24 +50,25 @@ export default function ListingApplicationEntryScreen() {
   const handleOpenCriteria = () => setIsCriteriaVisible(true);
   const handleCloseCriteria = () => setIsCriteriaVisible(false);
   const handleStart = () => {
-    if (IS_LISTING_RESTRICTED_PREVIEW) {
-      setIsRestrictionVisible(true);
-      return;
-    }
     if (!canCreate) return;
-    void handleSubmit(() => router.push('/listing-application/basic-info'))();
+    void handleSubmit(async () => {
+      const result = await access.verifyAccess();
+      if (result === 'restricted') setDismissedRestrictionKey(null);
+      if (result === 'login') router.push('/(auth)/login');
+      if (result === 'allowed') router.push('/listing-application/basic-info');
+    })();
   };
-  const handleCloseRestriction = () => setIsRestrictionVisible(false);
+  const handleCloseRestriction = () => setDismissedRestrictionKey(access.restrictionKey);
   const handleRestrictionDetails = () => {
-    setIsRestrictionVisible(false);
+    setDismissedRestrictionKey(access.restrictionKey);
     router.push('/listing-application/restriction');
   };
   const handleViewAll = () => router.push('/listing-application/my-applications');
-  const handleContinue = (draftId: string) => {
-    if (IS_LISTING_RESTRICTED_PREVIEW) {
-      setIsRestrictionVisible(true);
-      return;
-    }
+  const handleContinue = async (draftId: string) => {
+    const result = await access.verifyAccess();
+    if (result === 'restricted') setDismissedRestrictionKey(null);
+    if (result === 'login') router.push('/(auth)/login');
+    if (result !== 'allowed') return;
     router.push({
       pathname: getListingDraftRoute(
         summary?.items.find((draft) => String(draft.id) === draftId)?.currentStep,
@@ -146,12 +151,12 @@ export default function ListingApplicationEntryScreen() {
                 </Pressable>
               )}
             />
-            {errors.hasConfirmedCriteria && (
+            {(errors.hasConfirmedCriteria || access.errorMessage) && (
               <Text
                 accessibilityLiveRegion="polite"
                 className="mt-3 font-pretendard text-[11px] text-motu-red"
               >
-                {errors.hasConfirmedCriteria.message}
+                {errors.hasConfirmedCriteria?.message ?? access.errorMessage}
               </Text>
             )}
           </View>
@@ -159,7 +164,7 @@ export default function ListingApplicationEntryScreen() {
             <Button
               title="신청 시작"
               size="lg"
-              disabled={!hasConfirmedCriteria || !canCreate}
+              disabled={!hasConfirmedCriteria || !canCreate || access.isChecking}
               onPress={handleStart}
             />
           </View>
@@ -215,7 +220,7 @@ export default function ListingApplicationEntryScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={handleStart}
-              disabled={!canCreate}
+              disabled={!canCreate || access.isChecking}
               className="min-h-11 flex-1 items-center justify-center rounded-xl bg-motu-grey-lighter py-3 active:opacity-50"
             >
               <Text className="font-pretendard-bold text-sm text-motu-black">새 신청서 작성</Text>
@@ -226,6 +231,7 @@ export default function ListingApplicationEntryScreen() {
       <ListingCriteriaModal isVisible={isCriteriaVisible} onClose={handleCloseCriteria} />
       <ListingRestrictionModal
         isVisible={isRestrictionVisible}
+        label={access.restriction?.label}
         onClose={handleCloseRestriction}
         onDetailsPress={handleRestrictionDetails}
       />
