@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { LISTING_TRANSACTION_BASES } from '@/constants/listingMetricsPreview';
 import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
+import { toListingMetricsBasis } from '@/utils/listingMetricsDraft';
 import {
   formatMetricRange,
   getMetricReferenceDate,
@@ -41,7 +42,7 @@ export function ListingMetricsBasisField({
     value === 'lastTwelveMonths'
       ? getCompletedMetricPeriod(referenceDate)
       : value === 'entireOperation' &&
-          savedBasis === value &&
+          toListingMetricsBasis(savedBasis) === value &&
           savedPeriod &&
           isValidMetricRange(savedPeriod)
         ? savedPeriod
