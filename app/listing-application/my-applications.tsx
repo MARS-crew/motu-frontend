@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useListingAccess } from '@/hooks/useListingAccess';
+
 import { TopBar } from '@/components/TopBar';
 import { ListingApplicationCard } from '@/components/listingApplication/ListingApplicationCard';
 import { ListingApplicationEmpty } from '@/components/listingApplication/ListingApplicationEmpty';
@@ -14,23 +16,18 @@ import type {
   ListingApplicationListItem,
 } from '@/types/listingApplication';
 import { getListingDraftRoute } from '@/utils/listingApplication';
+import { useListingDraftsQuery } from '@/queries/useListingDraftsQuery';
+import { toListingDraftListItem } from '@/utils/listingDraft';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function MyListingApplicationsScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [filter, setFilter] = useState<ListingApplicationFilter>('all');
-  const drafts = useListingDraftStore((state) => state.drafts);
+  const access = useListingAccess();
+  const draftsQuery = useListingDraftsQuery(5);
+  const summary = draftsQuery.isSuccess ? draftsQuery.data : undefined;
   const applications = useListingDraftStore((state) => state.applications);
-  const deleteDraft = useListingDraftStore((state) => state.deleteDraft);
-  const draftItems: ListingApplicationListItem[] = Object.entries(drafts)
-    .filter(([id]) => !applications[id])
-    .map(([id, draft]) => ({
-      id,
-      name: draft.values.serviceName || '제목 없는 신청서',
-      status: 'draft',
-      savedDate: draft.savedDate ?? '',
-      step: draft.step ?? 1,
-    }));
+  const draftItems: ListingApplicationListItem[] = summary?.items.map(toListingDraftListItem) ?? [];
   const submittedItems = Object.values(applications).sort((a, b) =>
     b.submittedDate.localeCompare(a.submittedDate),
   );
@@ -39,10 +36,18 @@ export default function MyListingApplicationsScreen() {
   const hasNoApplication = allItems.length === 0;
   const filterLabel = LISTING_APPLICATION_FILTERS.find((option) => option.value === filter)?.label;
   const handleBack = () => router.dismissTo('/listing-application');
-  const handleContinue = (draftId: string) => {
-    router.push({ pathname: getListingDraftRoute(drafts[draftId]?.step), params: { draftId } });
+  const handleContinue = async (draftId: string) => {
+    const result = await access.verifyAccess();
+    if (result === 'login') router.push('/(auth)/login');
+    if (result === 'restricted') router.dismissTo('/listing-application');
+    if (result !== 'allowed') return;
+    router.push({
+      pathname: getListingDraftRoute(
+        summary?.items.find((draft) => String(draft.id) === draftId)?.currentStep,
+      ),
+      params: { draftId },
+    });
   };
-  const handleDelete = (draftId: string) => deleteDraft(draftId);
   const handleApply = () => router.dismissTo('/listing-application');
   const handleOpen = (applicationId: string) => {
     router.push({ pathname: '/listing-application/application-detail', params: { applicationId } });
@@ -65,11 +70,12 @@ export default function MyListingApplicationsScreen() {
               key={application.id}
               application={application}
               onContinue={handleContinue}
-              onDelete={handleDelete}
               onOpen={handleOpen}
             />
           ))}
           {items.length === 0 &&
+            !draftsQuery.isPending &&
+            !draftsQuery.isError &&
             (hasNoApplication ? (
               <ListingApplicationEmpty onApplyPress={handleApply} />
             ) : (
