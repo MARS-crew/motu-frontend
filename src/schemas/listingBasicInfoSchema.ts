@@ -32,14 +32,18 @@ export const listingImageSchema = z
   );
 
 export const listingBasicInfoSchema = z.object({
-  serviceName: z.string().trim().min(1, '필수 입력 항목입니다.'),
+  serviceName: z
+    .string()
+    .trim()
+    .min(1, '필수 입력 항목입니다.')
+    .max(30, '서비스명은 30자 이하로 입력해 주세요.'),
   introduction: z
     .string()
     .trim()
     .min(1, '필수 입력 항목입니다.')
     .min(10, '한 줄 소개는 10~60자로 입력해 주세요.')
     .max(60, '한 줄 소개는 10~60자로 입력해 주세요.'),
-  description: z.string(),
+  description: z.string().max(500, '상세 설명은 500자 이하로 입력해 주세요.'),
   category: z
     .string()
     .refine(
@@ -53,20 +57,32 @@ export const listingBasicInfoSchema = z.object({
   officialUrl: z
     .string()
     .trim()
+    .max(2048, '공식 URL은 2,048자 이하로 입력해 주세요.')
     .refine((value) => {
       if (!value) return true;
       try {
         const url = new URL(value);
-        return url.protocol === 'https:' && url.hostname.includes('.');
+        return (
+          url.protocol === 'https:' && url.hostname.includes('.') && !url.username && !url.password
+        );
       } catch {
         return false;
       }
     }, 'https://로 시작하는 올바른 주소를 입력해 주세요.'),
-  companyName: z.string().trim().min(1, '운영사명을 입력해 주세요.'),
-  contactName: z.string().trim().min(1, '담당자명을 입력해 주세요.'),
+  companyName: z
+    .string()
+    .trim()
+    .min(1, '운영사명을 입력해 주세요.')
+    .max(50, '운영사명은 50자 이하로 입력해 주세요.'),
+  contactName: z
+    .string()
+    .trim()
+    .min(1, '담당자명을 입력해 주세요.')
+    .max(50, '담당자명은 50자 이하로 입력해 주세요.'),
   email: z
     .string()
     .trim()
+    .max(255, '이메일은 255자 이하로 입력해 주세요.')
     .min(1, '필수 입력 항목입니다.')
     .refine(
       (value) => !value || z.email().safeParse(value).success,
@@ -75,6 +91,7 @@ export const listingBasicInfoSchema = z.object({
   phone: z
     .string()
     .trim()
+    .max(30, '연락처는 30자 이하로 입력해 주세요.')
     .min(1, '필수 입력 항목입니다.')
     .refine(
       (value) => !value || /^010-\d{4}-\d{4}$/.test(value),
