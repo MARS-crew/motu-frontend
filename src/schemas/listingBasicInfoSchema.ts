@@ -24,6 +24,8 @@ export const listingImageSchema = z
     width: z.number().optional(),
     height: z.number().optional(),
     isPreview: z.boolean().optional(),
+    collectionId: z.string().optional(),
+    attachmentId: z.string().optional(),
   })
   .refine((file) => file.size <= MAX_LISTING_IMAGE_BYTES, LISTING_IMAGE_SIZE_ERROR)
   .refine(

@@ -2,6 +2,8 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 
+import { useListingImageSource } from '@/hooks/useListingImageSource';
+
 import { listingImageSchema, type ListingImage } from '@/schemas/listingBasicInfoSchema';
 
 cssInterop(Image, { className: 'style' });
@@ -12,6 +14,7 @@ type ListingFileFieldProps = {
   isRequired?: boolean;
   errorMessage?: string;
   onPress: () => void;
+  disabled?: boolean;
 };
 
 export function ListingFileField({
@@ -20,7 +23,9 @@ export function ListingFileField({
   isRequired = false,
   errorMessage,
   onPress,
+  disabled = false,
 }: ListingFileFieldProps) {
+  const source = useListingImageSource(file);
   const hasValidFile = file !== null && listingImageSchema.safeParse(file).success;
   const sizeLabel = file
     ? file.size >= 1024 * 1024
@@ -51,7 +56,7 @@ export function ListingFileField({
             </View>
           ) : (
             <Image
-              source={{ uri: file.uri }}
+              source={source}
               contentFit="cover"
               className={`h-11 rounded-lg ${isRequired ? 'w-16' : 'w-11'}`}
             />
@@ -74,6 +79,7 @@ export function ListingFileField({
           accessibilityRole="button"
           accessibilityLabel={`${label} ${hasValidFile ? '변경' : '파일 선택'}`}
           onPress={onPress}
+          disabled={disabled}
           className="rounded-lg bg-motu-tonal px-3 py-2 active:opacity-60"
         >
           <Text className="font-pretendard-medium text-xs leading-4 text-motu-text-primary">

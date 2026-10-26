@@ -27,6 +27,11 @@ export function getListingBasicInfoError(error: unknown) {
     message: fallback,
     fields: {},
   };
+  if (error instanceof ListingBasicInfoSaveError) {
+    result.message = error.message;
+    if (error.field) result.fields[error.field] = error.message;
+    return result;
+  }
   if (!isAxiosError<unknown>(error)) return result;
   const parsed = errorSchema.safeParse(error.response?.data);
   if (!parsed.success) return result;
@@ -45,3 +50,15 @@ export function getListingBasicInfoError(error: unknown) {
   }
   return result;
 }
+
+export class ListingBasicInfoSaveError extends Error {
+  readonly field?: keyof ListingBasicInfoForm;
+
+  constructor(message: string, field?: keyof ListingBasicInfoForm) {
+    super(message);
+    this.field = field;
+  }
+}
+
+export const getListingBasicInfoField = (name: string) =>
+  BASIC_INFO_API_FIELDS[name.replace(/^data\./, '')];
