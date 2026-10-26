@@ -55,6 +55,8 @@ export const saveListingTradingDraftSchema = z.object({
   data: listingTradingDraftDataSchema,
 });
 export const listingMetricsDraftDataSchema = z.object({
+  metricsStartDate: z.string().max(40).nullable().optional(),
+  metricsEndDate: z.string().max(40).nullable().optional(),
   mau: z.string().max(40, 'MAU는 40자 이하로 입력해 주세요.').nullable(),
   dau: z.string().max(40, 'DAU는 40자 이하로 입력해 주세요.').nullable(),
   revenue: z.string().max(40, '매출은 40자 이하로 입력해 주세요.').nullable(),

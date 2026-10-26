@@ -17,6 +17,11 @@ const METRICS_API_FIELDS: Record<string, keyof ListingMetricsForm> = {
   transactionVolumeExtractDate: 'transactionExtractedAt',
 };
 const messageSchema = z.object({ error: z.object({ message: z.string() }) });
+const detailedFieldsSchema = z.object({
+  error: z.object({
+    details: z.object({ fields: z.array(z.object({ field: z.string(), message: z.string() })) }),
+  }),
+});
 const fieldsSchema = z.object({
   error: z.object({
     details: z.object({
@@ -53,5 +58,15 @@ export function getListingMetricsError(error: unknown) {
       const text = Array.isArray(messages) ? messages[0] : messages;
       if (field && text && !result.fields[field]) result.fields[field] = text;
     }
+  const detailedFields = detailedFieldsSchema.safeParse(body);
+  if (detailedFields.success) {
+    const messages: string[] = [];
+    for (const { field: name, message: text } of detailedFields.data.error.details.fields) {
+      const field = METRICS_API_FIELDS[name.replace(/^data\./, '')];
+      if (field && text && !result.fields[field]) result.fields[field] = text;
+      if (text.trim() && !messages.includes(text)) messages.push(text);
+    }
+    if (messages.length) result.message = messages.join('\n');
+  }
   return result;
 }

@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { saveListingMetricsDraft, validateListingMetricsStep } from '@/apis/listingDraft';
+import {
+  getListingDraftDetail,
+  saveListingMetricsDraft,
+  validateListingMetricsStep,
+} from '@/apis/listingDraft';
 import { listingTradingDraftKey } from '@/queries/useListingTradingDraftQuery';
 import { listingBasicDraftKey } from '@/queries/useListingBasicDraftQuery';
 import { LISTING_DRAFTS_QUERY_KEY } from '@/queries/useListingDraftsQuery';
@@ -22,9 +26,13 @@ export function useSaveListingMetricsDraftMutation() {
     mutationFn: async ({ id, values, validateStep }: SaveListingMetricsDraftVariables) => {
       if (!Number.isSafeInteger(id) || id <= 0) throw new Error('올바른 신청서 번호가 아닙니다.');
       if (validateStep) listingMetricsSchema.parse(values);
+      const savedData =
+        values.transactionBasis === 'entireOperation'
+          ? (await getListingDraftDetail(id)).data
+          : undefined;
       const body = saveListingMetricsDraftSchema.parse({
         currentStep: 3,
-        data: toListingMetricsDraftData(values),
+        data: toListingMetricsDraftData(values, { savedData }),
       });
       const draft = validateStep
         ? await validateListingMetricsStep(id, body)
