@@ -10,6 +10,7 @@ type TextFieldName = Exclude<keyof ListingBasicInfoForm, 'logo' | 'coverImage' |
 
 type ListingBasicInfoFieldsProps = {
   control: Control<ListingBasicInfoForm>;
+  isSaving?: boolean;
   errors: FieldErrors<ListingBasicInfoForm>;
   onFieldLayout: (field: keyof ListingBasicInfoForm, offset: number) => void;
   onImagePress: (field: 'logo' | 'coverImage') => void;
@@ -17,6 +18,7 @@ type ListingBasicInfoFieldsProps = {
 
 export function ListingBasicInfoFields({
   control,
+  isSaving = false,
   errors,
   onFieldLayout,
   onImagePress,
@@ -37,6 +39,7 @@ export function ListingBasicInfoFields({
         render={({ field: { value, onChange, onBlur, ref } }) => (
           <TextField
             label={label}
+            editable={!isSaving}
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
@@ -75,7 +78,9 @@ export function ListingBasicInfoFields({
           render={({ field }) => (
             <ListingCategoryField
               value={field.value}
-              onChange={field.onChange}
+              onChange={(value) => {
+                if (!isSaving) field.onChange(value);
+              }}
               errorMessage={errors.category?.message}
             />
           )}
@@ -93,6 +98,7 @@ export function ListingBasicInfoFields({
             <ListingFileField
               label="로고 파일"
               file={field.value}
+              disabled={isSaving}
               errorMessage={errors.logo?.message}
               onPress={() => onImagePress('logo')}
             />
@@ -112,6 +118,7 @@ export function ListingBasicInfoFields({
               label="대표 이미지"
               isRequired
               file={field.value}
+              disabled={isSaving}
               errorMessage={errors.coverImage?.message}
               onPress={() => onImagePress('coverImage')}
             />
