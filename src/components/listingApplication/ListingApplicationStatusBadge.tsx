@@ -3,7 +3,11 @@ import { Text, View } from 'react-native';
 import { LISTING_APPLICATION_FILTERS } from '@/constants/listingApplicationsPreview';
 import type { ListingApplicationStatus } from '@/types/listingApplication';
 
-const STATUS_STYLES: Record<ListingApplicationStatus, { background: string; text: string }> = {
+const STATUS_STYLES: Record<
+  ListingApplicationStatus | 'expired',
+  { background: string; text: string }
+> = {
+  expired: { background: 'bg-motu-bg-secondary', text: 'text-motu-text-tertiary' },
   draft: { background: 'bg-motu-tonal', text: 'text-motu-black' },
   received: { background: 'bg-motu-bg-secondary', text: 'text-motu-text-secondary' },
   reviewing: { background: 'bg-motu-bg-secondary', text: 'text-motu-text-secondary' },
@@ -13,12 +17,15 @@ const STATUS_STYLES: Record<ListingApplicationStatus, { background: string; text
 };
 
 type ListingApplicationStatusBadgeProps = {
-  status: ListingApplicationStatus;
+  status: ListingApplicationStatus | 'expired';
 };
 
 export function ListingApplicationStatusBadge({ status }: ListingApplicationStatusBadgeProps) {
   const statusStyle = STATUS_STYLES[status];
-  const label = LISTING_APPLICATION_FILTERS.find((filter) => filter.value === status)?.label;
+  const label =
+    status === 'expired'
+      ? '만료'
+      : LISTING_APPLICATION_FILTERS.find((filter) => filter.value === status)?.label;
   return (
     <View
       className={`h-7 items-center justify-center rounded-full px-3.5 ${status === 'draft' || status === 'supplementRequested' ? 'min-w-[76px]' : status === 'reviewing' ? 'min-w-[62px]' : 'min-w-[51px]'} ${statusStyle.background}`}

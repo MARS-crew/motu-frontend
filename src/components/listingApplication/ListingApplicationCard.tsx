@@ -24,9 +24,17 @@ export function ListingApplicationCard({
   onDelete,
   onOpen,
 }: ListingApplicationCardProps) {
+  const Summary = application.status === 'draft' ? Pressable : View;
   const content = (
     <>
-      <View className="flex-row items-center gap-2.5">
+      <Summary
+        accessibilityRole={application.status === 'draft' ? 'button' : undefined}
+        accessibilityLabel={
+          application.status === 'draft' ? `${application.name} 신청 상세 보기` : undefined
+        }
+        onPress={application.status === 'draft' ? () => onOpen(application.id) : undefined}
+        className="flex-row items-center gap-2.5"
+      >
         <View className="min-w-0 flex-1 gap-1">
           <Text
             numberOfLines={1}
@@ -54,7 +62,7 @@ export function ListingApplicationCard({
             />
           </View>
         )}
-      </View>
+      </Summary>
       {application.status === 'draft' && (
         <View className="flex-row gap-2">
           <Pressable

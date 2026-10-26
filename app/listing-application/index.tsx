@@ -63,6 +63,11 @@ export default function ListingApplicationEntryScreen() {
     setDismissedRestrictionKey(access.restrictionKey);
     router.push('/listing-application/restriction');
   };
+  const handleOpenDraft = (applicationId: string) =>
+    router.push({
+      pathname: '/listing-application/application-detail',
+      params: { applicationId },
+    });
   const handleViewAll = () => router.push('/listing-application/my-applications');
   const handleContinue = async (draftId: string) => {
     const result = await access.verifyAccess();
@@ -183,30 +188,37 @@ export default function ListingApplicationEntryScreen() {
           </Text>
           <View className="rounded-xl bg-white px-[14px]">
             {draftItems.map((draft, index) => (
-              <Pressable
+              <View
                 key={draft.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${draft.name} 이어서 작성`}
-                onPress={() => handleContinue(draft.id)}
                 className={`flex-row items-center justify-between gap-1 py-[10px] ${index > 0 ? 'border-t border-motu-grey-lighter' : ''}`}
               >
-                <View className="flex-1">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${draft.name} 신청 상세 보기`}
+                  onPress={() => handleOpenDraft(draft.id)}
+                  className="flex-1"
+                >
                   <Text className="font-pretendard-bold text-[15px] text-motu-black">
                     {draft.name}
                   </Text>
                   <Text className="mt-1 font-pretendard-medium text-[11px] text-motu-grey">
                     임시 저장 · {draft.step} {draft.progress} · {draft.savedAt}
                   </Text>
-                </View>
-                <View className="flex-row items-center gap-1">
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${draft.name} 이어서 작성`}
+                  onPress={() => void handleContinue(draft.id)}
+                  className="flex-row items-center gap-1"
+                >
                   <Text className="font-pretendard-medium text-xs text-motu-grey">이어서 작성</Text>
                   <Image
                     source={require('../../assets/icons/home/chevronRightSmall.svg')}
                     className="h-4 w-4"
                     contentFit="contain"
                   />
-                </View>
-              </Pressable>
+                </Pressable>
+              </View>
             ))}
           </View>
           <View className="mt-3 flex-row gap-2">
