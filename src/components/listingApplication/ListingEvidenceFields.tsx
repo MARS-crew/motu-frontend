@@ -14,6 +14,7 @@ type ListingEvidenceFieldsProps = {
   errors: FieldErrors<ListingEvidenceForm>;
   attachmentError: string | null;
   isPicking: boolean;
+  isSaving?: boolean;
   onPick: () => void;
   onHelp: () => void;
   onDelete: (item: EvidenceItem) => void;
@@ -26,6 +27,7 @@ export function ListingEvidenceFields({
   errors,
   attachmentError,
   isPicking,
+  isSaving = false,
   onPick,
   onHelp,
   onDelete,
@@ -56,8 +58,8 @@ export function ListingEvidenceFields({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="증빙 파일 선택"
-          accessibilityState={{ disabled: isPicking || hasReachedLimit }}
-          disabled={isPicking || hasReachedLimit}
+          accessibilityState={{ disabled: isPicking || isSaving || hasReachedLimit }}
+          disabled={isPicking || isSaving || hasReachedLimit}
           onPress={onPick}
           className={`h-10 w-[84px] items-center justify-center self-start rounded-[10px] bg-motu-grey-lighter px-[18px] ${isPicking || hasReachedLimit ? 'opacity-50' : ''}`}
         >
@@ -97,7 +99,12 @@ export function ListingEvidenceFields({
       {items.length > 0 && (
         <View className="gap-2">
           {items.map((item) => (
-            <ListingEvidenceItem key={item.id} item={item} onDelete={() => onDelete(item)} />
+            <ListingEvidenceItem
+              key={item.id}
+              item={item}
+              disabled={isSaving}
+              onDelete={() => onDelete(item)}
+            />
           ))}
         </View>
       )}
@@ -107,6 +114,7 @@ export function ListingEvidenceFields({
         render={({ field }) => (
           <TextField
             label="외부 링크 URL"
+            editable={!isSaving}
             placeholder="https://"
             hasBaselineOffset={false}
             value={field.value}
@@ -121,7 +129,7 @@ export function ListingEvidenceFields({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="외부 링크 추가"
-                disabled={hasReachedLimit}
+                disabled={hasReachedLimit || isSaving}
                 onPress={onAddLink}
                 className={`h-[50px] w-[47px] items-center justify-center rounded-lg bg-motu-tonal px-3 ${hasReachedLimit ? 'opacity-50' : ''}`}
               >
@@ -140,6 +148,7 @@ export function ListingEvidenceFields({
           render={({ field }) => (
             <TextField
               label="자료 설명"
+              editable={!isSaving}
               isRequired
               multiline
               multilineSize="short"

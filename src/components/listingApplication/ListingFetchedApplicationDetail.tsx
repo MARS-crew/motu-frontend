@@ -113,6 +113,20 @@ export function ListingFetchedApplicationDetail({ id }: ListingFetchedApplicatio
                 </Text>
               </View>
             )}
+            {application.status === 'REVISION_REQUESTED' && (
+              <>
+                <View className="min-h-px flex-1" />
+                <Button
+                  title="보완 자료 작성"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/listing-application/supplement',
+                      params: { applicationId: String(application.id) },
+                    })
+                  }
+                />
+              </>
+            )}
             {application.status === 'DRAFT' && application.isEditable && (
               <>
                 <View className="min-h-px flex-1" />

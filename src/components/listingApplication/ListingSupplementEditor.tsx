@@ -19,19 +19,28 @@ import {
 } from '@/schemas/listingEvidenceSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { createEvidenceId } from '@/utils/listingEvidence';
+import { getListingRevisionError } from '@/utils/listingRevision';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 type ListingSupplementEditorProps = {
   applicationId: string;
   initialValues: ListingEvidenceForm;
+  onSave?: (values: ListingEvidenceForm) => Promise<void>;
+  onBack?: () => void;
+  canSubmit?: boolean;
 };
 
 export function ListingSupplementEditor({
   applicationId,
   initialValues,
+  onSave,
+  onBack,
+  canSubmit = true,
 }: ListingSupplementEditorProps) {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const saveSupplementDraft = useListingDraftStore((state) => state.saveSupplementDraft);
+  const [isSaving, setIsSaving] = useState(false);
+  const requestLock = useRef(false);
   const [isHelpVisible, setIsHelpVisible] = useState(false);
   const [isDeleteVisible, setIsDeleteVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<EvidenceItem | null>(null);
@@ -95,20 +104,42 @@ export function ListingSupplementEditor({
     setIsDeleteVisible(false);
   };
   const handleConfirmDelete = () => {
+    if (requestLock.current) return;
     if (selectedItem)
       handleItemsChange(getValues('items').filter((item) => item.id !== selectedItem.id));
     handleCloseModal();
   };
   const handleBack = () => {
-    if (picker.isPicking) return;
+    if (picker.isPicking || requestLock.current) return;
     // 수정 완료 전에는 기존 자료를 변경하지 않습니다.
+    if (onBack) {
+      onBack();
+      return;
+    }
     router.dismissTo({ pathname: '/listing-application/supplement', params: { applicationId } });
   };
   const handleSave = () => {
-    if (picker.isPicking) return;
+    if (!canSubmit || picker.isPicking || requestLock.current) return;
     void handleSubmit(
-      (currentValues) => {
-        if (saveSupplementDraft(applicationId, currentValues)) handleBack();
+      async (currentValues) => {
+        if (requestLock.current) return;
+        requestLock.current = true;
+        setIsSaving(true);
+        setAttachmentError(null);
+        try {
+          if (onSave) await onSave(currentValues);
+          else if (saveSupplementDraft(applicationId, currentValues)) {
+            router.dismissTo({
+              pathname: '/listing-application/supplement',
+              params: { applicationId },
+            });
+          }
+        } catch (error: unknown) {
+          setAttachmentError(getListingRevisionError(error));
+        } finally {
+          requestLock.current = false;
+          setIsSaving(false);
+        }
       },
       () =>
         scrollRef.current?.scrollTo({
@@ -158,8 +189,12 @@ export function ListingSupplementEditor({
           <ListingEvidenceFields
             control={control}
             errors={errors}
-            attachmentError={attachmentError}
+            attachmentError={
+              attachmentError ??
+              (!canSubmit ? '보완 기한이 지났거나 현재 수정 자료를 저장할 수 없습니다.' : null)
+            }
             isPicking={picker.isPicking}
+            isSaving={isSaving}
             onPick={handlePick}
             onHelp={() => {
               setSelectedItem(null);
@@ -182,14 +217,14 @@ export function ListingSupplementEditor({
               title="이전"
               variant="secondary"
               onPress={handleBack}
-              disabled={picker.isPicking}
+              disabled={picker.isPicking || isSaving}
             />
           </View>
           <View className="flex-1">
             <Button
               title="수정 완료"
               onPress={handleSave}
-              disabled={!canSave || picker.isPicking}
+              disabled={!canSubmit || !canSave || picker.isPicking || isSaving}
             />
           </View>
         </View>
