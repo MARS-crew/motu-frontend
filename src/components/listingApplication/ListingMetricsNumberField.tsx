@@ -7,6 +7,7 @@ type ListingMetricsNumberFieldProps = {
   label: string;
   value: string;
   isCurrency?: boolean;
+  disabled?: boolean;
   errorMessage?: string;
   onChange: (value: string) => void;
   onBlur: () => void;
@@ -18,6 +19,7 @@ export function ListingMetricsNumberField({
   label,
   value,
   isCurrency = false,
+  disabled = false,
   errorMessage,
   onChange,
   onBlur,
@@ -39,6 +41,7 @@ export function ListingMetricsNumberField({
       value={value && isCurrency && !isFocused ? `${value} ₩` : value}
       placeholder="입력해 주세요."
       keyboardType="number-pad"
+      editable={!disabled}
       hasBaselineOffset={false}
       onChangeText={onChange}
       onBlur={handleBlur}

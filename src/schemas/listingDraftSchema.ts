@@ -54,9 +54,42 @@ export const saveListingTradingDraftSchema = z.object({
   currentStep: z.literal(2),
   data: listingTradingDraftDataSchema,
 });
+export const listingMetricsDraftDataSchema = z.object({
+  metricsStartDate: z.string().max(40).nullable().optional(),
+  metricsEndDate: z.string().max(40).nullable().optional(),
+  mau: z.string().max(40, 'MAU는 40자 이하로 입력해 주세요.').nullable(),
+  dau: z.string().max(40, 'DAU는 40자 이하로 입력해 주세요.').nullable(),
+  revenue: z.string().max(40, '매출은 40자 이하로 입력해 주세요.').nullable(),
+  transactionVolume: z.string().max(40, '거래액은 40자 이하로 입력해 주세요.').nullable(),
+  revenueStartDate: z.string().max(40, '매출 집계 시작일은 40자 이하로 입력해 주세요.').nullable(),
+  revenueEndDate: z.string().max(40, '매출 집계 종료일은 40자 이하로 입력해 주세요.').nullable(),
+  revenueSource: z.string().max(255, '매출 출처명은 255자 이하로 입력해 주세요.').nullable(),
+  revenueExtractDate: z.string().max(40, '매출 추출일은 40자 이하로 입력해 주세요.').nullable(),
+  transactionVolumeBasis: z
+    .string()
+    .max(40, '거래액 집계 기준은 40자 이하로 입력해 주세요.')
+    .nullable(),
+  transactionVolumeSource: z
+    .string()
+    .max(255, '거래액 출처명은 255자 이하로 입력해 주세요.')
+    .nullable(),
+  transactionVolumeExtractDate: z
+    .string()
+    .max(40, '거래액 추출일은 40자 이하로 입력해 주세요.')
+    .nullable(),
+});
+export const saveListingMetricsDraftSchema = z.object({
+  currentStep: z.literal(3),
+  data: listingMetricsDraftDataSchema,
+});
 export const listingDraftDetailSchema = listingDraftSummarySchema.extend({
   data: listingBasicDraftDataSchema
     .extend(listingTradingDraftDataSchema.shape)
+    .extend(listingMetricsDraftDataSchema.shape)
+    .extend({
+      metricsStartDate: z.string().max(40).nullable(),
+      metricsEndDate: z.string().max(40).nullable(),
+    })
     .partial()
     .passthrough(),
   applicationNumber: z.string().nullable(),
@@ -73,3 +106,9 @@ export const listingTradingStepResultSchema = listingDraftDetailSchema.extend({
 });
 export type SaveListingTradingDraft = z.infer<typeof saveListingTradingDraftSchema>;
 export type ListingTradingDraftData = z.infer<typeof listingTradingDraftDataSchema>;
+
+export const listingMetricsStepResultSchema = listingDraftDetailSchema.extend({
+  validatedStep: z.literal(3),
+});
+export type SaveListingMetricsDraft = z.infer<typeof saveListingMetricsDraftSchema>;
+export type ListingMetricsDraftData = z.infer<typeof listingMetricsDraftDataSchema>;
