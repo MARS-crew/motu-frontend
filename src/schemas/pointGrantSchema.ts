@@ -10,3 +10,13 @@ export const pointGrantStatusSchema = z.object({
 });
 
 export type PointGrantStatus = z.infer<typeof pointGrantStatusSchema>;
+
+export const pointGrantResultSchema = z.object({
+  amount: z.number().int().positive(),
+  cashBefore: z.number().int().nonnegative(),
+  cashAfter: z.number().int().nonnegative(),
+  grantedAt: z.iso.datetime({ offset: true }),
+  nextAvailableAt: z.iso.datetime({ offset: true }),
+});
+
+export type PointGrantResult = z.infer<typeof pointGrantResultSchema>;

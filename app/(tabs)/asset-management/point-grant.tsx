@@ -1,6 +1,10 @@
 import { router } from 'expo-router';
+import { useRef } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { usePointGrantMutation } from '@/queries/usePointGrantMutation';
+import { getPointRequestErrorMessage } from '@/utils/pointResponse';
 
 import { TopBar } from '@/components/TopBar';
 import { POINT_GRANT_AMOUNT } from '@/stores/usePointPreviewStore';
@@ -10,14 +14,35 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointGrantScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const { status, canGrant, remainingSeconds, errorMessage, isFetching, refetch } =
-    usePointGrantStatus();
+  const {
+    status,
+    canGrant,
+    remainingSeconds,
+    errorMessage: statusError,
+    isFetching,
+  } = usePointGrantStatus();
+  const grantMutation = usePointGrantMutation();
+  const isSubmitting = useRef(false);
+  const canSubmit = canGrant && !grantMutation.isPending;
+  const errorMessage = grantMutation.error
+    ? getPointRequestErrorMessage(
+        grantMutation.error,
+        '포인트 지급을 완료하지 못했습니다. 지급 정보를 확인한 후 다시 시도해 주세요.',
+      )
+    : statusError;
   const grantAmount = status?.amount ?? POINT_GRANT_AMOUNT;
   const handleBack = () => router.replace('/asset-management');
-  const handleGrant = () => {
-    if (!canGrant) return;
-    // 실제 지급 API는 별도 연동합니다. 조회만으로 잔액을 변경하거나 완료 화면으로 이동하지 않습니다.
-    void refetch();
+  const handleGrant = async () => {
+    if (!canSubmit || isSubmitting.current) return;
+    isSubmitting.current = true;
+    try {
+      await grantMutation.mutateAsync();
+      router.replace('/asset-management/point-grant-complete');
+    } catch {
+      // 실패 시 완료 화면으로 이동하지 않고 서버 오류를 표시합니다.
+    } finally {
+      isSubmitting.current = false;
+    }
   };
 
   return (
@@ -84,15 +109,19 @@ export default function PointGrantScreen() {
             )}
             <Pressable
               accessibilityRole="button"
-              accessibilityState={{ disabled: !canGrant }}
-              disabled={!canGrant}
+              accessibilityState={{ disabled: !canSubmit }}
+              disabled={!canSubmit}
               onPress={handleGrant}
-              className={`mt-4 min-h-11 items-center justify-center rounded-xl py-4 ${canGrant ? 'bg-motu-black active:opacity-50' : 'bg-motu-grey-chip'}`}
+              className={`mt-4 min-h-11 items-center justify-center rounded-xl py-4 ${canSubmit ? 'bg-motu-black active:opacity-50' : 'bg-motu-grey-chip'}`}
             >
               <Text
-                className={`text-center font-pretendard-bold text-[13px] ${canGrant ? 'text-white' : 'text-motu-grey-light'}`}
+                className={`text-center font-pretendard-bold text-[13px] ${canSubmit ? 'text-white' : 'text-motu-grey-light'}`}
               >
-                {isFetching ? '지급 가능 여부 확인 중...' : '포인트 추가 지급 신청'}
+                {grantMutation.isPending
+                  ? '포인트 지급 중...'
+                  : isFetching
+                    ? '지급 가능 여부 확인 중...'
+                    : '포인트 추가 지급 신청'}
               </Text>
             </Pressable>
           </View>

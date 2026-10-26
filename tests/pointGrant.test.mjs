@@ -98,3 +98,54 @@ test('인증 만료·연결 오류·잘못된 오류 응답을 구분해 안내�
   );
   assert.equal(getPointGrantErrorMessage(new Error('Network error')), fallback);
 });
+
+test('추가 지급 결과는 서버가 반환한 금액과 지급 시각을 그대로 사용한다', async () => {
+  const { pointGrantResultSchema } = await import('../src/schemas/pointGrantSchema.ts');
+  const result = {
+    amount: 100000,
+    cashBefore: 2345678,
+    cashAfter: 2445678,
+    grantedAt: '2026-10-20T10:19:00.000Z',
+    nextAvailableAt: '2026-10-21T10:19:00.000Z',
+  };
+  assert.deepEqual(pointGrantResultSchema.parse(result), result);
+  assert.equal(pointGrantResultSchema.safeParse({ ...result, cashAfter: -1 }).success, false);
+  assert.equal(
+    pointGrantResultSchema.safeParse({ ...result, grantedAt: 'invalid' }).success,
+    false,
+  );
+});
+
+test('Swagger 원본 응답과 success/data 응답을 모두 읽는다', async () => {
+  const { unwrapPointResponse } = await import('../src/utils/pointResponse.ts');
+  assert.deepEqual(unwrapPointResponse(waitingStatus), waitingStatus);
+  assert.deepEqual(unwrapPointResponse({ success: true, data: waitingStatus }), waitingStatus);
+  const failure = { success: false, error: { message: '실패' } };
+  assert.deepEqual(unwrapPointResponse(failure), failure);
+});
+
+test('중첩 오류 응답의 지급 대기·동시 갱신 오류를 처리한다', async () => {
+  const { getPointRequestErrorMessage } = await import('../src/utils/pointResponse.ts');
+  assert.equal(
+    getPointRequestErrorMessage(
+      apiError(409, { success: false, error: { code: 'POINT_GRANT_TOO_SOON' } }),
+      '실패',
+    ),
+    '포인트 지급 후 24시간이 지나지 않았습니다.',
+  );
+  assert.equal(
+    getPointRequestErrorMessage(
+      apiError(409, { error: { code: 'ACCOUNT_CONCURRENT_UPDATE' } }),
+      '실패',
+    ),
+    '계좌 정보가 변경되었습니다. 최신 정보를 확인한 후 다시 시도해 주세요.',
+  );
+  assert.equal(
+    getPointRequestErrorMessage(apiError(401, {}), '실패'),
+    '로그인 후 다시 시도해 주세요.',
+  );
+  assert.equal(
+    getPointRequestErrorMessage(new Error('Network'), '결과를 확인할 수 없습니다.'),
+    '결과를 확인할 수 없습니다.',
+  );
+});
