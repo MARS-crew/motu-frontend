@@ -9,7 +9,7 @@ import { getPointRequestErrorMessage } from '@/utils/pointResponse';
 import { TopBar } from '@/components/TopBar';
 import { POINT_GRANT_AMOUNT } from '@/stores/usePointPreviewStore';
 import { usePointGrantStatus } from '@/hooks/usePointGrantStatus';
-import { formatPointGrantDate, formatPointGrantRemainingTime } from '@/utils/pointGrant';
+import { formatPointRemainingHoursMinutes } from '@/utils/pointGrant';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function PointGrantScreen() {
@@ -91,13 +91,8 @@ export default function PointGrantScreen() {
                   포인트 지급 후 24시간이 지나지 않았습니다.
                 </Text>
                 <Text className="font-pretendard-semibold text-xs leading-5 text-motu-grey-light">
-                  남은 시간: {formatPointGrantRemainingTime(remainingSeconds)}
+                  남은 시간: {formatPointRemainingHoursMinutes(remainingSeconds)}
                 </Text>
-                {status?.nextAvailableAt && (
-                  <Text className="mt-1 font-pretendard text-[11px] leading-4 text-motu-grey">
-                    다음 지급 가능 시간: {formatPointGrantDate(status.nextAvailableAt)}
-                  </Text>
-                )}
               </View>
             )}
             {errorMessage && (

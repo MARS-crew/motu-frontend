@@ -22,6 +22,12 @@ export function formatPointGrantRemainingTime(seconds: number) {
     .join(' ');
 }
 
+export function formatPointRemainingHoursMinutes(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${String(hours).padStart(2, '0')}시간 ${String(minutes).padStart(2, '0')}분`;
+}
+
 export function formatPointGrantDate(value: string) {
   const date = new Date(value);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
