@@ -10,6 +10,8 @@ type ListingTradingSelectFieldProps = {
   options: readonly string[];
   unit: string;
   isOpen: boolean;
+  disabled?: boolean;
+  errorMessage?: string;
   onToggle: () => void;
   onChange: (value: string) => void;
 };
@@ -20,6 +22,8 @@ export function ListingTradingSelectField({
   options,
   unit,
   isOpen,
+  disabled = false,
+  errorMessage,
   onToggle,
   onChange,
 }: ListingTradingSelectFieldProps) {
@@ -31,9 +35,10 @@ export function ListingTradingSelectField({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label} 선택`}
-        accessibilityState={{ expanded: isOpen }}
+        accessibilityState={{ expanded: isOpen, disabled }}
+        disabled={disabled}
         onPress={onToggle}
-        className={`h-[50px] flex-row items-center rounded-xl border bg-white px-4 ${isOpen ? 'border-motu-black' : 'border-motu-border'}`}
+        className={`h-[50px] flex-row items-center rounded-xl border bg-white px-4 ${errorMessage ? 'border-motu-btn-red' : isOpen ? 'border-motu-black' : 'border-motu-border'}`}
       >
         <Text className="flex-1 font-pretendard-medium text-sm leading-5 text-motu-text-primary">
           {value}
@@ -47,6 +52,14 @@ export function ListingTradingSelectField({
           />
         </View>
       </Pressable>
+      {errorMessage && (
+        <Text
+          accessibilityLiveRegion="polite"
+          className="font-pretendard-medium text-xs leading-4 text-motu-btn-red"
+        >
+          {errorMessage}
+        </Text>
+      )}
       {isOpen && (
         <View className="rounded-xl border border-motu-grey-lighter bg-white p-1.5 shadow-listing-panel">
           {options.map((option) => (

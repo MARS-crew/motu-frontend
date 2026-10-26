@@ -38,8 +38,27 @@ export const saveListingBasicDraftSchema = z.object({
   currentStep: z.literal(1),
   data: listingBasicDraftDataSchema,
 });
+// 숫자·날짜도 문자열로 저장하여 작성 중인 값을 보존합니다.
+export const listingTradingDraftDataSchema = z.object({
+  desiredPrice: z.string().max(40, '희망 상장가는 40자 이하로 입력해 주세요.').nullable(),
+  totalIssuedQuantity: z.string().max(40, '총 발행 수량은 40자 이하로 입력해 주세요.').nullable(),
+  minOrderQuantity: z.string().max(40, '최소 주문 수량은 40자 이하로 입력해 주세요.').nullable(),
+  tickSize: z.string().max(40, '호가 단위는 40자 이하로 입력해 주세요.').nullable(),
+  priceCalculationBasis: z
+    .string()
+    .max(5000, '가격 산정 근거는 5,000자 이하로 입력해 주세요.')
+    .nullable(),
+  desiredListingDate: z.string().max(40, '거래 시작일시는 40자 이하로 입력해 주세요.').nullable(),
+});
+export const saveListingTradingDraftSchema = z.object({
+  currentStep: z.literal(2),
+  data: listingTradingDraftDataSchema,
+});
 export const listingDraftDetailSchema = listingDraftSummarySchema.extend({
-  data: listingBasicDraftDataSchema.partial().passthrough(),
+  data: listingBasicDraftDataSchema
+    .extend(listingTradingDraftDataSchema.shape)
+    .partial()
+    .passthrough(),
   applicationNumber: z.string().nullable(),
 });
 export const listingBasicStepResultSchema = listingDraftDetailSchema.extend({
@@ -48,3 +67,9 @@ export const listingBasicStepResultSchema = listingDraftDetailSchema.extend({
 export type ListingBasicDraftData = z.infer<typeof listingBasicDraftDataSchema>;
 export type SaveListingBasicDraft = z.infer<typeof saveListingBasicDraftSchema>;
 export type ListingDraftDetail = z.infer<typeof listingDraftDetailSchema>;
+
+export const listingTradingStepResultSchema = listingDraftDetailSchema.extend({
+  validatedStep: z.literal(2),
+});
+export type SaveListingTradingDraft = z.infer<typeof saveListingTradingDraftSchema>;
+export type ListingTradingDraftData = z.infer<typeof listingTradingDraftDataSchema>;

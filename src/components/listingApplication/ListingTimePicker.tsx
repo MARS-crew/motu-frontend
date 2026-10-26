@@ -17,9 +17,10 @@ type ListingTimePickerProps = {
 export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimePickerProps) {
   const [hour, setHour] = useState(value.slice(0, 2));
   const [minute, setMinute] = useState(value.slice(3, 5));
+  const hasHourError = !/^\d{2}$/.test(hour) || Number(hour) > 23;
   const hasMinuteError = !/^\d{1,2}$/.test(minute) || Number(minute) > 59;
   const handleApply = () => {
-    if (!hasMinuteError) onApply(`${hour}:${minute.padStart(2, '0')}`);
+    if (!hasHourError && !hasMinuteError) onApply(`${hour}:${minute.padStart(2, '0')}`);
   };
   return (
     <View className="gap-[14px] rounded-xl border border-motu-grey-lighter bg-white p-4 shadow-listing-panel">
@@ -118,7 +119,12 @@ export function ListingTimePicker({ date, value, onBack, onApply }: ListingTimeP
           입력한 날짜와 시간은 희망값이며 관리자 심사 후 변경될 수 있습니다.
         </Text>
       </View>
-      <Button title="완료" size="md" onPress={handleApply} disabled={hasMinuteError} />
+      <Button
+        title="완료"
+        size="md"
+        onPress={handleApply}
+        disabled={hasHourError || hasMinuteError}
+      />
     </View>
   );
 }
