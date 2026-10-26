@@ -6,6 +6,8 @@ import {
   type SaveListingBasicDraft,
   type SaveListingTradingDraft,
   listingTradingStepResultSchema,
+  listingMetricsStepResultSchema,
+  type SaveListingMetricsDraft,
 } from '@/schemas/listingDraftSchema';
 import type { ApiResponse } from '@/types/api';
 
@@ -59,4 +61,20 @@ export const validateListingTradingStep = async (id: number, body: SaveListingTr
     { data: body.data },
   );
   return listingTradingStepResultSchema.parse(data.data);
+};
+
+export const saveListingMetricsDraft = async (id: number, body: SaveListingMetricsDraft) => {
+  const { data } = await api.patch<ApiResponse<unknown>>(
+    `/listing-applications/drafts/${id}`,
+    body,
+  );
+  return listingDraftDetailSchema.parse(data.data);
+};
+
+export const validateListingMetricsStep = async (id: number, body: SaveListingMetricsDraft) => {
+  const { data } = await api.put<ApiResponse<unknown>>(
+    `/listing-applications/drafts/${id}/steps/3`,
+    { data: body.data },
+  );
+  return listingMetricsStepResultSchema.parse(data.data);
 };

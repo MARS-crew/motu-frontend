@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,18 +12,27 @@ import { ListingMetricsHelpModal } from '@/components/listingApplication/Listing
 import { ListingMetricsFields } from '@/components/listingApplication/ListingMetricsFields';
 import { EMPTY_LISTING_METRICS } from '@/constants/listingMetricsPreview';
 import { listingMetricsSchema, type ListingMetricsForm } from '@/schemas/listingMetricsSchema';
-import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useListingMetricsDraftQuery } from '@/queries/useListingMetricsDraftQuery';
+import { useSaveListingMetricsDraftMutation } from '@/queries/useSaveListingMetricsDraftMutation';
+import { toListingMetricsForm } from '@/utils/listingMetricsDraft';
+import { getListingMetricsError } from '@/utils/listingMetricsError';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingMetricsScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
-  const [currentDraftId] = useState(() => draftId || `draft-${Date.now()}`);
-  const [initialDraft] = useState(() => useListingDraftStore.getState().drafts[currentDraftId]);
-  const [savedAt, setSavedAt] = useState<string | null>(
-    initialDraft?.metricsValues ? initialDraft.savedAt : null,
-  );
-  const saveMetricsDraft = useListingDraftStore((state) => state.saveMetricsDraft);
+  const parsedId = Number(draftId);
+  const currentDraftId = Number.isSafeInteger(parsedId) && parsedId > 0 ? parsedId : null;
+  const hydratedId = useRef<number | null>(null);
+  const requestLock = useRef(false);
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
   const [helpType, setHelpType] = useState<'terms' | 'criteria' | null>(null);
   const [hasOpenPopover, setHasOpenPopover] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -32,27 +41,87 @@ export default function ListingMetricsScreen() {
   const {
     control,
     getValues,
+    setError,
+    clearErrors,
     handleSubmit,
     reset,
     formState: { errors, isDirty },
   } = useForm<ListingMetricsForm>({
     resolver: zodResolver(listingMetricsSchema),
-    defaultValues: initialDraft?.metricsValues ?? EMPTY_LISTING_METRICS,
+    defaultValues: EMPTY_LISTING_METRICS,
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     shouldFocusError: false,
   });
+  const saveMutation = useSaveListingMetricsDraftMutation();
+  const draftQuery = useListingMetricsDraftQuery(currentDraftId, saveMutation.isPending);
+  const hasLoadError = currentDraftId === null || draftQuery.isError;
+  const isBusy = saveMutation.isPending || (!draftQuery.data && !hasLoadError);
+  const canSave = !isBusy && !hasLoadError;
+  const savedAt = draftQuery.data?.lastSavedAt
+    ? new Date(draftQuery.data.lastSavedAt).toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    : null;
+  const loadErrorMessage =
+    currentDraftId === null
+      ? '올바른 신청서 번호가 아닙니다. 목록에서 다시 열어 주세요.'
+      : draftQuery.isError
+        ? getApiErrorMessage(draftQuery.error)
+        : null;
+  useEffect(() => {
+    if (!draftQuery.data || saveMutation.isPending || hydratedId.current === currentDraftId) return;
+    hydratedId.current = currentDraftId;
+    reset(toListingMetricsForm(draftQuery.data));
+  }, [draftQuery.data, saveMutation.isPending, currentDraftId, reset]);
+  const persist = async (values: ListingMetricsForm, destination?: 'previous' | 'next') => {
+    if (!canSave || currentDraftId === null || requestLock.current) return;
+    requestLock.current = true;
+    clearErrors();
+    try {
+      const result = await saveMutation.mutateAsync({
+        id: currentDraftId,
+        values,
+        validateStep: destination === 'next',
+      });
+      if (!isMounted.current) return;
+      reset(result.values);
+      if (destination === 'next')
+        router.push({
+          pathname: '/listing-application/evidence',
+          params: { draftId: String(currentDraftId) },
+        });
+      else if (destination === 'previous')
+        router.dismissTo({
+          pathname: '/listing-application/trading-info',
+          params: { draftId: String(currentDraftId) },
+        });
+    } catch (error: unknown) {
+      if (!isMounted.current) return;
+      const failure = getListingMetricsError(error);
+      for (const [field, message] of Object.entries(failure.fields))
+        setError(field as keyof ListingMetricsForm, { type: 'server', message });
+      setError('root.server', { type: 'server', message: failure.message });
+    } finally {
+      requestLock.current = false;
+    }
+  };
   const handleSave = () => {
-    const values = getValues();
-    setSavedAt(saveMetricsDraft(currentDraftId, values));
-    reset(values);
+    void persist(getValues());
   };
   const handlePrevious = () => {
-    handleSave();
-    router.dismissTo({
-      pathname: '/listing-application/trading-info',
-      params: { draftId: currentDraftId },
-    });
+    void persist(getValues(), 'previous');
+  };
+  const handleBack = () => {
+    if (saveMutation.isPending || requestLock.current) return;
+    if (hasLoadError || isBusy) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/listing-application');
+      return;
+    }
+    handlePrevious();
   };
   const handleInvalid = (fieldErrors: FieldErrors<ListingMetricsForm>) => {
     const field = (Object.keys(fieldErrors) as (keyof ListingMetricsForm)[]).sort(
@@ -64,14 +133,11 @@ export default function ListingMetricsScreen() {
         animated: true,
       });
   };
-  const handleNext = () =>
-    void handleSubmit(() => {
-      handleSave();
-      router.push({
-        pathname: '/listing-application/evidence',
-        params: { draftId: currentDraftId },
-      });
-    }, handleInvalid)();
+  const handleNext = () => {
+    if (!canSave) return;
+    clearErrors('root');
+    void handleSubmit((values) => persist(values, 'next'), handleInvalid)();
+  };
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <KeyboardAvoidingView
@@ -82,7 +148,7 @@ export default function ListingMetricsScreen() {
           isScrolled={isScrolled}
           savedAt={savedAt}
           isDirty={isDirty}
-          onBack={handlePrevious}
+          onBack={handleBack}
         />
         <ScrollView
           onScroll={handleScroll}
@@ -116,6 +182,12 @@ export default function ListingMetricsScreen() {
               onHelpPress={setHelpType}
               onPopoverChange={setHasOpenPopover}
               errors={errors}
+              isSaving={isBusy || hasLoadError}
+              savedTransactionBasis={draftQuery.data?.data.transactionVolumeBasis}
+              savedTransactionPeriod={{
+                start: draftQuery.data?.data.metricsStartDate ?? '',
+                end: draftQuery.data?.data.metricsEndDate ?? '',
+              }}
               onFieldLayout={(field, offset) => {
                 fieldOffsets.current[field] = offset;
               }}
@@ -123,9 +195,18 @@ export default function ListingMetricsScreen() {
           </View>
           <View className="gap-2.5">
             <View className="gap-1.5">
+              {(errors.root?.server?.message || loadErrorMessage) && (
+                <Text
+                  accessibilityLiveRegion="polite"
+                  className="font-pretendard-medium text-xs leading-4 text-motu-red"
+                >
+                  {errors.root?.server?.message || loadErrorMessage}
+                </Text>
+              )}
               <Pressable
                 accessibilityRole="button"
                 onPress={handleSave}
+                disabled={!canSave}
                 className="h-8 items-center justify-center"
               >
                 <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey underline">
@@ -134,10 +215,15 @@ export default function ListingMetricsScreen() {
               </Pressable>
               <View className="flex-row gap-2">
                 <View className="flex-1">
-                  <Button title="이전" variant="secondary" onPress={handlePrevious} />
+                  <Button
+                    title="이전"
+                    variant="secondary"
+                    onPress={handlePrevious}
+                    disabled={!canSave}
+                  />
                 </View>
                 <View className="flex-1">
-                  <Button title="다음" onPress={handleNext} />
+                  <Button title="다음" onPress={handleNext} disabled={!canSave} />
                 </View>
               </View>
             </View>

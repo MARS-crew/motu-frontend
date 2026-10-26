@@ -1,13 +1,13 @@
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
+import { useState } from 'react';
 import { Text, Pressable, View } from 'react-native';
 
 import { ListingMetricsCalendar } from '@/components/listingApplication/ListingMetricsCalendar';
 import {
-  LISTING_METRICS_DEFAULT_PERIOD,
-  LISTING_METRICS_REFERENCE_DATE,
-} from '@/constants/listingMetricsPreview';
-import {
+  getMetricReferenceDate,
+  isValidMetricDate,
+  isValidMetricRange,
   formatMetricDate,
   formatMetricRange,
   type ListingMetricDateRange,
@@ -21,6 +21,7 @@ type ListingMetricsDateFieldProps = {
   value: ListingMetricDateRange;
   isRange?: boolean;
   isOpen: boolean;
+  disabled?: boolean;
   errorMessage?: string;
   onToggle: () => void;
   onClose: () => void;
@@ -33,17 +34,16 @@ export function ListingMetricsDateField({
   value,
   isRange = false,
   isOpen,
+  disabled = false,
   errorMessage,
   onToggle,
   onClose,
   onChange,
 }: ListingMetricsDateFieldProps) {
+  const [referenceDate, setReferenceDate] = useState(getMetricReferenceDate);
   const hasValue = !!value.start && (!isRange || !!value.end);
-  const calendarValue = hasValue
-    ? value
-    : isRange
-      ? LISTING_METRICS_DEFAULT_PERIOD
-      : { start: LISTING_METRICS_REFERENCE_DATE, end: LISTING_METRICS_REFERENCE_DATE };
+  const hasValidValue = isRange ? isValidMetricRange(value) : isValidMetricDate(value.start);
+  const calendarValue = hasValidValue ? value : { start: referenceDate, end: referenceDate };
   return (
     <View className={`relative gap-2 ${isOpen ? 'z-30' : 'z-0'}`}>
       <Text className="font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
@@ -52,8 +52,12 @@ export function ListingMetricsDateField({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        accessibilityState={{ expanded: isOpen }}
-        onPress={onToggle}
+        accessibilityState={{ expanded: isOpen, disabled }}
+        disabled={disabled}
+        onPress={() => {
+          setReferenceDate(getMetricReferenceDate());
+          onToggle();
+        }}
         className={`h-[50px] flex-row items-center gap-2 rounded-xl border bg-white px-4 ${errorMessage ? 'border-motu-red' : isOpen ? 'border-motu-black' : 'border-motu-border'}`}
       >
         <Text

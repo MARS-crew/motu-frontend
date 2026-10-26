@@ -29,3 +29,18 @@ export function formatMetricDate(value: string) {
 export function formatMetricRange({ start, end }: ListingMetricDateRange) {
   return `${formatMetricDate(start)} ~ ${formatMetricDate(end)}`;
 }
+
+export function getMetricReferenceDate() {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+export function getCompletedMetricPeriod(
+  referenceDate: string,
+  months = 12,
+): ListingMetricDateRange {
+  const [year, month] = referenceDate.split('-').map(Number);
+  return {
+    start: new Date(Date.UTC(year, month - 1 - months, 1)).toISOString().slice(0, 10),
+    end: new Date(Date.UTC(year, month - 1, 0)).toISOString().slice(0, 10),
+  };
+}
