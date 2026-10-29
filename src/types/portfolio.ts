@@ -35,19 +35,26 @@ export type PortfolioItem = {
 export type Holding = {
   id: number;
   name: string;
-  color: string;
+  logoImageUrl: string | null;
   valuation: number;
   returnRate: number;
-  volume: number;
-  listedAt: string;
 };
 
-export type HoldingSort = 'valuation' | 'rateDesc' | 'rateAsc' | 'volume' | 'listedAt';
+// 보유 종목 응답에 거래량·상장일이 없어 평가금액·수익률 기준으로만 정렬합니다.
+export type HoldingSort = 'valuation' | 'rateDesc' | 'rateAsc';
 
 export type PortfolioSummary = {
+  totalAsset: number;
   cash: number;
+  valuation: number;
   profit: number;
+  profitRate: number;
   updatedAt: string;
+};
+
+export type Portfolio = {
+  summary: PortfolioSummary;
+  holdings: Holding[];
 };
 
 export type AssetCompositionItem = {

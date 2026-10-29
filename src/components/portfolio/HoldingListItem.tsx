@@ -1,7 +1,11 @@
+import { Image } from 'expo-image';
+import { cssInterop } from 'nativewind';
 import { Text, View } from 'react-native';
 
 import type { Holding } from '@/types/portfolio';
 import { formatRate, getChangeColorClass } from '@/utils/formatNumber';
+
+cssInterop(Image, { className: 'style' });
 
 type HoldingListItemProps = {
   holding: Holding;
@@ -15,15 +19,20 @@ export function HoldingListItem({ holding, isFirst }: HoldingListItemProps) {
         isFirst ? '' : 'border-t border-motu-grey-lighter'
       }`}
     >
-      {/* 종목별 색상은 서버 데이터라 style로 지정합니다. */}
-      <View
-        className="h-9 w-9 items-center justify-center rounded-full"
-        style={{ backgroundColor: holding.color }}
-      >
-        <Text className="font-pretendard-bold text-[13px] leading-[13px] text-white">
-          {holding.name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      {/* 로고가 없으면 이름 첫 글자를 보여줍니다. */}
+      {holding.logoImageUrl ? (
+        <Image
+          source={{ uri: holding.logoImageUrl }}
+          contentFit="cover"
+          className="h-9 w-9 rounded-full"
+        />
+      ) : (
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-motu-black">
+          <Text className="font-pretendard-bold text-[13px] leading-[13px] text-white">
+            {holding.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
       <Text
         numberOfLines={1}
         className="flex-1 font-pretendard-semibold text-[13px] leading-[19.5px] text-motu-black"
