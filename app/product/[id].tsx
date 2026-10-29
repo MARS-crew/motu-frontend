@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,18 +19,15 @@ import { ProductSummary } from '@/components/productDetail/ProductSummary';
 import { RecentTradeList } from '@/components/productDetail/RecentTradeList';
 import { TradeSummaryCard } from '@/components/productDetail/TradeSummaryCard';
 import { Toast } from '@/components/Toast';
-import {
-  CHART_PERIOD_OPTIONS,
-  getOrderBook,
-  getProductCandles,
-  getRecentTrades,
-  getTickSize,
-  getTradeSummary,
-} from '@/constants/productDetailPreview';
+import { CHART_PERIOD_OPTIONS, getTickSize } from '@/constants/productDetailPreview';
 import { SELLABLE_QUANTITY } from '@/constants/orderPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useCandlesQuery } from '@/queries/useCandlesQuery';
 import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
+import { useOrderBookQuery } from '@/queries/useOrderBookQuery';
+import { useRecentTradesQuery } from '@/queries/useRecentTradesQuery';
 import { useStockDetailQuery } from '@/queries/useStockDetailQuery';
+import { useTradeSummaryQuery } from '@/queries/useTradeSummaryQuery';
 import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { OrderSide } from '@/types/order';
@@ -62,14 +59,11 @@ export default function ProductDetailScreen() {
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const { isScrolled, handleScroll } = useHeaderScroll();
 
-  const candles = useMemo(
-    () => (product ? getProductCandles(product, period) : []),
-    [product, period],
-  );
-  const orderBook = useMemo(() => (product ? getOrderBook(product) : undefined), [product]);
-  const recentTrades = useMemo(() => (product ? getRecentTrades(product) : []), [product]);
-  // 거래 요약은 시세 API가 나오기 전까지 미리보기 데이터로 보여줍니다.
-  const tradeSummary = useMemo(() => (product ? getTradeSummary(product) : undefined), [product]);
+  const stockId = Number(id);
+  const candlesQuery = useCandlesQuery(stockId, period);
+  const { data: orderBook } = useOrderBookQuery(stockId);
+  const { data: recentTrades = [] } = useRecentTradesQuery(stockId);
+  const { data: tradeSummary } = useTradeSummaryQuery(stockId);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -172,6 +166,35 @@ export default function ProductDetailScreen() {
     );
   }
 
+  // 차트 영역은 봉이 없을 때도 같은 높이를 유지합니다.
+  const renderChart = () => {
+    const candles = candlesQuery.data ?? [];
+
+    if (candlesQuery.isPending) {
+      return <ActivityIndicator className="h-[274px]" />;
+    }
+
+    if (candles.length === 0) {
+      return (
+        <View className="h-[274px] items-center justify-center">
+          <Text className="text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
+            {candlesQuery.isError
+              ? '차트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+              : '체결 내역이 없어 차트를 표시할 수 없어요.'}
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <PriceChart
+        candles={candles}
+        currentPrice={tradeSummary?.currentPrice ?? product.price}
+        period={period}
+      />
+    );
+  };
+
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
       <ProductDetailHeader
@@ -203,7 +226,7 @@ export default function ProductDetailScreen() {
           <>
             <View className="px-6 pt-4">
               <View className="rounded-xl border border-motu-grey-lighter bg-white px-[13px] pb-[13px] pt-[17px]">
-                <PriceChart candles={candles} currentPrice={product.price} period={period} />
+                {renderChart()}
                 <View className="pt-3">
                   <ChartPeriodSelector
                     options={CHART_PERIOD_OPTIONS}
@@ -219,12 +242,13 @@ export default function ProductDetailScreen() {
           </>
         ) : selectedTab === 'orderBook' ? (
           <>
-            {orderBook && (
+            {orderBook && tradeSummary && (
               <View className="px-6 pt-4">
                 <OrderBookCard
                   orderBook={orderBook}
-                  currentPrice={product.price}
-                  changeRate={product.changeRate}
+                  currentPrice={tradeSummary.currentPrice}
+                  changeAmount={tradeSummary.changeAmount}
+                  changeRate={tradeSummary.changeRate}
                 />
               </View>
             )}

@@ -12,6 +12,9 @@ type SummaryItemProps = {
   value: string;
 };
 
+// 오늘 체결이 없어 값이 없으면 '-'로 표시합니다.
+const formatSummaryPrice = (value: number | null) => (value === null ? '-' : formatPoint(value));
+
 function SummaryItem({ label, value }: SummaryItemProps) {
   return (
     <View className="flex-1 items-center gap-1">
@@ -31,9 +34,9 @@ export function TradeSummaryCard({ summary }: TradeSummaryCardProps) {
       </Text>
       <View className="mt-2 rounded-xl border border-motu-grey-lighter bg-white px-[13px] py-[17px]">
         <View className="flex-row gap-1">
-          <SummaryItem label="시가" value={formatPoint(summary.open)} />
-          <SummaryItem label="고가" value={formatPoint(summary.high)} />
-          <SummaryItem label="저가" value={formatPoint(summary.low)} />
+          <SummaryItem label="시가" value={formatSummaryPrice(summary.open)} />
+          <SummaryItem label="고가" value={formatSummaryPrice(summary.high)} />
+          <SummaryItem label="저가" value={formatSummaryPrice(summary.low)} />
           <SummaryItem label="종가" value={formatPoint(summary.close)} />
         </View>
         <View className="mt-4 flex-row gap-3 border-t border-motu-grey-lighter pt-[17px]">

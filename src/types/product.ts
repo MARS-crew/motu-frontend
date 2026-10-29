@@ -31,13 +31,17 @@ export type ProductCandle = {
   volume: number;
 };
 
+// 오늘 체결이 없으면 시가·고가·저가는 null입니다.
 export type TradeSummary = {
-  open: number;
-  high: number;
-  low: number;
+  open: number | null;
+  high: number | null;
+  low: number | null;
   close: number;
   volume: number;
   tradeAmount: number;
+  currentPrice: number;
+  changeAmount: number;
+  changeRate: number;
 };
 
 export type TradeStatus = 'waiting' | 'tradable' | 'suspended' | 'ended';
