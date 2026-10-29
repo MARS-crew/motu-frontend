@@ -15,11 +15,7 @@ const TYPE_ICONS: Record<NotificationType, { source: number; className: string }
     source: require('../../../assets/icons/notification/target.svg'),
     className: 'bg-motu-green/10',
   },
-  point: {
-    source: require('../../../assets/icons/notification/wallet.svg'),
-    className: 'bg-motu-grey-lighter',
-  },
-  notice: {
+  listing: {
     source: require('../../../assets/icons/notification/notice.svg'),
     className: 'bg-motu-black/5',
   },
