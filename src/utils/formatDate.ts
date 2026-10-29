@@ -15,3 +15,7 @@ export const formatSlashDateTime = (value: string) => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${date.getFullYear()}/${month}/${day} ${hours}:${minutes}`;
 };
+
+// 서버 날짜(ISO 문자열)를 기기 시간대 기준 'YYYY-MM-DD HH:mm'으로 표시합니다.
+export const formatDashDateTime = (value: string) =>
+  formatSlashDateTime(value).replace(/^(\d{4})\/(\d{2})\/(\d{2})/, '$1-$2-$3');
