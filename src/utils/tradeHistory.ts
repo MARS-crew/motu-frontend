@@ -1,4 +1,5 @@
 import type {
+  OpenOrderItem,
   FilledOrderItem,
   TradeHistoryItem,
   TradeHistoryParams,
@@ -47,3 +48,19 @@ export function toFilledOrderRow(item: FilledOrderItem) {
     amount: item.filledAmount,
   };
 }
+
+export function toOpenOrderRow(item: OpenOrderItem) {
+  const kst = new Date(Date.parse(item.orderedAt) + 9 * 60 * 60 * 1000).toISOString();
+  return {
+    id: item.orderId,
+    productName: item.stockName,
+    orderedAt: kst.slice(0, 16),
+    side: item.side === 'BUY' ? ('buy' as const) : ('sell' as const),
+    orderPrice: item.price,
+    quantity: item.qty,
+    remainingQuantity: item.remainingQty,
+    orderAmount: item.orderAmount,
+    badgeClassName: 'bg-motu-black',
+  };
+}
+export type OpenOrderRow = ReturnType<typeof toOpenOrderRow>;

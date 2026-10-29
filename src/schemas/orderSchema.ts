@@ -53,3 +53,10 @@ export const createOrderSchema = ({
     });
 
 export type OrderForm = z.infer<ReturnType<typeof createOrderSchema>>;
+
+export const cancelOrderIdSchema = z.number().int().positive();
+export const cancelOrderResultSchema = z.object({
+  orderId: cancelOrderIdSchema,
+  status: z.literal('CANCELED'),
+  remainingQty: z.literal(0),
+});

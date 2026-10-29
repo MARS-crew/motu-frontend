@@ -59,3 +59,25 @@ export const filledOrderListSchema = tradeHistoryListSchema.extend({
   items: z.array(filledOrderItemSchema),
 });
 export type FilledOrderItem = z.infer<typeof filledOrderItemSchema>;
+
+export const openOrderParamsSchema = tradeHistoryParamsSchema.safeExtend({
+  sort: z.enum(['LATEST', 'AMOUNT']),
+});
+export const openOrderItemSchema = z.object({
+  orderId: z.number().int().positive(),
+  stockId: z.number().int().positive(),
+  stockName: z.string(),
+  side: z.enum(['BUY', 'SELL']),
+  price: z.number().nonnegative(),
+  qty: z.number().int().positive(),
+  filledQty: z.number().int().nonnegative(),
+  remainingQty: z.number().int().positive(),
+  orderAmount: z.number().nonnegative(),
+  status: z.enum(['ACCEPTED', 'PARTIAL', 'FILLED', 'CANCELED']),
+  orderedAt: z.iso.datetime({ offset: true }),
+});
+export const openOrderListSchema = tradeHistoryListSchema.extend({
+  items: z.array(openOrderItemSchema),
+});
+export type OpenOrderParams = z.infer<typeof openOrderParamsSchema>;
+export type OpenOrderItem = z.infer<typeof openOrderItemSchema>;

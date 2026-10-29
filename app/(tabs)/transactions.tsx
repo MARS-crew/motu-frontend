@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { cssInterop } from 'nativewind';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,16 +10,18 @@ import { SortDropdown } from '@/components/SortDropdown';
 import { CancelOrderModal } from '@/components/transactions/CancelOrderModal';
 import { TransactionDatePicker } from '@/components/transactions/TransactionDatePicker';
 import { TRANSACTION_SORT_OPTIONS } from '@/constants/transactionPreview';
+import { useCancelOrderMutation } from '@/queries/useCancelOrderMutation';
 import { useTradeHistoriesQuery } from '@/queries/useTradeHistoriesQuery';
 import {
   getInitialTradeHistoryRange,
   toTradeHistoryParams,
   toTradeHistoryRow,
   toFilledOrderRow,
+  toOpenOrderRow,
+  type OpenOrderRow,
 } from '@/utils/tradeHistory';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { PENDING_ORDER_PREVIEW, type PendingOrderPreview } from '@/constants/pendingOrderPreview';
 import { formatDateRange, type TransactionDateRange } from '@/utils/transactionDate';
 
 cssInterop(Image, { className: 'style' });
@@ -49,50 +51,57 @@ export default function TransactionsScreen() {
   const [dateRange, setDateRange] = useState<TransactionDateRange>(getInitialTradeHistoryRange);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const [cancelledOrderIds, setCancelledOrderIds] = useState<string[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<PendingOrderPreview | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OpenOrderRow | null>(null);
+  const cancelMutation = useCancelOrderMutation();
+  const isCancellingRef = useRef(false);
   const isPendingTab = activeTab === '미체결주문';
-  const pendingOrders = PENDING_ORDER_PREVIEW.filter((order) => {
-    const date = order.orderedAt.slice(0, 10);
-    return (
-      !cancelledOrderIds.includes(order.id) && date >= dateRange.start && date <= dateRange.end
-    );
-  }).sort((left, right) =>
-    sortValue === 'amount'
-      ? right.orderPrice * right.quantity - left.orderPrice * left.quantity ||
-        right.orderedAt.localeCompare(left.orderedAt)
-      : right.orderedAt.localeCompare(left.orderedAt),
-  );
-  const handleCloseCancelModal = () => setSelectedOrder(null);
-  const handleConfirmCancel = () => {
-    if (!selectedOrder) return;
-    // 서버 연동 전 로컬 목록에서만 취소 처리합니다.
-    setCancelledOrderIds((ids) => [...ids, selectedOrder.id]);
+  const handleCloseCancelModal = () => {
+    if (isCancellingRef.current) return;
     setSelectedOrder(null);
+    cancelMutation.reset();
+  };
+  const handleConfirmCancel = async () => {
+    if (!selectedOrder || !isLoggedIn || isCancellingRef.current) return;
+    isCancellingRef.current = true;
+    try {
+      await cancelMutation.mutateAsync(selectedOrder.id);
+      setSelectedOrder(null);
+      cancelMutation.reset();
+    } catch {
+      // 실패 시 모달과 서버 오류 안내를 유지하여 다시 시도할 수 있게 합니다.
+    } finally {
+      isCancellingRef.current = false;
+    }
   };
 
   const isHistoryTab = activeTab === '거래내역';
   const isCompletedTab = activeTab === '체결주문';
-  const { historyQuery, filledOrdersQuery, summaryQuery, isLoggedIn } = useTradeHistoriesQuery(
-    toTradeHistoryParams(dateRange, currentPage, PAGE_SIZE, sortValue),
-    isHistoryTab,
-    isCompletedTab,
-  );
-  const listQuery = isCompletedTab ? filledOrdersQuery : historyQuery;
+  const { historyQuery, filledOrdersQuery, openOrdersQuery, summaryQuery, isLoggedIn } =
+    useTradeHistoriesQuery(
+      toTradeHistoryParams(dateRange, currentPage, PAGE_SIZE, sortValue),
+      isHistoryTab,
+      isCompletedTab,
+      isPendingTab,
+    );
+  const listQuery = isPendingTab
+    ? openOrdersQuery
+    : isCompletedTab
+      ? filledOrdersQuery
+      : historyQuery;
+  const pendingOrders = openOrdersQuery.data?.items.map(toOpenOrderRow) ?? [];
   const history = listQuery.data;
   const summary = summaryQuery.data;
-  const historyError = !isPendingTab
-    ? !isLoggedIn
-      ? `로그인 후 ${activeTab}을 확인해 주세요.`
-      : listQuery.isError
-        ? getApiErrorMessage(listQuery.error)
-        : summaryQuery.isError
-          ? getApiErrorMessage(summaryQuery.error)
-          : null
-    : null;
-  const isLoadingHistory = !isPendingTab && !historyError && (!history || !summary);
+  const historyError = !isLoggedIn
+    ? `로그인 후 ${activeTab}을 확인해 주세요.`
+    : listQuery.isError
+      ? getApiErrorMessage(listQuery.error)
+      : !isPendingTab && summaryQuery.isError
+        ? getApiErrorMessage(summaryQuery.error)
+        : null;
+  const isLoadingHistory = !historyError && (!history || (!isPendingTab && !summary));
   const handleRetryHistory = () => {
-    void Promise.all([listQuery.refetch(), summaryQuery.refetch()]);
+    void listQuery.refetch();
+    if (!isPendingTab) void summaryQuery.refetch();
   };
   const buyAmount = summary?.buyAmount ?? 0;
   const sellAmount = summary?.sellAmount ?? 0;
@@ -116,13 +125,8 @@ export default function TransactionsScreen() {
   const handleTabPress = (tab: (typeof TABS)[number]) => {
     setActiveTab(tab);
     setCurrentPage(1);
-    if (tab === '미체결주문') {
-      setDateRange({ start: '2026-09-01', end: '2026-09-06' });
-      setSortValue('amount');
-    } else {
-      setDateRange(getInitialTradeHistoryRange());
-      setSortValue('latest');
-    }
+    setDateRange(getInitialTradeHistoryRange());
+    setSortValue('latest');
     setIsCalendarOpen(false);
   };
 
@@ -295,20 +299,29 @@ export default function TransactionsScreen() {
                     <View className="flex-1 items-end">
                       <Text className="font-pretendard text-[10px] text-motu-grey">주문금액</Text>
                       <Text className="mt-0.5 font-pretendard-semibold text-sm text-motu-black">
-                        {(order.orderPrice * order.quantity).toLocaleString('ko-KR')} P
+                        {order.orderAmount.toLocaleString('ko-KR')} P
                       </Text>
                     </View>
                   </View>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={`${order.productName} 주문 취소`}
-                    onPress={() => setSelectedOrder(order)}
+                    onPress={() => {
+                      cancelMutation.reset();
+                      setSelectedOrder(order);
+                    }}
                     className="mt-3 min-h-9 items-center justify-center rounded-lg border border-motu-grey-lighter py-2 active:opacity-60"
                   >
                     <Text className="font-pretendard-bold text-sm text-motu-grey">주문 취소</Text>
                   </Pressable>
                 </View>
               ))}
+              <Pagination
+                currentPage={history?.page ?? currentPage}
+                totalPages={totalPages}
+                visiblePageCount={3}
+                onPageChange={setCurrentPage}
+              />
             </View>
           ) : hasTransactions ? (
             <>
@@ -461,6 +474,9 @@ export default function TransactionsScreen() {
         order={selectedOrder}
         onClose={handleCloseCancelModal}
         onConfirm={handleConfirmCancel}
+        isSubmitting={cancelMutation.isPending}
+        canCancel={isLoggedIn}
+        errorMessage={cancelMutation.isError ? getApiErrorMessage(cancelMutation.error) : null}
       />
     </SafeAreaView>
   );

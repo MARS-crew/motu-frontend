@@ -1,20 +1,30 @@
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
-import type { PendingOrderPreview } from '@/constants/pendingOrderPreview';
+import type { OpenOrderRow } from '@/utils/tradeHistory';
 
 type CancelOrderModalProps = {
-  order: PendingOrderPreview | null;
+  order: OpenOrderRow | null;
   onClose: () => void;
   onConfirm: () => void;
+  isSubmitting: boolean;
+  canCancel: boolean;
+  errorMessage: string | null;
 };
 
-export function CancelOrderModal({ order, onClose, onConfirm }: CancelOrderModalProps) {
+export function CancelOrderModal({
+  order,
+  onClose,
+  onConfirm,
+  isSubmitting,
+  canCancel,
+  errorMessage,
+}: CancelOrderModalProps) {
   return (
     <Modal
       transparent
       animationType="fade"
       visible={order !== null}
-      onRequestClose={onClose}
+      onRequestClose={isSubmitting ? undefined : onClose}
       statusBarTranslucent
     >
       <View className="flex-1 bg-black/40">
@@ -25,6 +35,7 @@ export function CancelOrderModal({ order, onClose, onConfirm }: CancelOrderModal
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="주문 취소 창 닫기"
+            disabled={isSubmitting}
             onPress={onClose}
             className="absolute inset-0"
           />
@@ -67,9 +78,19 @@ export function CancelOrderModal({ order, onClose, onConfirm }: CancelOrderModal
                   </Text>
                 </View>
               </View>
+              {errorMessage && (
+                <Text
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite"
+                  className="mb-4 text-center font-pretendard text-xs text-motu-red"
+                >
+                  {errorMessage}
+                </Text>
+              )}
               <View className="flex-row gap-2">
                 <Pressable
                   accessibilityRole="button"
+                  disabled={isSubmitting}
                   onPress={onClose}
                   className="min-h-11 flex-1 items-center justify-center rounded-lg border border-motu-grey-lighter bg-white py-3 active:opacity-50"
                 >
@@ -79,6 +100,8 @@ export function CancelOrderModal({ order, onClose, onConfirm }: CancelOrderModal
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
+                  disabled={isSubmitting || !canCancel}
+                  accessibilityState={{ disabled: isSubmitting || !canCancel, busy: isSubmitting }}
                   onPress={onConfirm}
                   className="min-h-11 flex-1 items-center justify-center rounded-lg bg-motu-black py-3 active:opacity-50"
                 >
