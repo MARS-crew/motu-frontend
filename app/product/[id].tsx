@@ -25,6 +25,11 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useCandlesQuery } from '@/queries/useCandlesQuery';
 import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
 import { useOrderBookQuery } from '@/queries/useOrderBookQuery';
+import {
+  useDeletePriceAlertMutation,
+  useSavePriceAlertMutation,
+} from '@/queries/usePriceAlertMutation';
+import { usePriceAlertQuery } from '@/queries/usePriceAlertQuery';
 import { useRecentTradesQuery } from '@/queries/useRecentTradesQuery';
 import { useStockDetailQuery } from '@/queries/useStockDetailQuery';
 import { useTradeSummaryQuery } from '@/queries/useTradeSummaryQuery';
@@ -32,6 +37,7 @@ import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { OrderSide } from '@/types/order';
 import type { ChartPeriod } from '@/types/product';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 type DetailTab = 'chart' | 'orderBook' | 'info';
 
@@ -50,8 +56,6 @@ export default function ProductDetailScreen() {
 
   const [selectedTab, setSelectedTab] = useState<DetailTab>('chart');
   const [period, setPeriod] = useState<ChartPeriod>('day');
-  // 지정가 알림은 서버 연동 전까지 화면 안에서만 유지합니다.
-  const [alertPrice, setAlertPrice] = useState<number | null>(null);
   const [alertModal, setAlertModal] = useState<'form' | 'release' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -64,6 +68,11 @@ export default function ProductDetailScreen() {
   const { data: orderBook } = useOrderBookQuery(stockId);
   const { data: recentTrades = [] } = useRecentTradesQuery(stockId);
   const { data: tradeSummary } = useTradeSummaryQuery(stockId);
+  const { data: priceAlert = null } = usePriceAlertQuery(stockId);
+  const { mutateAsync: savePriceAlert } = useSavePriceAlertMutation();
+  const { mutate: deletePriceAlert, isPending: isDeletingPriceAlert } =
+    useDeletePriceAlertMutation();
+  const alertPrice = priceAlert?.targetPrice ?? null;
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -73,20 +82,37 @@ export default function ProductDetailScreen() {
     }
   };
 
-  const handleAlertPress = () => setAlertModal('form');
+  // 지정가 알림은 회원만 설정할 수 있습니다.
+  const handleAlertPress = () => {
+    if (!isLoggedIn) {
+      setIsLoginModalVisible(true);
+      return;
+    }
+    setAlertModal('form');
+  };
 
   const handleAlertModalClose = () => setAlertModal(null);
 
-  const handleAlertSubmit = (price: number) => {
-    setAlertPrice(price);
+  // 실패하면 모달이 서버 오류 문구를 보여주도록 오류를 그대로 넘깁니다.
+  const handleAlertSubmit = async (price: number) => {
+    await savePriceAlert({
+      stockId,
+      targetPrice: price,
+      alertId: priceAlert?.alertId ?? null,
+    });
     setAlertModal(null);
   };
 
   // 해제를 취소하면 수정 모달로 돌아갑니다. (화면설계서 USR-MARKET-02-M01)
   const handleAlertRelease = () => {
-    setAlertPrice(null);
-    setAlertModal(null);
-    setToastMessage('가격 알림이 해제되었습니다.');
+    if (!priceAlert || isDeletingPriceAlert) return;
+    deletePriceAlert(priceAlert.alertId, {
+      onSuccess: () => {
+        setAlertModal(null);
+        setToastMessage('가격 알림이 해제되었습니다.');
+      },
+      onError: (deleteError) => setToastMessage(getApiErrorMessage(deleteError)),
+    });
   };
 
   const handleToastHide = useCallback(() => setToastMessage(null), []);
@@ -298,8 +324,8 @@ export default function ProductDetailScreen() {
 
       <PriceAlertModal
         isVisible={alertModal === 'form'}
-        currentPrice={product.price}
-        changeRate={product.changeRate}
+        currentPrice={tradeSummary?.currentPrice ?? product.price}
+        changeRate={tradeSummary?.changeRate ?? product.changeRate}
         alertPrice={alertPrice}
         onClose={handleAlertModalClose}
         onSubmit={handleAlertSubmit}

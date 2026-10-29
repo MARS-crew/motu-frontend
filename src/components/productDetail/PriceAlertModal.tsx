@@ -8,6 +8,7 @@ import {
   ProductDetailDialog,
 } from '@/components/productDetail/ProductDetailDialog';
 import { priceAlertSchema, type PriceAlertForm } from '@/schemas/priceAlertSchema';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { formatPoint, getChangeColorClass } from '@/utils/formatNumber';
 
 type PriceAlertModalProps = {
@@ -17,7 +18,8 @@ type PriceAlertModalProps = {
   // 설정된 알림 가격이 있으면 수정 모달로 열립니다.
   alertPrice: number | null;
   onClose: () => void;
-  onSubmit: (price: number) => void;
+  // 저장에 실패하면 서버 오류 문구를 입력창 아래에 보여줍니다.
+  onSubmit: (price: number) => Promise<void>;
   onReleasePress: () => void;
 };
 
@@ -40,7 +42,8 @@ export function PriceAlertModal({
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    setError,
+    formState: { errors, isSubmitting },
   } = useForm<PriceAlertForm>({
     resolver: zodResolver(priceAlertSchema),
     defaultValues: { price: '' },
@@ -53,8 +56,16 @@ export function PriceAlertModal({
     if (isVisible) reset({ price: (alertPrice ?? currentPrice).toLocaleString('ko-KR') });
   }, [isVisible, alertPrice, currentPrice, reset]);
 
-  const handleConfirm = () =>
-    void handleSubmit(({ price }) => onSubmit(Number(price.replaceAll(',', ''))))();
+  const handleConfirm = () => {
+    if (isSubmitting) return;
+    void handleSubmit(async ({ price }) => {
+      try {
+        await onSubmit(Number(price.replaceAll(',', '')));
+      } catch (error) {
+        setError('price', { message: getApiErrorMessage(error) });
+      }
+    })();
+  };
 
   return (
     <ProductDetailDialog
