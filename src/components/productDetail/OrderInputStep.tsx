@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { OrderInfoRow, OrderTotalRow } from '@/components/productDetail/OrderInfoRow';
 import { OrderStepper } from '@/components/productDetail/OrderStepper';
-import { MIN_ORDER_QUANTITY, ORDER_QUANTITY_PRESETS, ORDER_SIDE_STYLES } from '@/constants/order';
+import { ORDER_QUANTITY_PRESETS, ORDER_SIDE_STYLES } from '@/constants/order';
 import type { OrderForm } from '@/schemas/orderSchema';
 import type { OrderAmounts, OrderSide } from '@/types/order';
 import { getChangeColorClass } from '@/utils/formatNumber';
@@ -14,6 +14,7 @@ type OrderInputStepProps = {
   currentPrice: number;
   changeRate: number;
   tickSize: number;
+  minQuantity: number;
   control: Control<OrderForm>;
   setValue: UseFormSetValue<OrderForm>;
   amounts: OrderAmounts;
@@ -26,6 +27,7 @@ export function OrderInputStep({
   currentPrice,
   changeRate,
   tickSize,
+  minQuantity,
   control,
   setValue,
   amounts,
@@ -88,7 +90,7 @@ export function OrderInputStep({
               onBlur={onBlur}
               onIncrease={() => setNumber('quantity', parseOrderNumber(value) + 1)}
               onDecrease={() =>
-                setNumber('quantity', Math.max(MIN_ORDER_QUANTITY, parseOrderNumber(value) - 1))
+                setNumber('quantity', Math.max(minQuantity, parseOrderNumber(value) - 1))
               }
             />
           )}

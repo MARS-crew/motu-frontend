@@ -1,14 +1,12 @@
 import { z } from 'zod';
 
-import { MIN_ORDER_QUANTITY, ORDER_ERROR_MESSAGES } from '@/constants/order';
-import type { OrderSide } from '@/types/order';
+import { ORDER_ERROR_MESSAGES } from '@/constants/order';
+import type { OrderAvailability, OrderSide } from '@/types/order';
 import { getOrderAmounts } from '@/utils/order';
 
-type OrderSchemaOptions = {
+// 호가 단위·최소 주문 값·수수료율·사용 가능 포인트·매도 가능 수량은 주문 가능 정보 API 값을 씁니다.
+type OrderSchemaOptions = Omit<OrderAvailability, 'isTradable'> & {
   side: OrderSide;
-  tickSize: number;
-  availablePoints: number;
-  sellableQuantity: number;
 };
 
 const toNumber = (value: string) => Number(value.replaceAll(',', ''));
@@ -17,6 +15,9 @@ const toNumber = (value: string) => Number(value.replaceAll(',', ''));
 export const createOrderSchema = ({
   side,
   tickSize,
+  minPrice,
+  minQuantity,
+  feeRate,
   availablePoints,
   sellableQuantity,
 }: OrderSchemaOptions) =>
@@ -31,19 +32,19 @@ export const createOrderSchema = ({
       const addIssue = (path: 'price' | 'quantity', message: string) =>
         context.addIssue({ code: 'custom', path: [path], message });
 
-      if (!price || !Number.isSafeInteger(priceValue) || priceValue <= 0) {
+      if (!price || !Number.isSafeInteger(priceValue) || priceValue < minPrice) {
         return addIssue('price', ORDER_ERROR_MESSAGES.price);
       }
       if (priceValue % tickSize !== 0) return addIssue('price', ORDER_ERROR_MESSAGES.tickSize);
       if (!quantity || !Number.isSafeInteger(quantityValue)) {
         return addIssue('quantity', ORDER_ERROR_MESSAGES.quantity);
       }
-      if (quantityValue < MIN_ORDER_QUANTITY) {
+      if (quantityValue < minQuantity) {
         return addIssue('quantity', ORDER_ERROR_MESSAGES.minQuantity);
       }
       if (
         side === 'buy' &&
-        getOrderAmounts('buy', priceValue, quantityValue).total > availablePoints
+        getOrderAmounts('buy', priceValue, quantityValue, feeRate).total > availablePoints
       ) {
         return addIssue('quantity', ORDER_ERROR_MESSAGES.points);
       }
