@@ -6,6 +6,7 @@ import { getChangeColorClass } from '@/utils/formatNumber';
 type OrderBookCardProps = {
   orderBook: OrderBook;
   currentPrice: number;
+  changeAmount: number;
   changeRate: number;
 };
 
@@ -37,6 +38,11 @@ function OrderBookColumn({ side, levels }: OrderBookColumnProps) {
           </Text>
         ))}
       </View>
+      {levels.length === 0 && (
+        <Text className="py-[11px] text-center font-pretendard-medium text-[11px] leading-[14px] text-motu-grey-light">
+          호가 없음
+        </Text>
+      )}
       {levels.map((level, index) => {
         const price = (
           <Text
@@ -69,7 +75,12 @@ function OrderBookColumn({ side, levels }: OrderBookColumnProps) {
   );
 }
 
-export function OrderBookCard({ orderBook, currentPrice, changeRate }: OrderBookCardProps) {
+export function OrderBookCard({
+  orderBook,
+  currentPrice,
+  changeAmount,
+  changeRate,
+}: OrderBookCardProps) {
   // 매도는 낮은 가격, 매수는 높은 가격부터 5단계를 고르고 둘 다 높은 가격이 위로 오게 표시합니다.
   const asks = [...orderBook.asks]
     .sort((a, b) => a.price - b.price)
@@ -77,7 +88,6 @@ export function OrderBookCard({ orderBook, currentPrice, changeRate }: OrderBook
     .reverse();
   const bids = [...orderBook.bids].sort((a, b) => b.price - a.price).slice(0, MAX_ORDER_BOOK_DEPTH);
 
-  const changeAmount = Math.round(currentPrice - currentPrice / (1 + changeRate / 100));
   const changeSign = changeAmount > 0 ? '+' : changeAmount < 0 ? '-' : '';
 
   return (
