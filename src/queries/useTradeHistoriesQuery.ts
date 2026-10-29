@@ -2,13 +2,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsFocused } from 'expo-router';
 import { useEffect } from 'react';
 
-import { getTradeHistories, getTradeHistorySummary } from '@/apis/tradeHistory';
+import { getFilledOrders, getTradeHistories, getTradeHistorySummary } from '@/apis/tradeHistory';
 import type { TradeHistoryParams } from '@/schemas/tradeHistorySchema';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 export const TRADE_HISTORIES_QUERY_KEY = ['trade-histories'] as const;
 
-export function useTradeHistoriesQuery(params: TradeHistoryParams, isHistoryTab: boolean) {
+export function useTradeHistoriesQuery(
+  params: TradeHistoryParams,
+  isHistoryTab: boolean,
+  isCompletedTab = false,
+) {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isFocused = useIsFocused();
   const queryClient = useQueryClient();
@@ -26,15 +30,25 @@ export function useTradeHistoriesQuery(params: TradeHistoryParams, isHistoryTab:
     gcTime: 0,
     refetchOnMount: 'always',
   });
-  const summaryQuery = useQuery({
-    queryKey: [...TRADE_HISTORIES_QUERY_KEY, 'summary', params.from, params.to],
-    queryFn: ({ signal }) => getTradeHistorySummary({ from: params.from, to: params.to }, signal),
-    enabled,
+  const filledOrdersQuery = useQuery({
+    queryKey: [...TRADE_HISTORIES_QUERY_KEY, 'filled-orders', params],
+    queryFn: ({ signal }) => getFilledOrders(params, signal),
+    enabled: isLoggedIn && isFocused && isCompletedTab,
     select: (data) => (isLoggedIn ? data : undefined),
     retry: false,
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
   });
-  return { historyQuery, summaryQuery, isLoggedIn };
+  const summaryQuery = useQuery({
+    queryKey: [...TRADE_HISTORIES_QUERY_KEY, 'summary', params.from, params.to],
+    queryFn: ({ signal }) => getTradeHistorySummary({ from: params.from, to: params.to }, signal),
+    enabled: isLoggedIn && isFocused && (isHistoryTab || isCompletedTab),
+    select: (data) => (isLoggedIn ? data : undefined),
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+  return { historyQuery, filledOrdersQuery, summaryQuery, isLoggedIn };
 }

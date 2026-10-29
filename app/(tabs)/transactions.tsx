@@ -9,16 +9,13 @@ import { Pagination } from '@/components/Pagination';
 import { SortDropdown } from '@/components/SortDropdown';
 import { CancelOrderModal } from '@/components/transactions/CancelOrderModal';
 import { TransactionDatePicker } from '@/components/transactions/TransactionDatePicker';
-import {
-  COMPLETED_ORDER_PREVIEW,
-  type CompletedOrderPreview,
-} from '@/constants/completedOrderPreview';
 import { TRANSACTION_SORT_OPTIONS } from '@/constants/transactionPreview';
 import { useTradeHistoriesQuery } from '@/queries/useTradeHistoriesQuery';
 import {
   getInitialTradeHistoryRange,
   toTradeHistoryParams,
   toTradeHistoryRow,
+  toFilledOrderRow,
 } from '@/utils/tradeHistory';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
@@ -75,57 +72,38 @@ export default function TransactionsScreen() {
   };
 
   const isHistoryTab = activeTab === '거래내역';
-  const { historyQuery, summaryQuery, isLoggedIn } = useTradeHistoriesQuery(
+  const isCompletedTab = activeTab === '체결주문';
+  const { historyQuery, filledOrdersQuery, summaryQuery, isLoggedIn } = useTradeHistoriesQuery(
     toTradeHistoryParams(dateRange, currentPage, PAGE_SIZE, sortValue),
     isHistoryTab,
+    isCompletedTab,
   );
-  const history = historyQuery.data;
+  const listQuery = isCompletedTab ? filledOrdersQuery : historyQuery;
+  const history = listQuery.data;
   const summary = summaryQuery.data;
-  const historyError = isHistoryTab
+  const historyError = !isPendingTab
     ? !isLoggedIn
-      ? '로그인 후 거래내역을 확인해 주세요.'
-      : historyQuery.isError
-        ? getApiErrorMessage(historyQuery.error)
+      ? `로그인 후 ${activeTab}을 확인해 주세요.`
+      : listQuery.isError
+        ? getApiErrorMessage(listQuery.error)
         : summaryQuery.isError
           ? getApiErrorMessage(summaryQuery.error)
           : null
     : null;
-  const isLoadingHistory = isHistoryTab && !historyError && (!history || !summary);
+  const isLoadingHistory = !isPendingTab && !historyError && (!history || !summary);
   const handleRetryHistory = () => {
-    void Promise.all([historyQuery.refetch(), summaryQuery.refetch()]);
+    void Promise.all([listQuery.refetch(), summaryQuery.refetch()]);
   };
-  const isCompletedTab = activeTab === '체결주문';
-  const source: CompletedOrderPreview[] = isCompletedTab ? COMPLETED_ORDER_PREVIEW : [];
-  const transactions = source
-    .filter(({ tradedAt }) => {
-      const date = tradedAt.slice(0, 10);
-      return date >= dateRange.start && date <= dateRange.end;
-    })
-    .sort((left, right) =>
-      sortValue === 'amount'
-        ? right.amount - left.amount || right.tradedAt.localeCompare(left.tradedAt)
-        : right.tradedAt.localeCompare(left.tradedAt),
-    );
-  const previewBuyAmount = transactions.reduce(
-    (total, item) => total + (item.side === 'buy' ? item.amount : 0),
-    0,
-  );
-  const previewSellAmount = transactions.reduce(
-    (total, item) => total + (item.side === 'sell' ? item.amount : 0),
-    0,
-  );
-  const buyAmount = isHistoryTab ? (summary?.buyAmount ?? 0) : previewBuyAmount;
-  const sellAmount = isHistoryTab ? (summary?.sellAmount ?? 0) : previewSellAmount;
-  const totalAmount = isHistoryTab ? (summary?.totalAmount ?? 0) : buyAmount + sellAmount;
-  const pageTransactions: (ReturnType<typeof toTradeHistoryRow> | CompletedOrderPreview)[] =
-    isHistoryTab
-      ? (history?.items.map(toTradeHistoryRow) ?? [])
-      : transactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const buyAmount = summary?.buyAmount ?? 0;
+  const sellAmount = summary?.sellAmount ?? 0;
+  const totalAmount = summary?.totalAmount ?? 0;
+  const pageTransactions: (
+    ReturnType<typeof toTradeHistoryRow> | ReturnType<typeof toFilledOrderRow>
+  )[] = isCompletedTab
+    ? (filledOrdersQuery.data?.items.map(toFilledOrderRow) ?? [])
+    : (historyQuery.data?.items.map(toTradeHistoryRow) ?? []);
   const hasTransactions = !isPendingTab && pageTransactions.length > 0;
-  const totalPages = Math.ceil(
-    (isHistoryTab ? (history?.totalCount ?? 0) : transactions.length) /
-      (isHistoryTab ? (history?.size ?? PAGE_SIZE) : PAGE_SIZE),
-  );
+  const totalPages = Math.ceil((history?.totalCount ?? 0) / (history?.size ?? PAGE_SIZE));
   const handleApplyDateRange = (range: TransactionDateRange) => {
     setDateRange(range);
     setCurrentPage(1);
@@ -138,10 +116,10 @@ export default function TransactionsScreen() {
   const handleTabPress = (tab: (typeof TABS)[number]) => {
     setActiveTab(tab);
     setCurrentPage(1);
-    if (tab === '체결주문' || tab === '미체결주문') {
+    if (tab === '미체결주문') {
       setDateRange({ start: '2026-09-01', end: '2026-09-06' });
       setSortValue('amount');
-    } else if (tab === '거래내역') {
+    } else {
       setDateRange(getInitialTradeHistoryRange());
       setSortValue('latest');
     }
@@ -250,14 +228,14 @@ export default function TransactionsScreen() {
                 accessibilityLiveRegion="polite"
                 className="text-center font-pretendard text-xs leading-5 text-motu-grey"
               >
-                {historyError || '거래내역을 불러오고 있습니다.'}
+                {historyError || `${activeTab}을 불러오고 있습니다.`}
               </Text>
               {historyError && isLoggedIn && (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="거래내역 다시 조회"
+                  accessibilityLabel={`${activeTab} 다시 조회`}
                   onPress={handleRetryHistory}
-                  disabled={historyQuery.isFetching || summaryQuery.isFetching}
+                  disabled={listQuery.isFetching || summaryQuery.isFetching}
                 >
                   <Text className="font-pretendard-medium text-xs text-motu-grey underline">
                     다시 조회
@@ -454,7 +432,7 @@ export default function TransactionsScreen() {
                 </View>
               )}
               <Pagination
-                currentPage={isHistoryTab ? (history?.page ?? currentPage) : currentPage}
+                currentPage={history?.page ?? currentPage}
                 totalPages={totalPages}
                 visiblePageCount={3}
                 onPageChange={setCurrentPage}
