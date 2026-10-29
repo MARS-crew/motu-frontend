@@ -1,6 +1,8 @@
 import { api } from '@/apis/instance';
 import {
   filledOrderListSchema,
+  openOrderListSchema,
+  openOrderParamsSchema,
   tradeHistoryParamsSchema,
   tradeHistoryPeriodSchema,
   tradeHistoryListSchema,
@@ -50,6 +52,24 @@ export async function getFilledOrders(params: TradeHistoryParams, signal?: Abort
       signal,
     });
     return filledOrderListSchema.parse(response.data.data);
+  }
+  return result;
+}
+
+export async function getOpenOrders(params: TradeHistoryParams, signal?: AbortSignal) {
+  const request = openOrderParamsSchema.parse(params);
+  const { data } = await api.get<ApiResponse<unknown>>('/trade-histories/open-orders', {
+    params: request,
+    signal,
+  });
+  const result = openOrderListSchema.parse(data.data);
+  const lastPage = Math.ceil(result.totalCount / result.size);
+  if (result.items.length === 0 && lastPage > 0 && result.page > lastPage) {
+    const response = await api.get<ApiResponse<unknown>>('/trade-histories/open-orders', {
+      params: { ...request, page: lastPage },
+      signal,
+    });
+    return openOrderListSchema.parse(response.data.data);
   }
   return result;
 }
