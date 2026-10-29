@@ -13,11 +13,14 @@ import {
   COMPLETED_ORDER_PREVIEW,
   type CompletedOrderPreview,
 } from '@/constants/completedOrderPreview';
+import { TRANSACTION_SORT_OPTIONS } from '@/constants/transactionPreview';
+import { useTradeHistoriesQuery } from '@/queries/useTradeHistoriesQuery';
 import {
-  TRANSACTION_PREVIEW,
-  TRANSACTION_SORT_OPTIONS,
-  type TransactionPreview,
-} from '@/constants/transactionPreview';
+  getInitialTradeHistoryRange,
+  toTradeHistoryParams,
+  toTradeHistoryRow,
+} from '@/utils/tradeHistory';
+import { getApiErrorMessage } from '@/utils/apiError';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { PENDING_ORDER_PREVIEW, type PendingOrderPreview } from '@/constants/pendingOrderPreview';
 import { formatDateRange, type TransactionDateRange } from '@/utils/transactionDate';
@@ -40,14 +43,13 @@ const EMPTY_STATE_CONTENT = {
   },
 };
 const PAGE_SIZE = 10;
-const INITIAL_DATE_RANGE = { start: '2026-09-05', end: '2026-09-06' };
 
 export default function TransactionsScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('거래내역');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortValue, setSortValue] = useState(TRANSACTION_SORT_OPTIONS[0].value);
-  const [dateRange, setDateRange] = useState<TransactionDateRange>(INITIAL_DATE_RANGE);
+  const [dateRange, setDateRange] = useState<TransactionDateRange>(getInitialTradeHistoryRange);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const [cancelledOrderIds, setCancelledOrderIds] = useState<string[]>([]);
@@ -72,10 +74,28 @@ export default function TransactionsScreen() {
     setSelectedOrder(null);
   };
 
+  const isHistoryTab = activeTab === '거래내역';
+  const { historyQuery, summaryQuery, isLoggedIn } = useTradeHistoriesQuery(
+    toTradeHistoryParams(dateRange, currentPage, PAGE_SIZE, sortValue),
+    isHistoryTab,
+  );
+  const history = historyQuery.data;
+  const summary = summaryQuery.data;
+  const historyError = isHistoryTab
+    ? !isLoggedIn
+      ? '로그인 후 거래내역을 확인해 주세요.'
+      : historyQuery.isError
+        ? getApiErrorMessage(historyQuery.error)
+        : summaryQuery.isError
+          ? getApiErrorMessage(summaryQuery.error)
+          : null
+    : null;
+  const isLoadingHistory = isHistoryTab && !historyError && (!history || !summary);
+  const handleRetryHistory = () => {
+    void Promise.all([historyQuery.refetch(), summaryQuery.refetch()]);
+  };
   const isCompletedTab = activeTab === '체결주문';
-  const source: (TransactionPreview | CompletedOrderPreview)[] = isCompletedTab
-    ? COMPLETED_ORDER_PREVIEW
-    : TRANSACTION_PREVIEW;
+  const source: CompletedOrderPreview[] = isCompletedTab ? COMPLETED_ORDER_PREVIEW : [];
   const transactions = source
     .filter(({ tradedAt }) => {
       const date = tradedAt.slice(0, 10);
@@ -86,19 +106,25 @@ export default function TransactionsScreen() {
         ? right.amount - left.amount || right.tradedAt.localeCompare(left.tradedAt)
         : right.tradedAt.localeCompare(left.tradedAt),
     );
-  const buyAmount = transactions.reduce(
+  const previewBuyAmount = transactions.reduce(
     (total, item) => total + (item.side === 'buy' ? item.amount : 0),
     0,
   );
-  const sellAmount = transactions.reduce(
+  const previewSellAmount = transactions.reduce(
     (total, item) => total + (item.side === 'sell' ? item.amount : 0),
     0,
   );
-  const hasTransactions = activeTab !== '미체결주문' && transactions.length > 0;
-  const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
-  const pageTransactions = transactions.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+  const buyAmount = isHistoryTab ? (summary?.buyAmount ?? 0) : previewBuyAmount;
+  const sellAmount = isHistoryTab ? (summary?.sellAmount ?? 0) : previewSellAmount;
+  const totalAmount = isHistoryTab ? (summary?.totalAmount ?? 0) : buyAmount + sellAmount;
+  const pageTransactions: (ReturnType<typeof toTradeHistoryRow> | CompletedOrderPreview)[] =
+    isHistoryTab
+      ? (history?.items.map(toTradeHistoryRow) ?? [])
+      : transactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const hasTransactions = !isPendingTab && pageTransactions.length > 0;
+  const totalPages = Math.ceil(
+    (isHistoryTab ? (history?.totalCount ?? 0) : transactions.length) /
+      (isHistoryTab ? (history?.size ?? PAGE_SIZE) : PAGE_SIZE),
   );
   const handleApplyDateRange = (range: TransactionDateRange) => {
     setDateRange(range);
@@ -116,7 +142,7 @@ export default function TransactionsScreen() {
       setDateRange({ start: '2026-09-01', end: '2026-09-06' });
       setSortValue('amount');
     } else if (tab === '거래내역') {
-      setDateRange(INITIAL_DATE_RANGE);
+      setDateRange(getInitialTradeHistoryRange());
       setSortValue('latest');
     }
     setIsCalendarOpen(false);
@@ -218,7 +244,28 @@ export default function TransactionsScreen() {
               <TransactionDatePicker value={dateRange} onApply={handleApplyDateRange} />
             </View>
           )}
-          {isPendingTab && pendingOrders.length > 0 ? (
+          {historyError || isLoadingHistory ? (
+            <View className="items-center gap-3 px-1 pb-10 pt-[104px]">
+              <Text
+                accessibilityLiveRegion="polite"
+                className="text-center font-pretendard text-xs leading-5 text-motu-grey"
+              >
+                {historyError || '거래내역을 불러오고 있습니다.'}
+              </Text>
+              {historyError && isLoggedIn && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="거래내역 다시 조회"
+                  onPress={handleRetryHistory}
+                  disabled={historyQuery.isFetching || summaryQuery.isFetching}
+                >
+                  <Text className="font-pretendard-medium text-xs text-motu-grey underline">
+                    다시 조회
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          ) : isPendingTab && pendingOrders.length > 0 ? (
             <View className="gap-3 pb-6">
               {pendingOrders.map((order) => (
                 <View
@@ -291,7 +338,7 @@ export default function TransactionsScreen() {
                 <View>
                   <Text className="font-pretendard text-xs text-motu-grey">총 거래금액</Text>
                   <Text className="mt-1.5 font-pretendard-bold text-lg text-motu-black">
-                    {(buyAmount + sellAmount).toLocaleString('ko-KR')} P
+                    {totalAmount.toLocaleString('ko-KR')} P
                   </Text>
                 </View>
                 <View className="gap-1.5">
@@ -407,7 +454,7 @@ export default function TransactionsScreen() {
                 </View>
               )}
               <Pagination
-                currentPage={currentPage}
+                currentPage={isHistoryTab ? (history?.page ?? currentPage) : currentPage}
                 totalPages={totalPages}
                 visiblePageCount={3}
                 onPageChange={setCurrentPage}
