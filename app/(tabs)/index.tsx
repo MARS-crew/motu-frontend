@@ -13,8 +13,8 @@ import { ASSET_SUMMARY } from '@/constants/homePreview';
 import { useHomeNewListingsQuery } from '@/queries/useHomeNewListingsQuery';
 import { useLatestNoticeQuery } from '@/queries/useLatestNoticeQuery';
 import { useRecentlyViewedQuery } from '@/queries/useRecentlyViewedQuery';
+import { useUnreadNotificationCountQuery } from '@/queries/useUnreadNotificationCountQuery';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useNotificationPreviewStore } from '@/stores/useNotificationPreviewStore';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import type { StockSummary } from '@/types/home';
 import type { NewListingItem, StockItem } from '@/types/stock';
@@ -50,9 +50,8 @@ export default function HomeScreen() {
   const recentlyViewedQuery = useRecentlyViewedQuery();
   const newListingsQuery = useHomeNewListingsQuery();
   const latestNotice = latestNoticeQuery.data;
-  const hasUnreadNotification = useNotificationPreviewStore((state) =>
-    state.notifications.some((notification) => !notification.isRead),
-  );
+  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCountQuery();
+  const hasUnreadNotification = isLoggedIn && unreadNotificationCount > 0;
 
   const handleSearchPress = () => router.push('/search');
 
