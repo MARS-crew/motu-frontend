@@ -1,4 +1,8 @@
-import type { TradeHistoryItem, TradeHistoryParams } from '@/schemas/tradeHistorySchema';
+import type {
+  FilledOrderItem,
+  TradeHistoryItem,
+  TradeHistoryParams,
+} from '@/schemas/tradeHistorySchema';
 import type { TransactionDateRange } from '@/utils/transactionDate';
 
 export function getInitialTradeHistoryRange(now = Date.now()): TransactionDateRange {
@@ -28,5 +32,18 @@ export function toTradeHistoryRow(item: TradeHistoryItem) {
     productName: item.stockName,
     side: item.side === 'BUY' ? ('buy' as const) : ('sell' as const),
     amount: item.amount,
+  };
+}
+
+export function toFilledOrderRow(item: FilledOrderItem) {
+  const kst = new Date(Date.parse(item.filledAt) + 9 * 60 * 60 * 1000).toISOString();
+  return {
+    id: String(item.orderId),
+    tradedAt: kst.slice(0, 16),
+    productName: item.stockName,
+    side: item.side === 'BUY' ? ('buy' as const) : ('sell' as const),
+    orderPrice: item.orderPrice,
+    filledQuantity: item.filledQty,
+    amount: item.filledAmount,
   };
 }

@@ -41,3 +41,21 @@ export const tradeHistorySummarySchema = z.object({
 export type TradeHistoryPeriod = z.infer<typeof tradeHistoryPeriodSchema>;
 export type TradeHistoryParams = z.infer<typeof tradeHistoryParamsSchema>;
 export type TradeHistoryItem = z.infer<typeof tradeHistoryItemSchema>;
+
+export const filledOrderItemSchema = z.object({
+  orderId: z.number().int().positive(),
+  stockId: z.number().int().positive(),
+  stockName: z.string(),
+  side: z.enum(['BUY', 'SELL']),
+  orderPrice: z.number().nonnegative(),
+  orderQty: z.number().int().positive(),
+  filledQty: z.number().int().positive(),
+  filledAmount: z.number().nonnegative(),
+  fee: z.number().nonnegative(),
+  status: z.enum(['ACCEPTED', 'PARTIAL', 'FILLED', 'CANCELED']),
+  filledAt: z.iso.datetime({ offset: true }),
+});
+export const filledOrderListSchema = tradeHistoryListSchema.extend({
+  items: z.array(filledOrderItemSchema),
+});
+export type FilledOrderItem = z.infer<typeof filledOrderItemSchema>;
