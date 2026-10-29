@@ -1,7 +1,6 @@
 import type { OrderSide } from '@/types/order';
 
 // 화면설계서 기준 주문 규칙입니다. (USR-MARKET-02-M02 ~ M07)
-export const MIN_ORDER_QUANTITY = 1;
 export const ORDER_QUANTITY_PRESETS = [10, 50, 100, 1000];
 // 거래 수수료는 실제 체결금액 기준 0.02%입니다.
 export const ORDER_FEE_RATE = 0.0002;

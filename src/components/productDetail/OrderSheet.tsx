@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
-import { useCallback, useMemo, useState } from 'react';
+import { randomUUID } from 'expo-crypto';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
@@ -19,21 +20,26 @@ import { OrderCompleteStep } from '@/components/productDetail/OrderCompleteStep'
 import { OrderConfirmStep } from '@/components/productDetail/OrderConfirmStep';
 import { OrderInputStep } from '@/components/productDetail/OrderInputStep';
 import { Toast } from '@/components/Toast';
-import { MIN_ORDER_QUANTITY, ORDER_SIDE_STYLES } from '@/constants/order';
+import { ORDER_SIDE_STYLES } from '@/constants/order';
+import { useCreateOrderMutation } from '@/queries/useCreateOrderMutation';
 import { createOrderSchema, type OrderForm } from '@/schemas/orderSchema';
-import type { OrderSide, OrderStep, SubmittedOrder } from '@/types/order';
-import { formatOrderedAt, getOrderAmounts, parseOrderNumber } from '@/utils/order';
+import type { OrderAvailability, OrderSide, OrderStep, SubmittedOrder } from '@/types/order';
+import {
+  formatOrderedAt,
+  getOrderAmounts,
+  getOrderErrorMessage,
+  parseOrderNumber,
+} from '@/utils/order';
 
 cssInterop(Image, { className: 'style' });
 
 type OrderSheetProps = {
   side: OrderSide;
+  stockId: number;
   productName: string;
   currentPrice: number;
   changeRate: number;
-  tickSize: number;
-  availablePoints: number;
-  sellableQuantity: number;
+  availability: OrderAvailability;
   onClose: () => void;
   onHistoryPress: () => void;
 };
@@ -42,12 +48,11 @@ const BOTTOM_PADDING = 24;
 
 export function OrderSheet({
   side,
+  stockId,
   productName,
   currentPrice,
   changeRate,
-  tickSize,
-  availablePoints,
-  sellableQuantity,
+  availability,
   onClose,
   onHistoryPress,
 }: OrderSheetProps) {
@@ -56,33 +61,55 @@ export function OrderSheet({
   const [submittedOrder, setSubmittedOrder] = useState<SubmittedOrder | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const sideStyle = ORDER_SIDE_STYLES[side];
+  const { tickSize, minQuantity, feeRate, availablePoints, sellableQuantity } = availability;
+  const { mutateAsync: createOrder, isPending: isSubmitting } = useCreateOrderMutation();
+  // 주문 확인으로 넘어갈 때 만들고, 응답을 못 받아 다시 제출할 때는 같은 값을 보냅니다.
+  const clientOrderIdRef = useRef<string | null>(null);
 
-  const schema = useMemo(
-    () => createOrderSchema({ side, tickSize, availablePoints, sellableQuantity }),
-    [side, tickSize, availablePoints, sellableQuantity],
-  );
+  const schema = useMemo(() => createOrderSchema({ side, ...availability }), [side, availability]);
   // 열 때마다 새로 마운트되며 현재가(호가 단위로 맞춤)와 최소 주문 수량으로 시작합니다.
   const { control, handleSubmit, setValue } = useForm<OrderForm>({
     resolver: zodResolver(schema),
     defaultValues: {
       price: (Math.round(currentPrice / tickSize) * tickSize).toLocaleString('ko-KR'),
-      quantity: MIN_ORDER_QUANTITY.toLocaleString('ko-KR'),
+      quantity: minQuantity.toLocaleString('ko-KR'),
     },
   });
   const [price, quantity] = useWatch({ control, name: ['price', 'quantity'] });
-  const amounts = getOrderAmounts(side, parseOrderNumber(price), parseOrderNumber(quantity));
+  const amounts = getOrderAmounts(
+    side,
+    parseOrderNumber(price),
+    parseOrderNumber(quantity),
+    feeRate,
+  );
 
   const handleToastHide = useCallback(() => setToastMessage(null), []);
 
   const handleInvalid = (errors: FieldErrors<OrderForm>) =>
     setToastMessage(errors.price?.message ?? errors.quantity?.message ?? null);
 
-  const handleConfirmPress = () => void handleSubmit(() => setStep('confirm'), handleInvalid)();
+  const handleConfirmPress = () =>
+    void handleSubmit(() => {
+      clientOrderIdRef.current = randomUUID();
+      setStep('confirm');
+    }, handleInvalid)();
 
-  // 서버 연동 전까지는 제출 즉시 완료 화면으로 넘어갑니다.
-  const handleSubmitPress = () => {
-    setSubmittedOrder({ ...amounts, orderedAt: formatOrderedAt(new Date()) });
-    setStep('complete');
+  // 주문 오류는 화면설계서 문구로 Toast에 보여줍니다. (USR-MARKET-02-M04, M07)
+  const handleSubmitPress = async () => {
+    if (isSubmitting || !clientOrderIdRef.current) return;
+    try {
+      const order = await createOrder({
+        clientOrderId: clientOrderIdRef.current,
+        stockId,
+        side: side === 'buy' ? 'BUY' : 'SELL',
+        price: amounts.price,
+        qty: amounts.quantity,
+      });
+      setSubmittedOrder({ ...amounts, orderedAt: formatOrderedAt(new Date(order.createDate)) });
+      setStep('complete');
+    } catch (error) {
+      setToastMessage(getOrderErrorMessage(error));
+    }
   };
 
   return (
@@ -147,6 +174,7 @@ export function OrderSheet({
                 currentPrice={currentPrice}
                 changeRate={changeRate}
                 tickSize={tickSize}
+                minQuantity={minQuantity}
                 control={control}
                 setValue={setValue}
                 amounts={amounts}
@@ -182,7 +210,8 @@ export function OrderSheet({
                 <Button
                   title={`${sideStyle.label} 주문 제출`}
                   color={sideStyle.buttonColor}
-                  onPress={handleSubmitPress}
+                  isLoading={isSubmitting}
+                  onPress={() => void handleSubmitPress()}
                 />
                 <Button title="취소" variant="secondary" onPress={onClose} />
               </>

@@ -19,11 +19,10 @@ import { ProductSummary } from '@/components/productDetail/ProductSummary';
 import { RecentTradeList } from '@/components/productDetail/RecentTradeList';
 import { TradeSummaryCard } from '@/components/productDetail/TradeSummaryCard';
 import { Toast } from '@/components/Toast';
-import { CHART_PERIOD_OPTIONS, getTickSize } from '@/constants/productDetailPreview';
-import { SELLABLE_QUANTITY } from '@/constants/orderPreview';
+import { CHART_PERIOD_OPTIONS } from '@/constants/productDetailPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useCandlesQuery } from '@/queries/useCandlesQuery';
-import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
+import { useOrderAvailableQuery } from '@/queries/useOrderAvailableQuery';
 import { useOrderBookQuery } from '@/queries/useOrderBookQuery';
 import {
   useDeletePriceAlertMutation,
@@ -52,7 +51,6 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: product, isLoading, error } = useStockDetailQuery(Number(id));
   const { mutate: toggleWishlist } = useWishlistMutation();
-  const { data: account, refetch: refetchAccount } = useMyAccountQuery();
 
   const [selectedTab, setSelectedTab] = useState<DetailTab>('chart');
   const [period, setPeriod] = useState<ChartPeriod>('day');
@@ -68,6 +66,8 @@ export default function ProductDetailScreen() {
   const { data: orderBook } = useOrderBookQuery(stockId);
   const { data: recentTrades = [] } = useRecentTradesQuery(stockId);
   const { data: tradeSummary } = useTradeSummaryQuery(stockId);
+  const { data: orderAvailability, refetch: refetchOrderAvailability } =
+    useOrderAvailableQuery(stockId);
   const { data: priceAlert = null } = usePriceAlertQuery(stockId);
   const { mutateAsync: savePriceAlert } = useSavePriceAlertMutation();
   const { mutate: deletePriceAlert, isPending: isDeletingPriceAlert } =
@@ -123,16 +123,16 @@ export default function ProductDetailScreen() {
       setIsLoginModalVisible(true);
       return;
     }
-    // 매수는 사용 가능 포인트를 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
-    if (side === 'buy') {
-      const refetchPromise = refetchAccount();
-      if (!account) {
-        const { data } = await refetchPromise;
-        if (!data) {
-          setToastMessage('주문 가능 포인트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
-          return;
-        }
-      }
+    // 주문 규칙·사용 가능 포인트·매도 가능 수량을 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
+    const refetchPromise = refetchOrderAvailability();
+    const availability = orderAvailability ?? (await refetchPromise).data;
+    if (!availability) {
+      setToastMessage('주문 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    if (!availability.isTradable) {
+      setToastMessage('지금은 거래할 수 없는 상품이에요.');
+      return;
     }
     setOrderSide(side);
   };
@@ -302,16 +302,15 @@ export default function ProductDetailScreen() {
         onBuyPress={() => void handleOrderPress('buy')}
       />
 
-      {orderSide && (
+      {orderSide && orderAvailability && (
         <OrderSheet
           key={orderSide}
           side={orderSide}
+          stockId={stockId}
           productName={product.name}
-          currentPrice={product.price}
-          changeRate={product.changeRate}
-          tickSize={getTickSize(product.price)}
-          availablePoints={account?.availableCash ?? 0}
-          sellableQuantity={SELLABLE_QUANTITY}
+          currentPrice={tradeSummary?.currentPrice ?? product.price}
+          changeRate={tradeSummary?.changeRate ?? product.changeRate}
+          availability={orderAvailability}
           onClose={() => setOrderSide(null)}
           onHistoryPress={handleOrderHistoryPress}
         />
