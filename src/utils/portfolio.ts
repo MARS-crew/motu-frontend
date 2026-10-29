@@ -1,5 +1,31 @@
 import { ASSET_COMPOSITION_COLORS } from '@/constants/portfolioPreview';
-import type { AssetCompositionItem, Holding, HoldingSort } from '@/types/portfolio';
+import type {
+  AssetCompositionItem,
+  Holding,
+  HoldingSort,
+  Portfolio,
+  PortfolioItem,
+} from '@/types/portfolio';
+import { formatDashDateTime } from '@/utils/formatDate';
+
+// 포트폴리오 API 응답을 화면에서 쓰는 형태로 바꿉니다.
+export const toPortfolio = (portfolio: PortfolioItem): Portfolio => ({
+  summary: {
+    totalAsset: portfolio.totalAsset,
+    cash: portfolio.cash,
+    valuation: portfolio.evaluationAmount,
+    profit: portfolio.profitLoss,
+    profitRate: portfolio.profitRate,
+    updatedAt: formatDashDateTime(portfolio.baseTime),
+  },
+  holdings: portfolio.holdings.map((holding) => ({
+    id: holding.stockId,
+    name: holding.name,
+    logoImageUrl: holding.logoImageUrl,
+    valuation: holding.evaluationAmount,
+    returnRate: holding.profitRate,
+  })),
+});
 
 // 예수금과 평가금액 상위 종목을 보여주고, 색이 모자라면 나머지 종목은 '기타'로 묶습니다.
 export const getAssetComposition = (cash: number, holdings: Holding[]): AssetCompositionItem[] => {
@@ -30,10 +56,6 @@ export const sortHoldings = (holdings: Holding[], sort: HoldingSort) => {
       return sorted.sort((a, b) => b.returnRate - a.returnRate);
     case 'rateAsc':
       return sorted.sort((a, b) => a.returnRate - b.returnRate);
-    case 'volume':
-      return sorted.sort((a, b) => b.volume - a.volume);
-    case 'listedAt':
-      return sorted.sort((a, b) => b.listedAt.localeCompare(a.listedAt));
     default:
       return sorted.sort((a, b) => b.valuation - a.valuation);
   }
