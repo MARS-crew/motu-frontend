@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { HomeEmptyBox } from '@/components/home/HomeEmptyBox';
 import { LoginRequiredBox } from '@/components/home/LoginRequiredBox';
 import type { AssetSummary } from '@/types/home';
 import {
@@ -11,7 +12,10 @@ import {
 } from '@/utils/formatNumber';
 
 type AssetSummaryCardProps = {
-  summary: AssetSummary | null;
+  summary: AssetSummary | undefined;
+  isLoggedIn: boolean;
+  isLoading: boolean;
+  isError: boolean;
 };
 
 type AssetStatProps = {
@@ -33,14 +37,33 @@ function AssetStat({ label, value, valueClassName = 'text-motu-black' }: AssetSt
   );
 }
 
-// summary가 없으면 비회원으로 보고 로그인 안내를 표시합니다.
-export function AssetSummaryCard({ summary }: AssetSummaryCardProps) {
-  if (!summary) {
+// 비회원·로딩·오류일 때는 카드 제목 아래에 상태 안내를 표시합니다.
+export function AssetSummaryCard({
+  summary,
+  isLoggedIn,
+  isLoading,
+  isError,
+}: AssetSummaryCardProps) {
+  if (!isLoggedIn || isLoading || !summary) {
     return (
       <View className="rounded-2xl border border-motu-grey-lighter bg-white p-4">
         <Text className="font-pretendard-medium text-xs leading-4 text-motu-grey">총 평가자산</Text>
         <View className="mt-3">
-          <LoginRequiredBox />
+          {!isLoggedIn ? (
+            <LoginRequiredBox />
+          ) : isLoading ? (
+            <View className="items-center justify-center py-6">
+              <ActivityIndicator />
+            </View>
+          ) : (
+            <HomeEmptyBox
+              message={
+                isError
+                  ? '정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+                  : '총 평가자산 정보가 없습니다.'
+              }
+            />
+          )}
         </View>
       </View>
     );
@@ -72,7 +95,10 @@ export function AssetSummaryCard({ summary }: AssetSummaryCardProps) {
           valueClassName={getChangeColorClass(summary.profitLoss)}
         />
         <AssetStat label="매입금액" value={formatPoint(summary.purchaseAmount)} />
-        <AssetStat label="거래 대금" value={formatPoint(summary.tradeAmount)} />
+        <AssetStat
+          label="거래 대금"
+          value={summary.tradeAmount === null ? '-' : formatPoint(summary.tradeAmount)}
+        />
       </View>
     </Pressable>
   );
