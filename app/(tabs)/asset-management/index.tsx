@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
@@ -8,6 +8,9 @@ import { TopBar } from '@/components/TopBar';
 import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+
+// 자산관리는 숨김 탭이라 기본 뒤로 가기는 첫 탭(홈)으로 갑니다. 진입한 포트폴리오로 돌려보냅니다.
+const goToPortfolio = () => router.navigate('/(tabs)/portfolio');
 
 export default function AssetManagementScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
@@ -22,13 +25,18 @@ export default function AssetManagementScreen() {
     }, [isLoggedIn, refetch]),
   );
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/portfolio');
-    }
-  };
+  // 안드로이드 시스템 뒤로 가기도 상단 뒤로 가기 버튼과 같이 포트폴리오로 이동합니다.
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        goToPortfolio();
+        return true;
+      });
+      return () => subscription.remove();
+    }, []),
+  );
+
+  const handleBack = goToPortfolio;
 
   const handlePointGrant = () => router.push('/asset-management/point-grant');
 
