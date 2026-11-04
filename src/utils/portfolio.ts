@@ -14,6 +14,7 @@ export const toPortfolio = (portfolio: PortfolioItem): Portfolio => ({
     totalAsset: portfolio.totalAsset,
     cash: portfolio.cash,
     valuation: portfolio.evaluationAmount,
+    purchaseAmount: portfolio.purchaseAmount,
     profit: portfolio.profitLoss,
     profitRate: portfolio.profitRate,
     updatedAt: formatDashDateTime(portfolio.baseTime),
