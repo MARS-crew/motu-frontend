@@ -173,9 +173,10 @@ export default function TransactionsScreen() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
+        {/* 피그마 수치(글자 12/18px, 버튼 34px, 간격 4px, 바 44px)는 tailwind theme 토큰으로 맞춥니다. */}
         <View
           accessibilityRole="tablist"
-          className="mx-6 mb-4 flex-row rounded-full border border-motu-grey-lighter bg-white p-1"
+          className="mx-6 mb-4 flex-row gap-segment-inset rounded-full border border-motu-grey-lighter bg-white p-segment-inset"
         >
           {TABS.map((tab) => (
             <Pressable
@@ -183,10 +184,11 @@ export default function TransactionsScreen() {
               accessibilityRole="tab"
               accessibilityState={{ selected: activeTab === tab }}
               onPress={() => handleTabPress(tab)}
-              className={`min-h-11 flex-1 items-center justify-center rounded-full px-1 py-[5px] ${activeTab === tab ? 'bg-motu-black' : ''}`}
+              hitSlop={{ top: 5, bottom: 5 }}
+              className={`h-segment-tab flex-1 items-center justify-center rounded-full ${activeTab === tab ? 'bg-motu-black' : ''}`}
             >
               <Text
-                className={`font-pretendard-bold text-xs ${activeTab === tab ? 'text-white' : 'text-motu-grey'}`}
+                className={`text-segment-tab ${activeTab === tab ? 'font-pretendard-bold text-white' : 'font-pretendard-medium text-motu-grey'}`}
               >
                 {tab}
               </Text>

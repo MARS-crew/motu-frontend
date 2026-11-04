@@ -14,6 +14,13 @@ module.exports = {
       },
       fontSize: {
         topbar: '17px',
+        'segment-tab': ['12px', { lineHeight: '18px' }],
+      },
+      // 폰에서 rem이 14px로 계산되어도 디자인 수치가 유지되도록 px로 등록합니다.
+      spacing: {
+        'header-logo': '30px',
+        'segment-tab': '34px',
+        'segment-inset': '4px',
       },
       // 공통 색상·폰트는 여기에 등록합니다.
       colors: {
