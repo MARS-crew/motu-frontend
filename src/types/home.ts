@@ -3,7 +3,8 @@ export type AssetSummary = {
   totalReturnRate: number;
   profitLoss: number;
   purchaseAmount: number;
-  tradeAmount: number;
+  // 이번 달 거래 대금입니다. 거래 요약을 아직 받지 못했거나 실패하면 null입니다.
+  tradeAmount: number | null;
 };
 
 export type Notice = {

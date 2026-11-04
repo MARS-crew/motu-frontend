@@ -47,6 +47,7 @@ export type PortfolioSummary = {
   totalAsset: number;
   cash: number;
   valuation: number;
+  purchaseAmount: number;
   profit: number;
   profitRate: number;
   updatedAt: string;

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 cssInterop(Image, { className: 'style' });
 
@@ -23,9 +23,14 @@ export function HomeHeader({
     <View
       className={`h-20 flex-row items-center justify-between border-b bg-motu-bg px-6 pb-3 pt-8 ${isScrolled ? 'border-motu-grey-lighter' : 'border-transparent'}`}
     >
-      <Text accessibilityRole="header" className="font-pretendard-bold text-lg text-motu-black">
-        모투
-      </Text>
+      <View accessible accessibilityRole="header" accessibilityLabel="모투">
+        <Image
+          source={require('../../../assets/logo.png')}
+          contentFit="contain"
+          className="h-header-logo w-header-logo"
+          accessible={false}
+        />
+      </View>
       <View className="flex-row gap-0.5">
         <Pressable
           accessibilityRole="button"
