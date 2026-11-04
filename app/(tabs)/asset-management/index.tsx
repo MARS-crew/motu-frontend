@@ -1,22 +1,42 @@
-import { router } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TopBar } from '@/components/TopBar';
 
-import { usePointPreviewStore } from '@/stores/usePointPreviewStore';
+import { useMyAccountQuery } from '@/queries/useMyAccountQuery';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+
+// 자산관리는 숨김 탭이라 기본 뒤로 가기는 첫 탭(홈)으로 갑니다. 진입한 포트폴리오로 돌려보냅니다.
+const goToPortfolio = () => router.navigate('/(tabs)/portfolio');
 
 export default function AssetManagementScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const balance = usePointPreviewStore((state) => state.balance);
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/portfolio');
-    }
-  };
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  // 예수금은 포트폴리오와 같은 값(매수 주문에 예약된 포인트 포함)을 보여줍니다.
+  const { data: account, isFetching, refetch } = useMyAccountQuery();
+
+  // 탭 화면은 계속 마운트되어 있어, 다시 들어올 때마다 체결·포인트 변경이 반영된 예수금을 새로 불러옵니다.
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoggedIn) void refetch({ cancelRefetch: false });
+    }, [isLoggedIn, refetch]),
+  );
+
+  // 안드로이드 시스템 뒤로 가기도 상단 뒤로 가기 버튼과 같이 포트폴리오로 이동합니다.
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        goToPortfolio();
+        return true;
+      });
+      return () => subscription.remove();
+    }, []),
+  );
+
+  const handleBack = goToPortfolio;
 
   const handlePointGrant = () => router.push('/asset-management/point-grant');
 
@@ -37,7 +57,11 @@ export default function AssetManagementScreen() {
             <Text className="font-pretendard text-xs text-motu-grey">보유 포인트</Text>
             <Text className="mt-2 font-pretendard text-[11px] text-motu-grey">예수금</Text>
             <Text className="mt-1 font-pretendard-bold text-[22px] text-motu-black">
-              {balance.toLocaleString('ko-KR')} P
+              {account
+                ? `${account.cash.toLocaleString('ko-KR')} P`
+                : isFetching
+                  ? '조회 중...'
+                  : '-'}
             </Text>
           </View>
 
