@@ -17,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { LoginHeader } from '@/components/login/LoginHeader';
 import { TextField } from '@/components/TextField';
-import { Toast } from '@/components/Toast';
 import { useLoginMutation } from '@/queries/useLoginMutation';
 import { loginSchema, type LoginForm } from '@/schemas/authSchema';
 import { getApiErrorMessage } from '@/utils/apiError';
@@ -27,7 +26,6 @@ export default function LoginScreen() {
   const { preview } = useLocalSearchParams<{ preview?: string }>();
   const isErrorPreview = __DEV__ && preview === 'error';
   const [hasPreviewError, setHasPreviewError] = useState(isErrorPreview);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
   const { control, handleSubmit, formState } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -58,9 +56,6 @@ export default function LoginScreen() {
   const handleBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
-  };
-  const handleUnavailable = (feature: string) => {
-    setToastMessage(`${feature} 기능은 준비 중입니다.`);
   };
 
   return (
@@ -173,11 +168,7 @@ export default function LoginScreen() {
               disabled={!canSubmit}
             />
             <View className="flex-row items-center justify-center gap-[8px]">
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={10}
-                onPress={() => handleUnavailable('아이디 찾기')}
-              >
+              <Pressable accessibilityRole="button" hitSlop={10}>
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   아이디 찾기
                 </Text>
@@ -188,11 +179,7 @@ export default function LoginScreen() {
               >
                 |
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={10}
-                onPress={() => handleUnavailable('비밀번호 재설정')}
-              >
+              <Pressable accessibilityRole="button" hitSlop={10}>
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   비밀번호 재설정
                 </Text>
@@ -200,18 +187,8 @@ export default function LoginScreen() {
             </View>
           </View>
           <View className="min-h-px flex-1" />
-          <Button
-            appearance="auth"
-            title="회원가입"
-            variant="secondary"
-            onPress={() => handleUnavailable('회원가입')}
-          />
+          <Button appearance="auth" title="회원가입" variant="secondary" />
         </ScrollView>
-        {toastMessage && (
-          <View className="absolute bottom-[96px] w-full">
-            <Toast message={toastMessage} onHide={() => setToastMessage(null)} />
-          </View>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
