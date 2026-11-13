@@ -67,7 +67,7 @@ export function Button({
       accessibilityState={{ disabled: isDisabled, busy: isLoading }}
       onPress={onPress}
       disabled={isDisabled}
-      className={`items-center justify-center ${isAuth ? 'rounded-auth-input' : 'rounded-xl'} ${buttonColorClassName} ${BUTTON_SIZE_STYLE[size]}`}
+      className={`items-center justify-center ${isAuth ? 'rounded-auth-input' : 'rounded-xl'} ${buttonColorClassName} ${isAuth && size === 'md' ? 'h-[44px]' : BUTTON_SIZE_STYLE[size]}`}
     >
       {isLoading && !isAuth ? (
         <ActivityIndicator color={isDisabled ? '#B0B8C1' : isPrimary ? 'white' : '#2E3138'} />

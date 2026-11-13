@@ -14,19 +14,11 @@ import {
 cssInterop(Image, { className: 'style' });
 
 export default function AccountRestrictionScreen() {
-  const { type, preview } = useLocalSearchParams<{ type?: string; preview?: string }>();
+  const { type } = useLocalSearchParams<{ type?: string }>();
   const restrictionType = getAccountRestrictionType(type);
   const content = ACCOUNT_RESTRICTION_CONTENT[restrictionType];
   const isLocked = restrictionType === 'locked';
   const handleLogin = () => router.replace('/(auth)/login');
-  const handleInquiry = () =>
-    router.push({
-      pathname: '/(auth)/account-inquiry',
-      params: {
-        type: restrictionType,
-        ...(__DEV__ && preview === 'true' ? { preview: 'true' } : {}),
-      },
-    });
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
