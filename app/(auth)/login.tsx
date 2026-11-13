@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
@@ -57,6 +57,17 @@ export default function LoginScreen() {
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
   };
+
+  if (__DEV__ && (preview === 'locked' || preview === 'suspended')) {
+    return (
+      <Redirect
+        href={{
+          pathname: '/(auth)/account-restriction',
+          params: { type: preview, preview: 'true' },
+        }}
+      />
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">

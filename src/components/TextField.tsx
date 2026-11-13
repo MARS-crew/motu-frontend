@@ -9,7 +9,7 @@ type TextFieldProps = TextInputProps & {
   errorMessage?: string;
   helperText?: string;
   inputRef?: Ref<TextInput>;
-  multilineSize?: 'default' | 'compact' | 'short';
+  multilineSize?: 'default' | 'compact' | 'short' | 'inquiry';
   inputAction?: ReactNode;
   hasBaselineOffset?: boolean;
 };
@@ -37,7 +37,7 @@ export function TextField({
 
   const input = (
     <View
-      className={`${inputAction ? 'min-w-0 flex-1' : ''} overflow-hidden ${isAuth ? 'rounded-auth-input' : 'rounded-xl'} border ${multiline ? (multilineSize === 'short' ? 'h-[80px]' : multilineSize === 'compact' ? 'h-[110px]' : 'h-[120px]') : 'h-[50px]'} ${
+      className={`${inputAction ? 'min-w-0 flex-1' : ''} overflow-hidden ${isAuth ? 'rounded-auth-input' : 'rounded-xl'} border ${multiline ? (multilineSize === 'inquiry' ? 'h-[172px]' : multilineSize === 'short' ? 'h-[80px]' : multilineSize === 'compact' ? 'h-[110px]' : 'h-[120px]') : 'h-[50px]'} ${
         hasError ? 'border-motu-red' : isFocused ? 'border-motu-black' : 'border-motu-border'
       } ${editable ? (isAuth ? 'bg-motu-surface-card' : 'bg-white') : 'bg-motu-border'}`}
     >
