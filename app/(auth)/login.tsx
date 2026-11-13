@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { LoginHeader } from '@/components/login/LoginHeader';
+import { SecuritySetupModal } from '@/components/login/SecuritySetupModal';
 import { TextField } from '@/components/TextField';
 import { useLoginMutation } from '@/queries/useLoginMutation';
 import { loginSchema, type LoginForm } from '@/schemas/authSchema';
@@ -26,6 +27,10 @@ export default function LoginScreen() {
   const { preview } = useLocalSearchParams<{ preview?: string }>();
   const isErrorPreview = __DEV__ && preview === 'error';
   const [hasPreviewError, setHasPreviewError] = useState(isErrorPreview);
+  const [isSecurityPreviewVisible, setIsSecurityPreviewVisible] = useState(
+    __DEV__ && preview === 'security',
+  );
+  const handleCloseSecurityPreview = () => setIsSecurityPreviewVisible(false);
   const passwordRef = useRef<TextInput>(null);
   const { control, handleSubmit, formState } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -201,6 +206,11 @@ export default function LoginScreen() {
           <Button appearance="auth" title="회원가입" variant="secondary" />
         </ScrollView>
       </KeyboardAvoidingView>
+      <SecuritySetupModal
+        isVisible={isSecurityPreviewVisible}
+        onClose={handleCloseSecurityPreview}
+        onSetupPress={handleCloseSecurityPreview}
+      />
     </SafeAreaView>
   );
 }

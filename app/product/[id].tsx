@@ -5,7 +5,10 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChartPeriodSelector } from '@/components/productDetail/ChartPeriodSelector';
-import { LoginRequiredModal } from '@/components/productDetail/LoginRequiredModal';
+import {
+  LoginRequiredModal,
+  type LoginRequiredReason,
+} from '@/components/productDetail/LoginRequiredModal';
 import { OrderBookCard } from '@/components/productDetail/OrderBookCard';
 import { OrderButtons } from '@/components/productDetail/OrderButtons';
 import { PriceAlertModal } from '@/components/productDetail/PriceAlertModal';
@@ -58,7 +61,7 @@ export default function ProductDetailScreen() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [orderSide, setOrderSide] = useState<OrderSide | null>(null);
-  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [loginRequiredReason, setLoginRequiredReason] = useState<LoginRequiredReason | null>(null);
   const { isScrolled, handleScroll } = useHeaderScroll();
 
   const stockId = Number(id);
@@ -85,7 +88,7 @@ export default function ProductDetailScreen() {
   // 지정가 알림은 회원만 설정할 수 있습니다.
   const handleAlertPress = () => {
     if (!isLoggedIn) {
-      setIsLoginModalVisible(true);
+      setLoginRequiredReason('priceAlert');
       return;
     }
     setAlertModal('form');
@@ -120,7 +123,7 @@ export default function ProductDetailScreen() {
   // 주문은 로그인 상태에서만 가능합니다. (화면설계서 USR-MARKET-02-M02)
   const handleOrderPress = async (side: OrderSide) => {
     if (!isLoggedIn) {
-      setIsLoginModalVisible(true);
+      setLoginRequiredReason('order');
       return;
     }
     // 주문 규칙·사용 가능 포인트·매도 가능 수량을 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
@@ -141,14 +144,14 @@ export default function ProductDetailScreen() {
   const handleFavoritePress = () => {
     if (!product) return;
     if (!isLoggedIn) {
-      setIsLoginModalVisible(true);
+      setLoginRequiredReason('favorite');
       return;
     }
     toggleWishlist({ stockId: product.id, isWishlisted: product.isFavorite });
   };
 
   const handleLoginPress = () => {
-    setIsLoginModalVisible(false);
+    setLoginRequiredReason(null);
     router.push('/login');
   };
 
@@ -316,8 +319,8 @@ export default function ProductDetailScreen() {
         />
       )}
       <LoginRequiredModal
-        isVisible={isLoginModalVisible}
-        onClose={() => setIsLoginModalVisible(false)}
+        reason={loginRequiredReason}
+        onClose={() => setLoginRequiredReason(null)}
         onLoginPress={handleLoginPress}
       />
 
