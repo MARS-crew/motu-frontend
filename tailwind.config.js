@@ -12,6 +12,7 @@ module.exports = {
         'listing-metrics-panel': '0px 6px 8px rgba(0, 0, 0, 0.08)',
         'listing-panel': '0px 4px 6px rgba(0, 0, 0, 0.06)',
       },
+      borderRadius: { 'auth-input': '12px', 'auth-notice': '10px' },
       fontSize: {
         topbar: '17px',
         'segment-tab': ['12px', { lineHeight: '18px' }],
@@ -24,6 +25,8 @@ module.exports = {
       },
       // 공통 색상·폰트는 여기에 등록합니다.
       colors: {
+        'motu-surface-card': '#FFFFFF',
+        'motu-on-cta': '#FFFFFF',
         'motu-black': '#2E3138',
         'motu-text-primary': '#191F28',
         'motu-text-secondary': '#4E5968',

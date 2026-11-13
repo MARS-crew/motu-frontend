@@ -6,6 +6,7 @@ type ButtonColor = 'black' | 'red' | 'blue' | 'danger';
 
 type ButtonProps = {
   title: string;
+  appearance?: 'default' | 'auth';
   subtitle?: string;
   onPress?: () => void;
   isLoading?: boolean;
@@ -29,6 +30,7 @@ const BUTTON_SIZE_STYLE = {
 
 export function Button({
   title,
+  appearance = 'default',
   subtitle,
   onPress,
   isLoading = false,
@@ -37,35 +39,46 @@ export function Button({
   size = 'lg',
   color = 'black',
 }: ButtonProps) {
+  const isAuth = appearance === 'auth';
   const isDisabled = disabled || isLoading;
   const isPrimary = variant === 'primary';
   const buttonColorClassName = isDisabled
     ? 'bg-motu-border'
     : isPrimary
       ? PRIMARY_BUTTON_COLOR_STYLE[color]
-      : 'border border-motu-grey-lighter bg-white';
+      : isAuth
+        ? 'border border-motu-border bg-motu-surface-card'
+        : 'border border-motu-grey-lighter bg-white';
   const textColorClassName = isDisabled
-    ? 'text-motu-disabled'
+    ? isAuth
+      ? 'text-motu-text-tertiary'
+      : 'text-motu-disabled'
     : isPrimary
-      ? 'text-white'
-      : 'text-motu-black';
+      ? isAuth
+        ? 'text-motu-on-cta'
+        : 'text-white'
+      : isAuth
+        ? 'text-motu-text-primary'
+        : 'text-motu-black';
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: isLoading }}
       onPress={onPress}
       disabled={isDisabled}
-      className={`items-center justify-center rounded-xl ${buttonColorClassName} ${BUTTON_SIZE_STYLE[size]}`}
+      className={`items-center justify-center ${isAuth ? 'rounded-auth-input' : 'rounded-xl'} ${buttonColorClassName} ${BUTTON_SIZE_STYLE[size]}`}
     >
-      {isLoading ? (
+      {isLoading && !isAuth ? (
         <ActivityIndicator color={isDisabled ? '#B0B8C1' : isPrimary ? 'white' : '#2E3138'} />
       ) : (
         <>
           <Text
-            className={`font-pretendard-bold ${subtitle ? 'text-sm leading-[18px]' : 'text-[15px] leading-5'} ${
+            className={`font-pretendard-bold ${isAuth ? 'text-[15px] leading-[20px] text-no-font-padding' : subtitle ? 'text-sm leading-[18px]' : 'text-[15px] leading-5'} ${
               textColorClassName
             }`}
           >
-            {title}
+            {isAuth && isLoading ? '로그인 중…' : title}
           </Text>
           {subtitle && (
             <Text
