@@ -12,8 +12,8 @@ export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const profile = MY_PAGE_PREVIEW;
 
-  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(편집, 2차 보안, 알림 설정, 1:1 문의, 로그아웃, 회원탈퇴)는
-  // 담당 화면이 생기면 연결합니다.
+  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(2차 보안, 알림 설정, 1:1 문의, 로그아웃, 회원탈퇴)는 담당 화면이 생기면 연결합니다.
+  const handleEditPress = () => router.push('/profile-edit');
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
 
@@ -42,6 +42,7 @@ export default function MyScreen() {
           email={profile.email}
           maskedPhoneNumber={profile.maskedPhoneNumber}
           isSecondFactorEnabled={profile.isSecondFactorEnabled}
+          onEditPress={handleEditPress}
         />
 
         <View className="mt-[24px] gap-[12px]">
