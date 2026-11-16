@@ -1,4 +1,12 @@
+import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type NotificationPreferenceRowProps = {
   title: string;
@@ -9,6 +17,9 @@ type NotificationPreferenceRowProps = {
   isPrimary?: boolean;
 };
 
+const THUMB_TRAVEL = 20;
+const TOGGLE_DURATION_MS = 180;
+
 export function NotificationPreferenceRow({
   title,
   description,
@@ -17,6 +28,21 @@ export function NotificationPreferenceRow({
   isDisabled = false,
   isPrimary = false,
 }: NotificationPreferenceRowProps) {
+  const progress = useSharedValue(isEnabled ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isEnabled ? 1 : 0, {
+      duration: TOGGLE_DURATION_MS,
+      easing: Easing.out(Easing.cubic),
+      reduceMotion: ReduceMotion.System,
+    });
+  }, [isEnabled, progress]);
+
+  const trackStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * THUMB_TRAVEL }],
+  }));
+
   return (
     <Pressable
       accessibilityRole="switch"
@@ -37,9 +63,16 @@ export function NotificationPreferenceRow({
         </Text>
       </View>
       <View
-        className={`h-[24px] w-[44px] shrink-0 justify-center rounded-full px-[2px] ${isEnabled ? 'items-end bg-motu-black' : 'items-start bg-motu-grey-light/60'} ${isDisabled ? 'opacity-40' : ''}`}
+        className={`relative h-[24px] w-[44px] shrink-0 justify-center overflow-hidden rounded-full bg-motu-grey-light/60 px-[2px] ${isDisabled ? 'opacity-40' : ''}`}
       >
-        <View className="h-[20px] w-[20px] rounded-full bg-motu-surface-card" />
+        <View className="absolute inset-0" pointerEvents="none">
+          <Animated.View style={trackStyle}>
+            <View className="h-[24px] rounded-full bg-motu-black" />
+          </Animated.View>
+        </View>
+        <Animated.View style={thumbStyle}>
+          <View className="h-[20px] w-[20px] rounded-full bg-motu-surface-card" />
+        </Animated.View>
       </View>
     </Pressable>
   );
