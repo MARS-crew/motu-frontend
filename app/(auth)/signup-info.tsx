@@ -31,6 +31,7 @@ import {
 } from '@/schemas/signupInfoSchema';
 
 import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
+import { formatBirthDateInput } from '@/utils/formatDate';
 
 type SignupField = {
   name: keyof SignupInfoForm;
@@ -47,7 +48,7 @@ const SIGNUP_FIELDS: readonly SignupField[] = [
   { name: 'nickname', label: '닉네임 *', helperText: '한글·영문·숫자 2~10자' },
   { name: 'email', label: '이메일 *', inputMode: 'email' },
   { name: 'phone', label: '휴대폰 번호(선택)', placeholder: '010-0000-0000', inputMode: 'tel' },
-  { name: 'birthDate', label: '생년월일 *', placeholder: 'YYYY-MM-DD' },
+  { name: 'birthDate', label: '생년월일 *', placeholder: 'YYYY-MM-DD', inputMode: 'numeric' },
 ];
 
 const DUPLICATE_CHECK_SCHEMAS = { loginId: signupIdSchema, nickname: signupNicknameSchema };
@@ -142,7 +143,7 @@ export default function SignupInfoScreen() {
                         inputRef={ref}
                         value={value}
                         onChangeText={(text) => {
-                          onChange(text);
+                          onChange(name === 'birthDate' ? formatBirthDateInput(text) : text);
                           if (hasDuplicateAction)
                             setAcceptedValues((current) =>
                               current[name] ? { ...current, [name]: '' } : current,
