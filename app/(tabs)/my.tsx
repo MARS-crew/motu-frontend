@@ -15,7 +15,7 @@ export default function MyScreen() {
   const maskedPhone = useSecondFactorPreviewStore((state) => state.maskedPhone);
   const isSecondFactorEnabled = __DEV__ && maskedPhone !== null;
 
-  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(편집, 알림 설정, 1:1 문의, 로그아웃, 회원탈퇴)는
+  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(편집, 1:1 문의, 로그아웃, 회원탈퇴)는
   // 담당 화면이 생기면 연결합니다.
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
@@ -59,6 +59,7 @@ export default function MyScreen() {
               icon={require('../../assets/icons/my/bell.svg')}
               title="알림 설정"
               hasDivider
+              onPress={() => router.push('/notification-settings')}
             />
             <MyMenuItem
               icon={require('../../assets/icons/my/megaphone.svg')}
