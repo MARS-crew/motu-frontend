@@ -203,7 +203,12 @@ export default function LoginScreen() {
             </View>
           </View>
           <View className="min-h-px flex-1" />
-          <Button appearance="auth" title="회원가입" variant="secondary" />
+          <Button
+            appearance="auth"
+            title="회원가입"
+            variant="secondary"
+            onPress={() => router.push('/signup')}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
       <SecuritySetupModal
