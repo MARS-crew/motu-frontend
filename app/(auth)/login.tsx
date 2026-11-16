@@ -184,7 +184,12 @@ export default function LoginScreen() {
               disabled={!canSubmit}
             />
             <View className="flex-row items-center justify-center gap-[8px]">
-              <Pressable accessibilityRole="button" hitSlop={10}>
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={10}
+                onPress={__DEV__ ? () => router.push('/find-id') : undefined}
+                disabled={!__DEV__}
+              >
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   아이디 찾기
                 </Text>
@@ -195,7 +200,12 @@ export default function LoginScreen() {
               >
                 |
               </Text>
-              <Pressable accessibilityRole="button" hitSlop={10}>
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={10}
+                onPress={__DEV__ ? () => router.push('/reset-password') : undefined}
+                disabled={!__DEV__}
+              >
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   비밀번호 재설정
                 </Text>
