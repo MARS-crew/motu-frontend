@@ -59,7 +59,9 @@ export default function SignupInfoScreen() {
   const { errors, touchedFields, isValid } = formState;
   const hasMismatch =
     touchedFields.confirmPassword && confirmation !== '' && password !== confirmation;
-  const showChecklist = Boolean((touchedFields.password && errors.password) || hasMismatch);
+  const showChecklist = Boolean(
+    password !== '' && ((touchedFields.password && errors.password) || hasMismatch),
+  );
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
