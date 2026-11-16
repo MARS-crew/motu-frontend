@@ -48,7 +48,6 @@ const SIGNUP_FIELDS: readonly SignupField[] = [
 ];
 
 const DUPLICATE_CHECK_SCHEMAS = { loginId: signupIdSchema, nickname: signupNicknameSchema };
-const UNAVAILABLE_PREVIEW_VALUES = { loginId: 'jinwu0613', nickname: '모투' };
 
 export default function SignupInfoScreen() {
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
@@ -80,11 +79,11 @@ export default function SignupInfoScreen() {
     // 퍼블리싱용 결과는 개발 빌드에서만 사용합니다.
     if (!__DEV__ || !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success) return;
     Keyboard.dismiss();
-    setDuplicateResult({ field, value, isAvailable: value !== UNAVAILABLE_PREVIEW_VALUES[field] });
+    setDuplicateResult({ field, value });
   };
   const handleCloseDuplicate = () => setDuplicateResult(null);
   const handleAcceptDuplicate = () => {
-    if (!duplicateResult?.isAvailable) return;
+    if (!duplicateResult) return;
     const { field, value } = duplicateResult;
     setAcceptedValues((current) => ({ ...current, [field]: value }));
     handleCloseDuplicate();
