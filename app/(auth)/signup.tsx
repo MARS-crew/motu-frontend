@@ -160,7 +160,12 @@ export default function SignupScreen() {
               ))}
             </View>
             <View className="min-h-px flex-1" />
-            <Button appearance="auth" title="다음" disabled={!isAllChecked} />
+            <Button
+              appearance="auth"
+              title="다음"
+              disabled={!isAllChecked}
+              onPress={() => router.push('/signup-info')}
+            />
           </ScrollView>
         </>
       )}
