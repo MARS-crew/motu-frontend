@@ -21,6 +21,7 @@ import {
   type DuplicateCheckResult,
 } from '@/components/signup/DuplicateCheckModal';
 import { PasswordChecklist } from '@/components/signup/PasswordChecklist';
+import { SignupProgress } from '@/components/signup/SignupProgress';
 import { TextField } from '@/components/TextField';
 import {
   signupIdSchema,
@@ -28,6 +29,8 @@ import {
   signupNicknameSchema,
   type SignupInfoForm,
 } from '@/schemas/signupInfoSchema';
+
+import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
 
 type SignupField = {
   name: keyof SignupInfoForm;
@@ -56,7 +59,8 @@ export default function SignupInfoScreen() {
     password: false,
     confirmPassword: false,
   });
-  const { control, formState } = useForm<SignupInfoForm>({
+  const setSignupEmail = useSignupEmailStore((state) => state.setEmail);
+  const { control, formState, handleSubmit } = useForm<SignupInfoForm>({
     resolver: zodResolver(signupInfoSchema),
     mode: 'onTouched',
     defaultValues: {
@@ -110,22 +114,7 @@ export default function SignupInfoScreen() {
           contentContainerClassName="grow gap-[24px] px-[24px] pb-[32px] pt-[12px]"
           keyboardShouldPersistTaps="handled"
         >
-          <View
-            accessibilityRole="progressbar"
-            accessibilityLabel="회원가입 2단계"
-            accessibilityValue={{ min: 0, now: 2, max: 4 }}
-            className="flex-row items-center gap-[6px]"
-          >
-            {[1, 2, 3, 4].map((step) => (
-              <View
-                key={step}
-                className={`h-[4px] flex-1 rounded-full ${step <= 2 ? 'bg-motu-black' : 'bg-motu-border'}`}
-              />
-            ))}
-            <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-text-tertiary text-no-font-padding">
-              2/4
-            </Text>
-          </View>
+          <SignupProgress step={2} />
           <View className="gap-[6px]">
             <Text
               accessibilityRole="header"
@@ -228,7 +217,11 @@ export default function SignupInfoScreen() {
           <Button
             appearance="auth"
             title="다음"
-            disabled={!isValid || (__DEV__ && !hasAcceptedValues)}
+            disabled={!__DEV__ || !isValid || !hasAcceptedValues}
+            onPress={handleSubmit(({ email }) => {
+              setSignupEmail(email);
+              router.push('/signup-email');
+            })}
           />
         </ScrollView>
       </KeyboardAvoidingView>
