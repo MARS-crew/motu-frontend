@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,9 +16,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { LoginHeader } from '@/components/login/LoginHeader';
+import {
+  DuplicateCheckModal,
+  type DuplicateCheckResult,
+} from '@/components/signup/DuplicateCheckModal';
 import { PasswordChecklist } from '@/components/signup/PasswordChecklist';
 import { TextField } from '@/components/TextField';
-import { signupInfoSchema, type SignupInfoForm } from '@/schemas/signupInfoSchema';
+import {
+  signupIdSchema,
+  signupInfoSchema,
+  signupNicknameSchema,
+  type SignupInfoForm,
+} from '@/schemas/signupInfoSchema';
 
 type SignupField = {
   name: keyof SignupInfoForm;
@@ -37,7 +47,11 @@ const SIGNUP_FIELDS: readonly SignupField[] = [
   { name: 'birthDate', label: '생년월일 *', placeholder: 'YYYY-MM-DD' },
 ];
 
+const DUPLICATE_CHECK_SCHEMAS = { loginId: signupIdSchema, nickname: signupNicknameSchema };
+
 export default function SignupInfoScreen() {
+  const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
+  const [acceptedValues, setAcceptedValues] = useState({ loginId: '', nickname: '' });
   const [visiblePasswords, setVisiblePasswords] = useState({
     password: false,
     confirmPassword: false,
@@ -55,7 +69,25 @@ export default function SignupInfoScreen() {
       birthDate: '',
     },
   });
-  const [password, confirmation] = useWatch({ control, name: ['password', 'confirmPassword'] });
+  const [password, confirmation, loginId, nickname] = useWatch({
+    control,
+    name: ['password', 'confirmPassword', 'loginId', 'nickname'],
+  });
+  const hasAcceptedValues =
+    acceptedValues.loginId === loginId && acceptedValues.nickname === nickname;
+  const handleCheckDuplicate = (field: DuplicateCheckResult['field'], value: string) => {
+    // 퍼블리싱용 결과는 개발 빌드에서만 사용합니다.
+    if (!__DEV__ || !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success) return;
+    Keyboard.dismiss();
+    setDuplicateResult({ field, value });
+  };
+  const handleCloseDuplicate = () => setDuplicateResult(null);
+  const handleAcceptDuplicate = () => {
+    if (!duplicateResult) return;
+    const { field, value } = duplicateResult;
+    setAcceptedValues((current) => ({ ...current, [field]: value }));
+    handleCloseDuplicate();
+  };
   const { errors, touchedFields, isValid } = formState;
   const hasMismatch =
     touchedFields.confirmPassword && confirmation !== '' && password !== confirmation;
@@ -124,7 +156,13 @@ export default function SignupInfoScreen() {
                         label={label}
                         inputRef={ref}
                         value={value}
-                        onChangeText={onChange}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          if (hasDuplicateAction)
+                            setAcceptedValues((current) =>
+                              current[name] ? { ...current, [name]: '' } : current,
+                            );
+                        }}
                         onBlur={onBlur}
                         inputMode={inputMode}
                         autoCapitalize="none"
@@ -141,11 +179,23 @@ export default function SignupInfoScreen() {
                         }
                         inputAction={
                           hasDuplicateAction ? (
-                            <View className="h-[50px] justify-center rounded-auth-input bg-motu-tonal px-[14px]">
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`${label.replace(' *', '')} 중복 확인`}
+                              accessibilityState={{
+                                selected:
+                                  acceptedValues[name] !== '' && acceptedValues[name] === value,
+                              }}
+                              disabled={
+                                !__DEV__ || !DUPLICATE_CHECK_SCHEMAS[name].safeParse(value).success
+                              }
+                              onPress={() => handleCheckDuplicate(name, value)}
+                              className="h-[50px] justify-center rounded-auth-input bg-motu-tonal px-[14px]"
+                            >
                               <Text className="font-pretendard-semibold text-[12px] leading-[16px] text-motu-text-primary text-no-font-padding">
                                 중복 확인
                               </Text>
-                            </View>
+                            </Pressable>
                           ) : undefined
                         }
                         inputEndAccessory={
@@ -177,9 +227,20 @@ export default function SignupInfoScreen() {
               );
             })}
           </View>
-          <Button appearance="auth" title="다음" disabled={!isValid} />
+          <Button
+            appearance="auth"
+            title="다음"
+            disabled={!isValid || (__DEV__ && !hasAcceptedValues)}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
+      {duplicateResult && (
+        <DuplicateCheckModal
+          result={duplicateResult}
+          onClose={handleCloseDuplicate}
+          onAccept={handleAcceptDuplicate}
+        />
+      )}
     </SafeAreaView>
   );
 }
