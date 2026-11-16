@@ -21,10 +21,14 @@ type TermCheckmarkProps = {
 function TermCheckmark({ isChecked }: TermCheckmarkProps) {
   return (
     <View
-      className={`h-[22px] w-[22px] items-center justify-center rounded-[6px] border border-motu-border ${isChecked ? 'bg-motu-success' : 'bg-motu-bg'}`}
+      className={`h-[22px] w-[22px] items-center justify-center rounded-[6px] border ${isChecked ? 'border-motu-success bg-motu-success' : 'border-motu-border bg-motu-bg'}`}
     >
       <Image
-        source={require('../../assets/icons/signup/check.svg')}
+        source={
+          isChecked
+            ? require('../../assets/icons/signup/checkSelected.svg')
+            : require('../../assets/icons/signup/check.svg')
+        }
         className="h-[14px] w-[14px]"
         contentFit="contain"
         accessible={false}
