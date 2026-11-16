@@ -73,12 +73,10 @@ export default function SignupInfoScreen() {
       birthDate: '',
     },
   });
-  const [password, confirmation, loginId, nickname] = useWatch({
+  const [password, confirmation] = useWatch({
     control,
-    name: ['password', 'confirmPassword', 'loginId', 'nickname'],
+    name: ['password', 'confirmPassword'],
   });
-  const hasAcceptedValues =
-    acceptedValues.loginId === loginId && acceptedValues.nickname === nickname;
   const handleCheckDuplicate = (field: DuplicateCheckResult['field'], value: string) => {
     // 퍼블리싱용 결과는 개발 빌드에서만 사용합니다.
     if (!__DEV__ || !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success) return;
@@ -123,7 +121,7 @@ export default function SignupInfoScreen() {
               기본 정보를 입력해 주세요.
             </Text>
             <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
-              아이디와 닉네임은 중복 확인이 필요합니다.
+              아이디와 닉네임의 중복 확인을 미리 볼 수 있습니다.
             </Text>
           </View>
           <View className="gap-[16px]">
@@ -217,7 +215,7 @@ export default function SignupInfoScreen() {
           <Button
             appearance="auth"
             title="다음"
-            disabled={!__DEV__ || !isValid || !hasAcceptedValues}
+            disabled={!__DEV__ || !isValid}
             onPress={handleSubmit(({ email }) => {
               setSignupEmail(email);
               router.push('/signup-email');
