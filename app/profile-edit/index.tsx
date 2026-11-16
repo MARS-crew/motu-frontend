@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { ProfileEditFooter } from '@/components/profileEdit/ProfileEditFooter';
+import { ProfileEditVerifyMessage } from '@/components/profileEdit/ProfileEditVerifyMessage';
 import { TextField } from '@/components/TextField';
 import { TopBar } from '@/components/TopBar';
 import { PROFILE_EDIT_PREVIEW } from '@/constants/profileEditPreview';
@@ -14,26 +15,6 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { profileEditVerifySchema, type ProfileEditVerifyForm } from '@/schemas/profileEditSchema';
 
 type VerifyStatus = 'idle' | 'sent' | 'sendFailed' | 'verified';
-
-type VerifyMessageProps = {
-  message: string;
-  tone: 'success' | 'error';
-};
-
-// 발송·인증 결과를 안내하는 한 줄 문구
-function VerifyMessage({ message, tone }: VerifyMessageProps) {
-  return (
-    <Text
-      accessibilityRole={tone === 'error' ? 'alert' : undefined}
-      accessibilityLiveRegion="polite"
-      className={`font-pretendard-medium text-[12px] leading-[20px] text-no-font-padding ${
-        tone === 'success' ? 'text-motu-success' : 'text-motu-btn-red'
-      }`}
-    >
-      {message}
-    </Text>
-  );
-}
 
 // 미리보기 주소: /profile-edit?preview=sent | verified | mismatch | send-failed
 function getInitialStatus(preview?: string): VerifyStatus {
@@ -132,13 +113,13 @@ export default function ProfileEditVerifyScreen() {
           />
 
           {status === 'sendFailed' && (
-            <VerifyMessage
+            <ProfileEditVerifyMessage
               tone="error"
               message="인증번호 발송에 실패했습니다. 다시 시도해 주세요."
             />
           )}
           {status === 'sent' && (
-            <VerifyMessage
+            <ProfileEditVerifyMessage
               tone="success"
               message="인증번호가 발송되었습니다. 이메일을 확인해 주세요."
             />
@@ -168,9 +149,11 @@ export default function ProfileEditVerifyScreen() {
                   />
                 )}
               />
-              {isVerified && <VerifyMessage tone="success" message="인증이 완료되었습니다." />}
+              {isVerified && (
+                <ProfileEditVerifyMessage tone="success" message="인증이 완료되었습니다." />
+              )}
               {hasCodeError && (
-                <VerifyMessage
+                <ProfileEditVerifyMessage
                   tone="error"
                   message="인증번호가 일치하지 않습니다. 다시 확인해 주세요."
                 />
@@ -184,7 +167,7 @@ export default function ProfileEditVerifyScreen() {
             </>
           )}
         </ScrollView>
-        <ProfileEditFooter disabled={!isVerified} onPress={handleNext} />
+        <ProfileEditFooter title="회원정보 수정하기" disabled={!isVerified} onPress={handleNext} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

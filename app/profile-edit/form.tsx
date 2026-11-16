@@ -49,8 +49,9 @@ export default function ProfileEditFormScreen() {
     else router.replace('/(tabs)/my');
   };
 
-  // 퍼블리싱 단계: 회원정보 수정 API와 연락처 변경 화면은 이후 작업에서 연결합니다.
+  // 퍼블리싱 단계: 회원정보 수정 API는 이후 작업에서 연결합니다.
   const handleSave = handleSubmit(() => {});
+  const handleContactChangePress = () => router.push('/profile-edit/phone');
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -160,6 +161,7 @@ export default function ProfileEditFormScreen() {
               <Pressable
                 accessibilityRole="link"
                 hitSlop={8}
+                onPress={handleContactChangePress}
                 className="h-[18px] flex-row items-center gap-[4px] self-start active:opacity-60"
               >
                 <Text className="font-pretendard-semibold text-[12px] leading-[18px] text-motu-black underline">
@@ -175,7 +177,7 @@ export default function ProfileEditFormScreen() {
             </View>
           </ProfileEditSection>
         </ScrollView>
-        <ProfileEditFooter onPress={handleSave} />
+        <ProfileEditFooter title="회원정보 수정하기" onPress={handleSave} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

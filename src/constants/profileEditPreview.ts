@@ -4,6 +4,6 @@ export const PROFILE_EDIT_PREVIEW = {
   loginId: 'motukim1234',
   nickname: 'motukim1234',
   phoneNumber: '010-1234-5678',
-  // 인증 화면에서 이 번호를 입력하면 인증 완료, 다른 6자리는 불일치로 보여 줍니다.
+  newPhoneNumber: '010-4567-8901',
   verificationCode: '135790',
 };

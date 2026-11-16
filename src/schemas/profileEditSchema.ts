@@ -30,3 +30,13 @@ export const profileEditSchema = z
   });
 
 export type ProfileEditForm = z.infer<typeof profileEditSchema>;
+
+const PHONE_NUMBER_PATTERN = /^010-\d{4}-\d{4}$/;
+
+// 연락처 변경 전 휴대폰 점유 인증
+export const phoneChangeSchema = z.object({
+  phoneNumber: z.string().regex(PHONE_NUMBER_PATTERN, '010-1234-5678 형식으로 입력해 주세요.'),
+  code: z.string().regex(/^\d{6}$/, '인증번호 6자리를 입력해 주세요.'),
+});
+
+export type PhoneChangeForm = z.infer<typeof phoneChangeSchema>;
