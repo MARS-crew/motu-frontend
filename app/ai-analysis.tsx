@@ -5,25 +5,25 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiAnalysisEmpty } from '@/components/portfolio/AiAnalysisEmpty';
+import { AiRecommendationSection } from '@/components/portfolio/AiRecommendationSection';
+import { InvestmentCoachSection } from '@/components/portfolio/InvestmentCoachSection';
 import { InvestmentProfileCard } from '@/components/portfolio/InvestmentProfileCard';
+import { AI_ANALYSIS_PREVIEWS, AI_RECOMMENDATION_PREVIEW } from '@/constants/aiAnalysisPreview';
 
 cssInterop(Image, { className: 'style' });
-
-const REPORT_PREVIEWS = {
-  result: { title: '수익 추구형', description: 'AI·플랫폼 상품 선호도가 높아요' },
-  pending: {
-    title: '분석 준비 중',
-    description: '체결 주문이 10건 이상이면 투자 성향을 분석해요. (현재 4건)',
-  },
-};
 
 export default function AiAnalysisScreen() {
   const { preview } = useLocalSearchParams<{ preview?: string }>();
   const report =
-    __DEV__ && (preview === 'result' || preview === 'pending') ? REPORT_PREVIEWS[preview] : null;
+    __DEV__ &&
+    (preview === 'result' || preview === 'medium' || preview === 'low' || preview === 'pending')
+      ? AI_ANALYSIS_PREVIEWS[preview]
+      : null;
 
   const handleBack = () => router.dismissTo('/portfolio');
   const handleInvestPress = () => router.dismissTo('/market');
+  const handleProductPress = (keyword: string) =>
+    router.push({ pathname: '/search', params: { keyword } });
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -57,7 +57,14 @@ export default function AiAnalysisScreen() {
           showsVerticalScrollIndicator={false}
         >
           {report ? (
-            <InvestmentProfileCard {...report} />
+            <View className="gap-[24px]">
+              <InvestmentProfileCard {...report.profile} />
+              <InvestmentCoachSection {...report.coach} />
+              <AiRecommendationSection
+                products={AI_RECOMMENDATION_PREVIEW}
+                onProductPress={handleProductPress}
+              />
+            </View>
           ) : (
             <AiAnalysisEmpty onInvestPress={handleInvestPress} />
           )}
