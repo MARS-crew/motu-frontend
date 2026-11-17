@@ -43,8 +43,7 @@ export default function PortfolioScreen() {
   const handleFavoritePress = () => router.push('/favorites');
   const handleTransactionsPress = () => router.push('/transactions');
   const handleAssetManagementPress = () => router.push('/asset-management');
-  // AI 분석 화면이 추가되면 연결합니다.
-  const handleAiAnalysisPress = () => {};
+  const handleAiAnalysisPress = () => router.push('/ai-analysis');
 
   const renderAssets = () => {
     if (!isLoggedIn) {
