@@ -49,9 +49,9 @@ export default function ProfileEditFormScreen() {
     else router.replace('/(tabs)/my');
   };
 
-  // 퍼블리싱 단계: 회원정보 수정 API와 연락처 변경 화면은 이후 작업에서 연결합니다.
-  const handleSave = handleSubmit(() => {});
-
+  // 퍼블리싱 단계: 검증만 통과하면 마이페이지로 돌아갑니다.
+  // TODO: 회원정보 수정 API 연결 후 저장 성공 시에만 이동합니다.
+  const handleSave = handleSubmit(() => router.dismissTo('/(tabs)/my'));
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <TopBar isScrolled={isScrolled} title="회원정보 수정" onBack={handleBack} />
@@ -81,6 +81,7 @@ export default function ProfileEditFormScreen() {
                 <ProfileEditField
                   label="비밀번호"
                   isRequired
+                  hasMessageSlot
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -99,6 +100,7 @@ export default function ProfileEditFormScreen() {
                 <ProfileEditField
                   label="비밀번호 확인"
                   isRequired
+                  hasMessageSlot
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -126,6 +128,7 @@ export default function ProfileEditFormScreen() {
                 <ProfileEditField
                   label="생년월일"
                   isRequired
+                  hasMessageSlot
                   value={value}
                   onChangeText={(text) => onChange(formatBirthDate(text))}
                   onBlur={onBlur}
@@ -133,14 +136,6 @@ export default function ProfileEditFormScreen() {
                   maxLength={10}
                   placeholder="YYYY-MM-DD"
                   errorMessage={error?.message}
-                  accessory={
-                    <Image
-                      source={require('../../assets/icons/profileEdit/calendar.svg')}
-                      contentFit="contain"
-                      className="mr-[2px] h-[15px] w-[16px]"
-                      accessible={false}
-                    />
-                  }
                 />
               )}
             />
