@@ -7,12 +7,16 @@ import { MyMenuItem } from '@/components/my/MyMenuItem';
 import { MyProfileCard } from '@/components/my/MyProfileCard';
 import { MY_PAGE_PREVIEW } from '@/constants/myPagePreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useSecondFactorPreviewStore } from '@/stores/useSecondFactorPreviewStore';
 
 export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const profile = MY_PAGE_PREVIEW;
+  const maskedPhone = useSecondFactorPreviewStore((state) => state.maskedPhone);
+  const isSecondFactorEnabled = __DEV__ && maskedPhone !== null;
 
-  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(2차 보안, 알림 설정, 1:1 문의, 로그아웃, 회원탈퇴)는 담당 화면이 생기면 연결합니다.
+  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의, 로그아웃, 회원탈퇴)는
+  // 담당 화면이 생기면 연결합니다.
   const handleEditPress = () => router.push('/profile-edit');
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
@@ -41,7 +45,7 @@ export default function MyScreen() {
           nickname={profile.nickname}
           email={profile.email}
           maskedPhoneNumber={profile.maskedPhoneNumber}
-          isSecondFactorEnabled={profile.isSecondFactorEnabled}
+          isSecondFactorEnabled={isSecondFactorEnabled}
           onEditPress={handleEditPress}
         />
 
@@ -49,13 +53,15 @@ export default function MyScreen() {
           <MyMenuGroup>
             <MyMenuItem
               icon={require('../../assets/icons/my/shieldCheck.svg')}
-              title={profile.isSecondFactorEnabled ? '2차 보안 관리' : '2차 보안 설정하기'}
+              title={isSecondFactorEnabled ? '2차 보안 관리' : '2차 보안 설정하기'}
               description="여기서 2차 보안을 설정하거나 해제할 수 있어요."
+              onPress={() => router.push('/two-factor-security')}
             />
             <MyMenuItem
               icon={require('../../assets/icons/my/bell.svg')}
               title="알림 설정"
               hasDivider
+              onPress={() => router.push('/notification-settings')}
             />
             <MyMenuItem
               icon={require('../../assets/icons/my/megaphone.svg')}

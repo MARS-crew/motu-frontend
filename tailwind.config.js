@@ -27,6 +27,7 @@ module.exports = {
       colors: {
         'motu-surface-card': '#FFFFFF',
         'motu-on-cta': '#FFFFFF',
+        'motu-overlay': '#101114',
         'motu-black': '#2E3138',
         'motu-text-primary': '#191F28',
         'motu-text-secondary': '#4E5968',
