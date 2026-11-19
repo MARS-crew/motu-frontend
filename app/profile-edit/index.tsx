@@ -162,7 +162,9 @@ export default function ProfileEditVerifyScreen() {
                 />
                 {/* 인증 결과 문구 자리를 미리 남겨 확인 버튼 위치를 고정합니다. */}
                 <View className="h-[20px]">
-                  {isVerified && <ProfileEditVerifyMessage tone="success" message="인증이 완료되었습니다." />}
+                  {isVerified && (
+                    <ProfileEditVerifyMessage tone="success" message="인증이 완료되었습니다." />
+                  )}
                   {hasCodeError && (
                     <ProfileEditVerifyMessage
                       tone="error"
