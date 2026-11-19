@@ -13,6 +13,7 @@ type TextFieldProps = TextInputProps & {
   inputAction?: ReactNode;
   inputEndAccessory?: ReactNode;
   hasBaselineOffset?: boolean;
+  isInvalid?: boolean;
 };
 
 export function TextField({
@@ -27,6 +28,7 @@ export function TextField({
   multiline = false,
   multilineSize = 'default',
   hasBaselineOffset = true,
+  isInvalid = false,
   inputRef,
   editable = true,
   onBlur,
@@ -35,7 +37,7 @@ export function TextField({
 }: TextFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const isAuth = variant === 'auth';
-  const hasError = Boolean(errorMessage);
+  const hasError = Boolean(errorMessage) || isInvalid;
 
   const input = (
     <View
