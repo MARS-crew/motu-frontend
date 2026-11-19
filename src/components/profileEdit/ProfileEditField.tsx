@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 type ProfileEditFieldProps = TextInputProps & {
@@ -6,16 +6,17 @@ type ProfileEditFieldProps = TextInputProps & {
   isRequired?: boolean;
   helperText?: string;
   errorMessage?: string;
-  accessory?: ReactNode;
+  hasMessageSlot?: boolean;
 };
 
 // 회원정보 수정 폼의 입력 한 칸: 라벨 + 입력창(46px) + 안내/오류 문구
+// hasMessageSlot이면 오류 문구 자리(17px)를 미리 남겨 오류가 생겨도 아래 칸이 밀리지 않습니다.
 export function ProfileEditField({
   label,
   isRequired = false,
   helperText,
   errorMessage,
-  accessory,
+  hasMessageSlot = false,
   editable = true,
   onFocus,
   onBlur,
@@ -23,6 +24,7 @@ export function ProfileEditField({
 }: ProfileEditFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const hasError = Boolean(errorMessage);
+  const message = errorMessage ?? helperText;
 
   return (
     <View className="gap-[8px]">
@@ -31,7 +33,7 @@ export function ProfileEditField({
       </Text>
       <View>
         <View
-          className={`h-[46px] flex-row items-center gap-[8px] rounded-[8px] border px-[13px] ${
+          className={`h-[46px] flex-row items-center rounded-[8px] border px-[13px] ${
             hasError
               ? 'border-motu-red'
               : isFocused
@@ -55,17 +57,29 @@ export function ProfileEditField({
             }`}
             {...inputProps}
           />
-          {accessory}
         </View>
-        {(errorMessage || helperText) && (
-          <Text
-            accessibilityRole={hasError ? 'alert' : undefined}
-            className={`mt-[6px] font-pretendard text-[11px] leading-[16.5px] ${
-              hasError ? 'text-motu-red' : 'text-motu-grey-light'
-            }`}
-          >
-            {errorMessage ?? helperText}
-          </Text>
+        {hasMessageSlot ? (
+          <View className="h-[17px]">
+            {hasError && (
+              <Text
+                accessibilityRole="alert"
+                className="font-pretendard text-[11px] leading-[16.5px] text-motu-red"
+              >
+                {errorMessage}
+              </Text>
+            )}
+          </View>
+        ) : (
+          message && (
+            <Text
+              accessibilityRole={hasError ? 'alert' : undefined}
+              className={`mt-[6px] font-pretendard text-[11px] leading-[16.5px] ${
+                hasError ? 'text-motu-red' : 'text-motu-grey-light'
+              }`}
+            >
+              {message}
+            </Text>
+          )
         )}
       </View>
     </View>

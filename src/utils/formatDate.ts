@@ -19,3 +19,8 @@ export const formatSlashDateTime = (value: string) => {
 // 서버 날짜(ISO 문자열)를 기기 시간대 기준 'YYYY-MM-DD HH:mm'으로 표시합니다.
 export const formatDashDateTime = (value: string) =>
   formatSlashDateTime(value).replace(/^(\d{4})\/(\d{2})\/(\d{2})/, '$1-$2-$3');
+
+export function formatBirthDateInput(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  return [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join('-');
+}

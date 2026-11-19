@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
@@ -24,12 +24,15 @@ import { isNearBottom } from '@/utils/scroll';
 import { toProduct } from '@/utils/stock';
 
 export default function SearchScreen() {
+  const { keyword } = useLocalSearchParams<{ keyword?: string }>();
+  const initialSearch = searchSchema.safeParse({ keyword });
+  const initialKeyword = initialSearch.data?.keyword ?? '';
   const { isScrolled, handleScroll } = useHeaderScroll();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const [searchedKeyword, setSearchedKeyword] = useState<string | null>(null);
+  const [searchedKeyword, setSearchedKeyword] = useState<string | null>(initialKeyword || null);
   const { control, handleSubmit, setValue } = useForm<SearchForm>({
     resolver: zodResolver(searchSchema),
-    defaultValues: { keyword: '' },
+    defaultValues: { keyword: initialKeyword },
   });
 
   const { data: searchHistories = [] } = useSearchHistoriesQuery();
