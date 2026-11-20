@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
@@ -32,6 +32,8 @@ import {
 
 import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
 import { formatBirthDateInput } from '@/utils/formatDate';
+import { signupConsentSchema } from '@/schemas/signupConsentSchema';
+import { useSignupFormStore } from '@/stores/useSignupFormStore';
 
 type SignupField = {
   name: keyof SignupInfoForm;
@@ -54,6 +56,7 @@ const SIGNUP_FIELDS: readonly SignupField[] = [
 const DUPLICATE_CHECK_SCHEMAS = { loginId: signupIdSchema, nickname: signupNicknameSchema };
 
 export default function SignupInfoScreen() {
+  const consent = useSignupFormStore((state) => state.consent);
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [acceptedValues, setAcceptedValues] = useState({ loginId: '', nickname: '' });
   const [visiblePasswords, setVisiblePasswords] = useState({
@@ -99,6 +102,8 @@ export default function SignupInfoScreen() {
     if (router.canGoBack()) router.back();
     else router.replace('/signup');
   };
+
+  if (!signupConsentSchema.safeParse(consent).success) return <Redirect href="/signup" />;
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
