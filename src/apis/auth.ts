@@ -1,5 +1,15 @@
 import { api } from '@/apis/instance';
-import { loginResultSchema, loginSchema, type LoginForm } from '@/schemas/authSchema';
+import {
+  loginResultSchema,
+  loginResponseSchema,
+  loginSchema,
+  type LoginForm,
+} from '@/schemas/authSchema';
+import { loginVerificationDeliverySchema } from '@/schemas/loginVerificationSchema';
+import { newDeviceSchema } from '@/schemas/newDeviceSchema';
+import { pendingLoginStorage } from '@/utils/pendingLoginStorage';
+import { getDeviceId } from '@/utils/deviceId';
+import { Platform } from 'react-native';
 import type { ApiResponse } from '@/types/api';
 
 export class LoginVerificationRequiredError extends Error {
@@ -10,9 +20,36 @@ export class LoginVerificationRequiredError extends Error {
 }
 
 export const postLogin = async (body: LoginForm) => {
-  // 기본 로그인 단계만 연결합니다. 기기 인증용 deviceId/loginToken은 사용하지 않습니다.
-  const { data } = await api.post<ApiResponse<unknown>>('/auth/login', loginSchema.parse(body));
+  const deviceId = await getDeviceId();
+  const { data } = await api.post<ApiResponse<unknown>>('/auth/login', {
+    ...loginSchema.parse(body),
+    deviceId,
+  });
   const result = loginResultSchema.parse(data.data);
-  if (result.verificationRequired) throw new LoginVerificationRequiredError();
   return result;
 };
+
+async function requireLoginToken() {
+  const challenge = await pendingLoginStorage.get();
+  if (!challenge) throw new LoginVerificationRequiredError();
+  return challenge.loginToken;
+}
+
+export async function postLoginVerification() {
+  const loginToken = await requireLoginToken();
+  const { data } = await api.post<ApiResponse<unknown>>('/auth/login/verifications', {
+    loginToken,
+  });
+  return loginVerificationDeliverySchema.parse(data.data);
+}
+
+export async function postConfirmLoginVerification(code: string) {
+  const loginToken = await requireLoginToken();
+  const body = { loginToken, ...newDeviceSchema.parse({ code }) };
+  const { data } = await api.post<ApiResponse<unknown>>(
+    '/auth/login/verifications/confirm',
+    body,
+    Platform.OS === 'web' ? undefined : { headers: { 'User-Agent': `MOTU/${Platform.OS}` } },
+  );
+  return loginResponseSchema.parse(data.data);
+}
