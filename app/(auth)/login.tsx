@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isAxiosError } from 'axios';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,8 +20,7 @@ import { SecuritySetupModal } from '@/components/login/SecuritySetupModal';
 import { TextField } from '@/components/TextField';
 import { useLoginMutation } from '@/queries/useLoginMutation';
 import { loginSchema, type LoginForm } from '@/schemas/authSchema';
-import { getApiErrorMessage } from '@/utils/apiError';
-import { getDesignedFormError } from '@/utils/designedFormError';
+import { getLoginFailure } from '@/utils/loginError';
 
 export default function LoginScreen() {
   // 개발 환경에서만 Figma의 실패 화면을 API 요청 없이 확인합니다.
@@ -35,27 +34,34 @@ export default function LoginScreen() {
   const passwordRef = useRef<TextInput>(null);
   const { control, handleSubmit, formState } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    mode: 'onChange',
     defaultValues: isErrorPreview
       ? { loginId: 'jinwu0613', password: '12345678' }
       : { loginId: '', password: '' },
   });
   const [loginId, password] = useWatch({ control, name: ['loginId', 'password'] });
-  const { mutate: login, isPending, error, reset } = useLoginMutation();
-  const canSubmit = Boolean(loginId.trim() && password);
-  const hasCredentialError = isAxiosError(error) && error.response?.status === 401;
-  const errorMessage = getDesignedFormError(
-    hasPreviewError || hasCredentialError
-      ? '아이디 또는 비밀번호를 확인해 주세요.'
-      : error
-        ? getApiErrorMessage(error)
-        : null,
-  );
+  const { mutateAsync: login, isPending, error, reset } = useLoginMutation();
+  const isSubmittingRef = useRef(false);
+  const canSubmit = formState.isValid && Boolean(loginId.trim() && password);
+  const failure = getLoginFailure(error);
+  const errorMessage = hasPreviewError ? '아이디 또는 비밀번호를 확인해 주세요.' : failure?.message;
+  const failCount = hasPreviewError ? 1 : failure?.failCount;
 
-  const handleLogin = handleSubmit((form) => {
-    if (isPending) return;
+  const handleLogin = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setHasPreviewError(false);
-    login(form);
-  });
+    try {
+      await handleSubmit(async (form) => {
+        await login(form);
+        Keyboard.dismiss();
+      })();
+    } catch {
+      // 인증 실패는 Mutation 오류 상태로 표시하고 입력값은 유지합니다.
+    } finally {
+      isSubmittingRef.current = false;
+    }
+  };
   const handleEdit = () => {
     setHasPreviewError(false);
     if (error) reset();
@@ -170,7 +176,7 @@ export default function LoginScreen() {
               ) && (
                 <Text
                   accessibilityLiveRegion="polite"
-                  numberOfLines={hasPreviewError ? 1 : 2}
+                  numberOfLines={failCount != null ? 1 : 2}
                   className="font-pretendard-medium text-[12px] leading-[16px] text-motu-btn-red text-no-font-padding"
                 >
                   {formState.errors.loginId?.message ||
@@ -178,9 +184,9 @@ export default function LoginScreen() {
                     errorMessage}
                 </Text>
               )}
-              {hasPreviewError && (
+              {failCount != null && (
                 <Text className="font-pretendard-medium text-[12px] leading-[16px] text-motu-text-tertiary text-no-font-padding">
-                  실패 횟수 1/5회 · 4회 남음
+                  실패 횟수 {failCount}/5회 · {5 - failCount}회 남음
                 </Text>
               )}
             </View>

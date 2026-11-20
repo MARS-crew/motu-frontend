@@ -1,14 +1,6 @@
-export type LoginUser = {
-  userId: number;
-  loginId: string;
-  nickname: string;
-  role: 'USER' | 'ADMIN';
-};
+import type { z } from 'zod';
 
-export type LoginResponse = {
-  accessToken: string;
-  // Access 토큰 유효시간(초)입니다.
-  accessTokenExpiresIn: number;
-  refreshToken: string;
-  user: LoginUser;
-};
+import type { loginResponseSchema, loginUserSchema } from '@/schemas/authSchema';
+
+export type LoginUser = z.infer<typeof loginUserSchema>;
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
