@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 cssInterop(Image, { className: 'style' });
 
 type ListingTradingSelectFieldProps = {
@@ -52,14 +53,7 @@ export function ListingTradingSelectField({
           />
         </View>
       </Pressable>
-      {errorMessage && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="font-pretendard-medium text-xs leading-4 text-motu-btn-red"
-        >
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} />
       {isOpen && (
         <View className="rounded-xl border border-motu-grey-lighter bg-white p-1.5 shadow-listing-panel">
           {options.map((option) => (

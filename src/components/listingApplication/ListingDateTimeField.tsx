@@ -3,6 +3,7 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { ListingDatePicker } from '@/components/listingApplication/ListingDatePicker';
 import { ListingMonthPicker } from '@/components/listingApplication/ListingMonthPicker';
 import { ListingTimePicker } from '@/components/listingApplication/ListingTimePicker';
@@ -107,14 +108,7 @@ export function ListingDateTimeField({
           }}
         />
       )}
-      {errorMessage && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="font-pretendard-medium text-xs leading-4 text-motu-btn-red"
-        >
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} />
     </View>
   );
 }

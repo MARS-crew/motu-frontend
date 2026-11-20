@@ -94,9 +94,6 @@ export default function SignupInfoScreen() {
   const { errors, touchedFields, isValid } = formState;
   const hasMismatch =
     touchedFields.confirmPassword && confirmation !== '' && password !== confirmation;
-  const showChecklist = Boolean(
-    password !== '' && ((touchedFields.password && errors.password) || hasMismatch),
-  );
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -158,6 +155,7 @@ export default function SignupInfoScreen() {
                         placeholder={placeholder}
                         secureTextEntry={isPassword && !isPasswordVisible}
                         helperText={helperText}
+                        messageSize={name === 'confirmPassword' ? 'double' : 'single'}
                         errorMessage={
                           name === 'confirmPassword' && hasMismatch
                             ? '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.'
@@ -208,7 +206,7 @@ export default function SignupInfoScreen() {
                       />
                     )}
                   />
-                  {name === 'password' && showChecklist && (
+                  {name === 'password' && (
                     <PasswordChecklist password={password} confirmation={confirmation} />
                   )}
                 </View>

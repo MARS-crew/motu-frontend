@@ -41,6 +41,7 @@ export function ListingTradingInfoFields({
             name={name}
             render={({ field: { value, onChange, onBlur, ref } }) => (
               <TextField
+                hasDesignMessagesOnly
                 label={name === 'listingPrice' ? '희망 상장가' : '총 발행 수량'}
                 isRequired
                 placeholder="입력해 주세요."
@@ -121,6 +122,7 @@ export function ListingTradingInfoFields({
           name="priceReason"
           render={({ field: { value, onChange, onBlur, ref } }) => (
             <TextField
+              hasDesignMessagesOnly
               label="가격 산정 근거"
               isRequired
               editable={!isSaving}

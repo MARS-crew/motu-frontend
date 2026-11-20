@@ -3,6 +3,7 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { LISTING_CATEGORIES } from '@/schemas/listingBasicInfoSchema';
 
 cssInterop(Image, { className: 'style' });
@@ -69,14 +70,7 @@ export function ListingCategoryField({ value, errorMessage, onChange }: ListingC
           ))}
         </View>
       )}
-      {errorMessage && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="font-pretendard-medium text-xs leading-4 text-motu-btn-red"
-        >
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} />
     </View>
   );
 }

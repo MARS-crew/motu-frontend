@@ -5,6 +5,7 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { FormMessage } from '@/components/FormMessage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -156,14 +157,12 @@ export default function ListingApplicationEntryScreen() {
                 </Pressable>
               )}
             />
-            {(errors.hasConfirmedCriteria || access.errorMessage) && (
-              <Text
-                accessibilityLiveRegion="polite"
-                className="mt-3 font-pretendard text-[11px] text-motu-red"
-              >
-                {errors.hasConfirmedCriteria?.message ?? access.errorMessage}
-              </Text>
-            )}
+            <View className="mt-3">
+              <FormMessage
+                message={errors.hasConfirmedCriteria?.message ?? access.errorMessage}
+                size="double"
+              />
+            </View>
           </View>
           <View className="mt-[14px] font-pretendard-bold">
             <Button

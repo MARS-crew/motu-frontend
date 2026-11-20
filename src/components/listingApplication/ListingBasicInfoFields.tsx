@@ -38,6 +38,7 @@ export function ListingBasicInfoFields({
         name={name}
         render={({ field: { value, onChange, onBlur, ref } }) => (
           <TextField
+            hasDesignMessagesOnly
             label={label}
             editable={!isSaving}
             value={value}

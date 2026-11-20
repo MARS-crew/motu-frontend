@@ -188,8 +188,8 @@ export default function ListingEvidenceScreen() {
               }}
             />
           </View>
-          {!errors.description && <View className="min-h-1 flex-1" />}
-          <View className={`gap-1.5 ${errors.description ? 'pt-2' : ''}`}>
+          <View className="min-h-1 flex-1" />
+          <View className="gap-1.5 pt-2">
             <Pressable
               accessibilityRole="button"
               disabled={picker.isPicking}

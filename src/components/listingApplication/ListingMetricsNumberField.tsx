@@ -36,6 +36,7 @@ export function ListingMetricsNumberField({
   };
   return (
     <TextField
+      hasDesignMessagesOnly
       label={label}
       accessibilityLabel={label}
       value={value && isCurrency && !isFocused ? `${value} ₩` : value}

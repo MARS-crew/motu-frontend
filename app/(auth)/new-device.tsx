@@ -144,18 +144,17 @@ export default function NewDeviceScreen() {
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       placeholder="6자리 숫자"
+                      errorMessage={
+                        hasCodeError || hasExpired
+                          ? hasExpired
+                            ? '인증번호가 만료되었습니다.'
+                            : MISMATCH_MESSAGE
+                          : undefined
+                      }
                     />
                   )}
                 />
                 <View className="gap-[4px]">
-                  {(hasCodeError || hasExpired) && (
-                    <Text
-                      accessibilityRole="alert"
-                      className="font-pretendard-medium text-[12px] leading-[20px] text-motu-btn-red text-no-font-padding"
-                    >
-                      {hasExpired ? '인증번호가 만료되었습니다.' : MISMATCH_MESSAGE}
-                    </Text>
-                  )}
                   <Text className="font-pretendard-medium text-[12px] leading-[20px] text-motu-text-tertiary text-no-font-padding">
                     남은 시간 {formatRemainingTime(codeRemaining)}
                   </Text>
