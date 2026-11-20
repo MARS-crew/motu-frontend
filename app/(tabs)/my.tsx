@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MyAccountActionModal, type MyAccountAction } from '@/components/my/MyAccountActionModal';
 import { MyMenuGroup } from '@/components/my/MyMenuGroup';
 import { MyMenuItem } from '@/components/my/MyMenuItem';
 import { MyProfileCard } from '@/components/my/MyProfileCard';
@@ -11,6 +13,7 @@ import { useSecondFactorPreviewStore } from '@/stores/useSecondFactorPreviewStor
 
 export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
+  const [accountAction, setAccountAction] = useState<MyAccountAction | null>(null);
   const profile = MY_PAGE_PREVIEW;
   const maskedPhone = useSecondFactorPreviewStore((state) => state.maskedPhone);
   const isSecondFactorEnabled = __DEV__ && maskedPhone !== null;
@@ -20,6 +23,7 @@ export default function MyScreen() {
   const handleEditPress = () => router.push('/profile-edit');
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
+  const handleCloseAccountAction = () => setAccountAction(null);
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
@@ -87,6 +91,7 @@ export default function MyScreen() {
               icon={require('../../assets/icons/my/logout.svg')}
               title="로그아웃"
               hasChevron={false}
+              onPress={() => setAccountAction('logout')}
             />
             <MyMenuItem
               icon={require('../../assets/icons/my/userMinus.svg')}
@@ -94,10 +99,14 @@ export default function MyScreen() {
               tone="danger"
               hasChevron={false}
               hasDivider
+              onPress={() => setAccountAction('withdraw')}
             />
           </MyMenuGroup>
         </View>
       </ScrollView>
+      {accountAction && (
+        <MyAccountActionModal action={accountAction} onClose={handleCloseAccountAction} />
+      )}
     </SafeAreaView>
   );
 }
