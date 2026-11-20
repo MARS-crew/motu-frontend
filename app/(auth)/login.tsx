@@ -21,6 +21,7 @@ import { TextField } from '@/components/TextField';
 import { useLoginMutation } from '@/queries/useLoginMutation';
 import { loginSchema, type LoginForm } from '@/schemas/authSchema';
 import { getApiErrorMessage } from '@/utils/apiError';
+import { getDesignedFormError } from '@/utils/designedFormError';
 
 export default function LoginScreen() {
   // 개발 환경에서만 Figma의 실패 화면을 API 요청 없이 확인합니다.
@@ -42,12 +43,13 @@ export default function LoginScreen() {
   const { mutate: login, isPending, error, reset } = useLoginMutation();
   const canSubmit = Boolean(loginId.trim() && password);
   const hasCredentialError = isAxiosError(error) && error.response?.status === 401;
-  const errorMessage =
+  const errorMessage = getDesignedFormError(
     hasPreviewError || hasCredentialError
       ? '아이디 또는 비밀번호를 확인해 주세요.'
       : error
         ? getApiErrorMessage(error)
-        : null;
+        : null,
+  );
 
   const handleLogin = handleSubmit((form) => {
     if (isPending) return;
@@ -98,22 +100,6 @@ export default function LoginScreen() {
               모투 계정으로 로그인해 주세요.
             </Text>
           </View>
-          {errorMessage && (
-            <View
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-              className="rounded-auth-notice bg-motu-red-light px-[14px] py-[12px]"
-            >
-              <Text className="font-pretendard-medium text-[12px] leading-[16px] text-motu-btn-red text-no-font-padding">
-                {errorMessage}
-              </Text>
-              {hasPreviewError && (
-                <Text className="font-pretendard-medium text-[12px] leading-[16px] text-motu-btn-red text-no-font-padding">
-                  실패 횟수 1/5회 · 4회 남음
-                </Text>
-              )}
-            </View>
-          )}
           <View className="gap-[16px]">
             <Controller
               control={control}
@@ -138,7 +124,8 @@ export default function LoginScreen() {
                   submitBehavior="submit"
                   onSubmitEditing={() => passwordRef.current?.focus()}
                   editable={!isPending}
-                  errorMessage={formState.errors.loginId?.message}
+                  hasMessageSpace={false}
+                  isInvalid={Boolean(formState.errors.loginId)}
                 />
               )}
             />
@@ -170,10 +157,33 @@ export default function LoginScreen() {
                     if (canSubmit) void handleLogin();
                   }}
                   editable={!isPending}
-                  errorMessage={formState.errors.password?.message}
+                  hasMessageSpace={false}
+                  isInvalid={Boolean(formState.errors.password)}
                 />
               )}
             />
+            <View className="-mt-[8px] h-[36px] shrink-0 gap-[4px]">
+              {Boolean(
+                formState.errors.loginId?.message ||
+                formState.errors.password?.message ||
+                errorMessage,
+              ) && (
+                <Text
+                  accessibilityLiveRegion="polite"
+                  numberOfLines={hasPreviewError ? 1 : 2}
+                  className="font-pretendard-medium text-[12px] leading-[16px] text-motu-btn-red text-no-font-padding"
+                >
+                  {formState.errors.loginId?.message ||
+                    formState.errors.password?.message ||
+                    errorMessage}
+                </Text>
+              )}
+              {hasPreviewError && (
+                <Text className="font-pretendard-medium text-[12px] leading-[16px] text-motu-text-tertiary text-no-font-padding">
+                  실패 횟수 1/5회 · 4회 남음
+                </Text>
+              )}
+            </View>
           </View>
           <View className="gap-[16px]">
             <Button

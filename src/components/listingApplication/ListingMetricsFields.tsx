@@ -82,6 +82,7 @@ export function ListingMetricsFields({
         name={name}
         render={({ field }) => (
           <TextField
+            hasDesignMessagesOnly
             label="출처명"
             accessibilityLabel={name === 'revenueSource' ? '매출 출처명' : '거래액 출처명'}
             placeholder="입력해 주세요."

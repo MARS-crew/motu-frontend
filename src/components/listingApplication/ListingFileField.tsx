@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import { Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { useListingImageSource } from '@/hooks/useListingImageSource';
 
 import { listingImageSchema, type ListingImage } from '@/schemas/listingBasicInfoSchema';
@@ -87,14 +88,7 @@ export function ListingFileField({
           </Text>
         </Pressable>
       </View>
-      {errorMessage && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="font-pretendard-medium text-xs leading-4 text-motu-btn-red"
-        >
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} size="double" />
       {isRequired && (
         <Text className="font-pretendard-medium text-xs leading-4 text-motu-text-tertiary">
           JPG·JPEG·PNG / 10MB 이하

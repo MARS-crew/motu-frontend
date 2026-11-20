@@ -3,6 +3,7 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Text, Pressable, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { ListingMetricsCalendar } from '@/components/listingApplication/ListingMetricsCalendar';
 import {
   getMetricReferenceDate,
@@ -78,11 +79,7 @@ export function ListingMetricsDateField({
           contentFit="contain"
         />
       </Pressable>
-      {errorMessage && (
-        <Text className="font-pretendard-medium text-xs leading-4 text-motu-red">
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} size={isRange ? 'double' : 'single'} />
       {isOpen && (
         <View className="absolute left-0 right-0 top-[80px] z-30">
           <ListingMetricsCalendar

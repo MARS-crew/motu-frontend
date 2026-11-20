@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { FormMessage } from '@/components/FormMessage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -195,14 +196,10 @@ export default function ListingMetricsScreen() {
           </View>
           <View className="gap-2.5">
             <View className="gap-1.5">
-              {(errors.root?.server?.message || loadErrorMessage) && (
-                <Text
-                  accessibilityLiveRegion="polite"
-                  className="font-pretendard-medium text-xs leading-4 text-motu-red"
-                >
-                  {errors.root?.server?.message || loadErrorMessage}
-                </Text>
-              )}
+              <FormMessage
+                message={errors.root?.server?.message || loadErrorMessage}
+                size="double"
+              />
               <Pressable
                 accessibilityRole="button"
                 onPress={handleSave}

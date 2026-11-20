@@ -3,6 +3,7 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { LISTING_TRANSACTION_BASES } from '@/constants/listingMetricsPreview';
 import type { ListingMetricsForm } from '@/schemas/listingMetricsSchema';
 import { toListingMetricsBasis } from '@/utils/listingMetricsDraft';
@@ -72,14 +73,7 @@ export function ListingMetricsBasisField({
       <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
         집계 기간 {period ? formatMetricRange(period) : '-'}
       </Text>
-      {errorMessage && (
-        <Text
-          accessibilityLiveRegion="polite"
-          className="font-pretendard-medium text-xs leading-4 text-motu-red"
-        >
-          {errorMessage}
-        </Text>
-      )}
+      <FormMessage message={errorMessage} />
       {isOpen && (
         <View className="absolute left-0 right-0 top-[80px] z-30 rounded-xl border border-motu-grey-lighter bg-white p-1.5 shadow-listing-metrics-panel">
           {LISTING_TRANSACTION_BASES.map((option) => (

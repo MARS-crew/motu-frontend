@@ -1,6 +1,7 @@
 import { Controller, useWatch, type Control, type FieldErrors } from 'react-hook-form';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import { FormMessage } from '@/components/FormMessage';
 import { TextField } from '@/components/TextField';
 import { ListingEvidenceItem } from '@/components/listingApplication/ListingEvidenceItem';
 import {
@@ -74,16 +75,15 @@ export function ListingEvidenceFields({
         <Text className="font-pretendard-medium text-[11px] leading-[14px] text-motu-grey">
           첨부 가능 형식: JPG, JPEG, PNG, PDF
         </Text>
-        {(attachmentError || errors.items?.message || hasReachedLimit) && (
-          <Text
-            accessibilityLiveRegion="polite"
-            className={`font-pretendard-medium text-xs leading-4 ${attachmentError || errors.items?.message ? 'text-motu-red' : 'text-motu-grey'}`}
-          >
-            {attachmentError ||
-              errors.items?.message ||
-              '파일과 링크를 합산해 최대 10개까지 등록할 수 있습니다.'}
-          </Text>
-        )}
+        <FormMessage
+          message={
+            attachmentError ||
+            errors.items?.message ||
+            (hasReachedLimit ? '파일과 링크를 합산해 최대 10개까지 등록할 수 있습니다.' : undefined)
+          }
+          isError={Boolean(attachmentError || errors.items?.message)}
+          size="double"
+        />
       </View>
       <View className="flex-row items-center gap-1">
         <Text className="flex-1 font-pretendard-medium text-xs leading-4 text-motu-text-secondary">
@@ -113,6 +113,7 @@ export function ListingEvidenceFields({
         name="linkUrl"
         render={({ field }) => (
           <TextField
+            hasDesignMessagesOnly
             label="외부 링크 URL"
             editable={!isSaving}
             placeholder="https://"
@@ -147,6 +148,7 @@ export function ListingEvidenceFields({
           name="description"
           render={({ field }) => (
             <TextField
+              hasDesignMessagesOnly
               label="자료 설명"
               editable={!isSaving}
               isRequired

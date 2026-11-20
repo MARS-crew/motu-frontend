@@ -117,19 +117,16 @@ export default function SignupEmailScreen() {
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         placeholder="6자리 숫자"
+                        errorMessage={
+                          hasCodeError || timer.hasExpired
+                            ? timer.hasExpired
+                              ? '인증번호가 만료되었습니다.'
+                              : '인증번호가 일치하지 않습니다.'
+                            : undefined
+                        }
                       />
                     )}
                   />
-                  {(hasCodeError || timer.hasExpired) && (
-                    <Text
-                      accessibilityRole="alert"
-                      className="mt-[4px] font-pretendard-medium text-[12px] leading-[20px] text-motu-btn-red text-no-font-padding"
-                    >
-                      {timer.hasExpired
-                        ? '인증번호가 만료되었습니다.'
-                        : '인증번호가 일치하지 않습니다.'}
-                    </Text>
-                  )}
                   <Text className="mt-[4px] font-pretendard-medium text-[12px] leading-[20px] text-motu-text-tertiary text-no-font-padding">
                     남은 시간 {formatEmailCodeTime(timer.remaining)}
                   </Text>

@@ -100,6 +100,7 @@ export default function NewPasswordScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry={!visible[name]}
+                messageSize={name === 'confirmPassword' ? 'double' : 'single'}
                 errorMessage={
                   name === 'confirmPassword' && hasMismatch
                     ? '비밀번호가 일치하지 않습니다. 다시 입력해 주세요.'

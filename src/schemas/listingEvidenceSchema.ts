@@ -4,7 +4,7 @@ export const MAX_EVIDENCE_ITEMS = 10;
 export const MAX_EVIDENCE_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_EVIDENCE_PDF_BYTES = 20 * 1024 * 1024;
 export const EVIDENCE_DESCRIPTION_ERROR = '자료 설명은 필수 입력값입니다. (10자 이상 500자 이하)';
-export const EVIDENCE_COUNT_ERROR = '파일과 링크는 합산해 최대 10개까지 등록할 수 있습니다.';
+export const EVIDENCE_COUNT_ERROR = '파일과 링크를 합산해 최대 10개까지 등록할 수 있습니다.';
 export const EVIDENCE_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
 export const evidenceLinkSchema = z

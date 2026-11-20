@@ -180,7 +180,8 @@ export default function TwoFactorVerifyScreen() {
             />
             <Text
               accessibilityLiveRegion={isLocked || timer.hasExpired ? 'polite' : 'none'}
-              className={`font-pretendard-medium text-[13px] leading-[20px] text-no-font-padding ${isLocked || timer.hasExpired ? 'text-motu-btn-red' : 'text-motu-text-tertiary'}`}
+              numberOfLines={2}
+              className={`h-[40px] font-pretendard-medium text-[13px] leading-[20px] text-no-font-padding ${isLocked || timer.hasExpired ? 'text-motu-btn-red' : 'text-motu-text-tertiary'}`}
             >
               {isLocked
                 ? '인증번호를 5회 연속 잘못 입력했습니다.\n30분 후 다시 시도해 주세요.'
