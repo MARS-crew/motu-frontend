@@ -16,16 +16,18 @@ export const getPasswordRules = (password: string) => [
   { label: '특수문자 1개 이상', isMet: /[^\p{L}\p{N}\s]/u.test(password) },
 ];
 
+export const signupPasswordSchema = z
+  .string()
+  .min(1, '비밀번호를 입력해 주세요.')
+  .refine(
+    (password) => getPasswordRules(password).every(({ isMet }) => isMet),
+    '영문·숫자·특수문자를 포함해 주세요.',
+  );
+
 export const signupInfoSchema = z
   .object({
     loginId: signupIdSchema,
-    password: z
-      .string()
-      .min(1, '비밀번호를 입력해 주세요.')
-      .refine(
-        (password) => getPasswordRules(password).every(({ isMet }) => isMet),
-        '영문·숫자·특수문자를 포함해 주세요.',
-      ),
+    password: signupPasswordSchema,
     confirmPassword: z.string().min(1, '비밀번호 확인을 입력해 주세요.'),
     nickname: signupNicknameSchema,
     email: z
