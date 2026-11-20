@@ -30,7 +30,6 @@ import {
   type SignupInfoForm,
 } from '@/schemas/signupInfoSchema';
 
-import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
 import { formatBirthDateInput } from '@/utils/formatDate';
 import { signupConsentSchema } from '@/schemas/signupConsentSchema';
 import { useSignupFormStore } from '@/stores/useSignupFormStore';
@@ -66,7 +65,6 @@ export default function SignupInfoScreen() {
     password: false,
     confirmPassword: false,
   });
-  const setSignupEmail = useSignupEmailStore((state) => state.setEmail);
   const { control, formState, handleSubmit, getValues } = useForm<SignupInfoForm>({
     resolver: zodResolver(signupInfoSchema),
     mode: 'onChange',
@@ -258,7 +256,6 @@ export default function SignupInfoScreen() {
             onPress={handleSubmit((form) => {
               if (!hasCheckedDuplicates) return;
               setInfo(form);
-              setSignupEmail(form.email);
               router.push('/signup-email');
             })}
           />

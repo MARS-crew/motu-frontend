@@ -51,5 +51,7 @@ export async function postConfirmLoginVerification(code: string) {
     body,
     Platform.OS === 'web' ? undefined : { headers: { 'User-Agent': `MOTU/${Platform.OS}` } },
   );
+  const current = await pendingLoginStorage.get();
+  if (current?.loginToken !== loginToken) throw new LoginVerificationRequiredError();
   return loginResponseSchema.parse(data.data);
 }

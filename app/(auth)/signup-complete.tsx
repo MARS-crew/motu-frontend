@@ -6,17 +6,18 @@ import { Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { AuthFlowLayout } from '@/components/login/AuthFlowLayout';
 import { SignupProgress } from '@/components/signup/SignupProgress';
-import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
+import { useSignupResultQuery } from '@/queries/useSignupEmailMutation';
 
 cssInterop(Image, { className: 'style' });
 
 export default function SignupCompleteScreen() {
-  const setEmail = useSignupEmailStore((state) => state.setEmail);
-
-  if (!__DEV__) return <Redirect href="/login" />;
+  const result = useSignupResultQuery();
+  if (!result.data) return <Redirect href="/signup" />;
+  const { userStatus, role, cash } = result.data;
+  const statusLabels = { ACTIVE: '정상', LOCKED: '잠금', BLOCKED: '정지', WITHDRAWN: '탈퇴' };
+  const roleLabels = { USER: '일반 사용자', ADMIN: '관리자' };
 
   const handleLogin = () => {
-    setEmail('');
     router.dismissTo('/login');
   };
 
@@ -44,8 +45,8 @@ export default function SignupCompleteScreen() {
       </View>
       <View className="gap-[12px] rounded-[14px] border border-motu-border bg-motu-surface-card p-[15px]">
         {[
-          ['회원 상태', '정상'],
-          ['역할', '일반 사용자'],
+          ['회원 상태', statusLabels[userStatus]],
+          ['역할', roleLabels[role]],
         ].map(([label, value]) => (
           <View key={label} className="flex-row items-center justify-between gap-[8px]">
             <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-tertiary text-no-font-padding">
@@ -62,7 +63,7 @@ export default function SignupCompleteScreen() {
           초기 포인트 지급
         </Text>
         <Text className="font-pretendard-bold text-[24px] leading-[32px] text-motu-text-primary text-no-font-padding">
-          3,000,000P
+          {cash.toLocaleString('ko-KR')}P
         </Text>
       </View>
       <View className="min-h-px flex-1" />
