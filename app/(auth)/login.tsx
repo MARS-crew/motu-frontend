@@ -21,6 +21,7 @@ import { TextField } from '@/components/TextField';
 import { useLoginMutation } from '@/queries/useLoginMutation';
 import { loginSchema, type LoginForm } from '@/schemas/authSchema';
 import { getLoginFailure } from '@/utils/loginError';
+import { getLoginRestriction } from '@/utils/authError';
 
 export default function LoginScreen() {
   // 개발 환경에서만 Figma의 실패 화면을 API 요청 없이 확인합니다.
@@ -56,7 +57,10 @@ export default function LoginScreen() {
         await login(form);
         Keyboard.dismiss();
       })();
-    } catch {
+    } catch (error) {
+      const restriction = getLoginRestriction(error);
+      if (restriction)
+        router.replace({ pathname: '/account-restriction', params: { type: restriction } });
       // 인증 실패는 Mutation 오류 상태로 표시하고 입력값은 유지합니다.
     } finally {
       isSubmittingRef.current = false;

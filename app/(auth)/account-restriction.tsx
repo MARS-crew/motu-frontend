@@ -52,7 +52,16 @@ export default function AccountRestrictionScreen() {
         </View>
         <View className="min-h-px flex-1" />
         <View className="gap-[12px]">
-          <Button appearance="auth" title="문의하기" />
+          <Button
+            appearance="auth"
+            title="문의하기"
+            onPress={() =>
+              router.push({
+                pathname: './account-inquiry',
+                params: { type: isLocked ? 'LOGIN_FAILED_LOCKED' : 'SUSPENDED' },
+              })
+            }
+          />
           <Text className="text-center font-pretendard-medium text-[12px] leading-[18px] text-motu-text-tertiary text-no-font-padding">
             {content.help}
           </Text>
