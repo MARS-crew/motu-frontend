@@ -54,7 +54,8 @@ export default function LoginScreen() {
     setHasPreviewError(false);
     try {
       await handleSubmit(async (form) => {
-        await login(form);
+        const { result } = await login(form);
+        if (result.verificationRequired) router.push('/new-device');
         Keyboard.dismiss();
       })();
     } catch (error) {

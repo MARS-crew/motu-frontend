@@ -13,7 +13,10 @@ type AuthRequestConfig = InternalAxiosRequestConfig & {
 };
 type RefreshedSession = SessionTokens & { sessionRevision: number };
 
-const isTokenEndpoint = (url?: string) => url === '/auth/login' || url === '/auth/refresh';
+const isTokenEndpoint = (url?: string) =>
+  url === '/auth/login' ||
+  url === '/auth/refresh' ||
+  url?.startsWith('/auth/login/verifications') === true;
 export const api = create({ baseURL: API_URL, timeout: 10_000 });
 
 export class SessionChangedError extends Error {

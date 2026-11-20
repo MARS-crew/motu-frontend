@@ -1,18 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Redirect, router } from 'expo-router';
+import { useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { FormMessage } from '@/components/FormMessage';
 import { LoginHeader } from '@/components/login/LoginHeader';
 import { TextField } from '@/components/TextField';
+import { formatEmailCodeTime } from '@/hooks/useEmailCodeTimer';
+import { useVerificationTimer } from '@/hooks/useVerificationTimer';
+import {
+  useLoginChallengeQuery,
+  useLoginDeliveryQuery,
+  useSendLoginVerificationMutation,
+  useConfirmLoginVerificationMutation,
+} from '@/queries/useLoginVerificationMutation';
 import { newDeviceSchema, type NewDeviceForm } from '@/schemas/newDeviceSchema';
-
-const RESEND_SECONDS = 30;
-const EXPIRY_SECONDS = 300;
-const MISMATCH_MESSAGE = '인증번호가 일치하지 않습니다.';
+import { getAuthError } from '@/utils/authError';
+import { pendingLoginStorage } from '@/utils/pendingLoginStorage';
 
 type NewDeviceInfoFieldProps = {
   label: string;
@@ -34,55 +41,56 @@ function NewDeviceInfoField({ label, value }: NewDeviceInfoFieldProps) {
   );
 }
 
-function formatRemainingTime(seconds: number) {
-  return [Math.floor(seconds / 60), seconds % 60]
-    .map((value) => String(value).padStart(2, '0'))
-    .join(':');
-}
-
 export default function NewDeviceScreen() {
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
-  const isErrorPreview = preview === 'error';
-  const [sentAt, setSentAt] = useState<number | null>(() =>
-    preview === 'sent' || isErrorPreview ? Date.now() - (isErrorPreview ? 10_000 : 0) : null,
-  );
-  const [now, setNow] = useState(Date.now);
-  const [hasCodeError, setHasCodeError] = useState(isErrorPreview);
+  const challenge = useLoginChallengeQuery();
+  const delivery = useLoginDeliveryQuery();
+  const send = useSendLoginVerificationMutation();
+  const confirm = useConfirmLoginVerificationMutation();
+  const isBusyRef = useRef(false);
+  const timer = useVerificationTimer(delivery.data ?? undefined);
   const { control, handleSubmit, reset } = useForm<NewDeviceForm>({
     resolver: zodResolver(newDeviceSchema),
-    defaultValues: { code: isErrorPreview ? '135791' : '' },
+    defaultValues: { code: '' },
   });
   const code = useWatch({ control, name: 'code' });
-  const hasSent = sentAt !== null;
-  const elapsed = sentAt === null ? 0 : Math.max(0, Math.floor((now - sentAt) / 1000));
-  const resendRemaining = Math.max(0, RESEND_SECONDS - elapsed);
-  const codeRemaining = Math.max(0, EXPIRY_SECONDS - elapsed);
-  const hasExpired = hasSent && codeRemaining === 0;
-
-  useEffect(() => {
-    if (!hasSent || hasExpired) return;
-    const timer = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(timer);
-  }, [hasSent, hasExpired]);
-
-  // 퍼블리싱 미리보기입니다. 실제 발송·검증이나 로그인 상태 변경을 하지 않습니다.
-  if (!__DEV__) return <Redirect href="/(auth)/login" />;
-
-  const handleBack = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/(auth)/login');
+  const hasSent = Boolean(delivery.data);
+  const isBusy = send.isPending || confirm.isPending;
+  const error = getAuthError(send.error ?? confirm.error);
+  const handleBack = async () => {
+    await pendingLoginStorage.clear();
+    router.replace('/login');
   };
-  const handleSend = () => {
-    const sentTime = Date.now();
-    setSentAt(sentTime);
-    setNow(sentTime);
-    setHasCodeError(false);
-    reset({ code: '' });
+  const handleSend = async () => {
+    if (isBusyRef.current || timer.resendRemaining > 0) return;
+    isBusyRef.current = true;
+    confirm.reset();
+    try {
+      await send.mutateAsync();
+      reset({ code: '' });
+    } catch {
+      /* 서버 오류만 표시합니다. */
+    } finally {
+      isBusyRef.current = false;
+    }
   };
-  const handleConfirm = handleSubmit(() => {
-    if (!hasExpired) setHasCodeError(true);
-  });
-
+  const handleConfirm = async () => {
+    if (isBusyRef.current || timer.hasExpired) return;
+    isBusyRef.current = true;
+    send.reset();
+    try {
+      await handleSubmit(async ({ code }) => {
+        await confirm.mutateAsync(code);
+      })();
+    } catch {
+      /* 서버 오류만 표시합니다. */
+    } finally {
+      isBusyRef.current = false;
+    }
+  };
+  if (challenge.isPending) return null;
+  if (!challenge.data) return <Redirect href="/login" />;
+  if (error?.code === 'AUTH_INVALID_LOGIN_TOKEN') return <Redirect href="/login" />;
+  const target = delivery.data ?? challenge.data;
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
       <KeyboardAvoidingView
@@ -103,20 +111,19 @@ export default function NewDeviceScreen() {
           </Text>
           <View className="gap-[16px]">
             <NewDeviceInfoField
-              label="접속 환경"
-              value={hasSent ? '확인 불가' : 'Windows · Chrome'}
+              label={target.method === 'EMAIL' ? '등록 이메일' : '등록 휴대폰'}
+              value={target.maskedTarget}
             />
-            <NewDeviceInfoField label="등록 이메일" value="na***@example.com" />
             <Button
               appearance="auth"
               title={
                 !hasSent
                   ? '인증번호 보내기'
-                  : resendRemaining > 0
-                    ? `인증번호 재발송 (${formatRemainingTime(resendRemaining)})`
+                  : timer.resendRemaining > 0
+                    ? `인증번호 재발송 (${formatEmailCodeTime(timer.resendRemaining)})`
                     : '인증번호 재발송'
               }
-              disabled={hasSent && resendRemaining > 0}
+              disabled={isBusy || timer.resendRemaining > 0}
               onPress={handleSend}
             />
             {hasSent && (
@@ -138,29 +145,23 @@ export default function NewDeviceScreen() {
                       value={value}
                       onBlur={onBlur}
                       onChangeText={(text) => {
-                        setHasCodeError(false);
+                        confirm.reset();
                         onChange(text.replace(/[^0-9]/g, '').slice(0, 6));
                       }}
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       placeholder="6자리 숫자"
-                      errorMessage={
-                        hasCodeError || hasExpired
-                          ? hasExpired
-                            ? '인증번호가 만료되었습니다.'
-                            : MISMATCH_MESSAGE
-                          : undefined
-                      }
+                      editable={!isBusy}
+                      errorMessage={timer.hasExpired ? '인증번호가 만료되었습니다.' : undefined}
                     />
                   )}
                 />
-                <View className="gap-[4px]">
-                  <Text className="font-pretendard-medium text-[12px] leading-[20px] text-motu-text-tertiary text-no-font-padding">
-                    남은 시간 {formatRemainingTime(codeRemaining)}
-                  </Text>
-                </View>
+                <Text className="font-pretendard-medium text-[12px] leading-[20px] text-motu-text-tertiary text-no-font-padding">
+                  남은 시간 {formatEmailCodeTime(timer.remaining)}
+                </Text>
               </>
             )}
+            <FormMessage message={error?.message} isError size="double" />
           </View>
           {hasSent && (
             <>
@@ -168,7 +169,7 @@ export default function NewDeviceScreen() {
               <Button
                 appearance="auth"
                 title="인증 확인"
-                disabled={code.length !== 6 || hasExpired}
+                disabled={code.length !== 6 || timer.hasExpired || isBusy}
                 onPress={handleConfirm}
               />
             </>
