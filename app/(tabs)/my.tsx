@@ -18,8 +18,9 @@ export default function MyScreen() {
   const maskedPhone = useSecondFactorPreviewStore((state) => state.maskedPhone);
   const isSecondFactorEnabled = __DEV__ && maskedPhone !== null;
 
-  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(편집, 1:1 문의)는
+  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의, 로그아웃, 회원탈퇴)는
   // 담당 화면이 생기면 연결합니다.
+  const handleEditPress = () => router.push('/profile-edit');
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
   const handleCloseAccountAction = () => setAccountAction(null);
@@ -49,6 +50,7 @@ export default function MyScreen() {
           email={profile.email}
           maskedPhoneNumber={profile.maskedPhoneNumber}
           isSecondFactorEnabled={isSecondFactorEnabled}
+          onEditPress={handleEditPress}
         />
 
         <View className="mt-[24px] gap-[12px]">
