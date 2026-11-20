@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type Ref, type ReactNode } from 'react';
+import { useImperativeHandle, useRef, useState, type Ref, type ReactNode } from 'react';
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { FormMessage } from '@/components/FormMessage';
@@ -48,14 +48,7 @@ export function TextField({
 }: TextFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const nativeInputRef = useRef<TextInput>(null);
-  const setInputRef = useCallback(
-    (input: TextInput | null) => {
-      nativeInputRef.current = input;
-      if (typeof inputRef === 'function') inputRef(input);
-      else if (inputRef) inputRef.current = input;
-    },
-    [inputRef],
-  );
+  useImperativeHandle(inputRef, () => nativeInputRef.current!, []);
   const handleRecoverKeyboard = useAndroidKeyboardRecovery(
     nativeInputRef,
     editable && !inputProps.readOnly && inputProps.inputMode !== 'none' && showSoftInputOnFocus,
@@ -70,7 +63,7 @@ export function TextField({
       } ${editable ? (isAuth ? 'bg-motu-surface-card' : 'bg-white') : 'bg-motu-border'}`}
     >
       <TextInput
-        ref={setInputRef}
+        ref={nativeInputRef}
         accessibilityLabel={label}
         multiline={multiline}
         editable={editable}
