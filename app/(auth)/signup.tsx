@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { cssInterop } from 'nativewind';
 import { useCallback, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,10 +10,13 @@ import { Button } from '@/components/Button';
 import { LoginHeader } from '@/components/login/LoginHeader';
 import { TermsDetail } from '@/components/signup/TermsDetail';
 import { SIGNUP_TERMS, type SignupTerm } from '@/constants/signupTerms';
+import { signupConsentSchema, type SignupConsentInput } from '@/schemas/signupConsentSchema';
+import { useSignupFormStore } from '@/stores/useSignupFormStore';
 
 cssInterop(Image, { className: 'style' });
 
 const REQUIRED_TERMS = ['service', 'privacy'] as const satisfies readonly SignupTerm[];
+const CONSENT_FIELDS = { service: 'termsAgreed', privacy: 'privacyAgreed' } as const;
 
 type TermCheckmarkProps = {
   isChecked: boolean;
@@ -38,12 +42,14 @@ function TermCheckmark({ isChecked }: TermCheckmarkProps) {
 }
 
 export default function SignupScreen() {
-  const [consent, setConsent] = useState<Record<SignupTerm, boolean>>({
-    service: false,
-    privacy: false,
+  const savedConsent = useSignupFormStore((state) => state.consent);
+  const setConsent = useSignupFormStore((state) => state.setConsent);
+  const { control, setValue, getValues } = useForm<SignupConsentInput>({
+    defaultValues: savedConsent,
   });
+  const consent = useWatch({ control });
   const [detail, setDetail] = useState<SignupTerm | null>(null);
-  const isAllChecked = REQUIRED_TERMS.every((term) => consent[term]);
+  const isAllChecked = REQUIRED_TERMS.every((term) => consent[CONSENT_FIELDS[term]]);
 
   const handleCloseDetail = useCallback(() => setDetail(null), []);
   useFocusEffect(
@@ -62,13 +68,15 @@ export default function SignupScreen() {
     else router.replace('/login');
   };
   const handleToggleAll = () => {
-    setConsent({ service: !isAllChecked, privacy: !isAllChecked });
+    setValue('termsAgreed', !isAllChecked);
+    setValue('privacyAgreed', !isAllChecked);
   };
   const handleToggleTerm = (term: SignupTerm) => {
-    setConsent((current) => ({ ...current, [term]: !current[term] }));
+    const field = CONSENT_FIELDS[term];
+    setValue(field, !getValues(field));
   };
   const handleAgree = (term: SignupTerm) => {
-    setConsent((current) => ({ ...current, [term]: true }));
+    setValue(CONSENT_FIELDS[term], true);
     handleCloseDetail();
   };
 
@@ -131,11 +139,11 @@ export default function SignupScreen() {
                   <Pressable
                     accessibilityRole="checkbox"
                     accessibilityLabel={SIGNUP_TERMS[term].label}
-                    accessibilityState={{ checked: consent[term] }}
+                    accessibilityState={{ checked: Boolean(consent[CONSENT_FIELDS[term]]) }}
                     onPress={() => handleToggleTerm(term)}
                     className="justify-center pl-[15px]"
                   >
-                    <TermCheckmark isChecked={consent[term]} />
+                    <TermCheckmark isChecked={Boolean(consent[CONSENT_FIELDS[term]])} />
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
@@ -164,7 +172,12 @@ export default function SignupScreen() {
               appearance="auth"
               title="다음"
               disabled={!isAllChecked}
-              onPress={() => router.push('/signup-info')}
+              onPress={() => {
+                const result = signupConsentSchema.safeParse(getValues());
+                if (!result.success) return;
+                setConsent(result.data);
+                router.push('/signup-info');
+              }}
             />
           </ScrollView>
         </>
