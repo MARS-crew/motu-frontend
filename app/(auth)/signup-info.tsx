@@ -66,7 +66,7 @@ export default function SignupInfoScreen() {
   const setSignupEmail = useSignupEmailStore((state) => state.setEmail);
   const { control, formState, handleSubmit } = useForm<SignupInfoForm>({
     resolver: zodResolver(signupInfoSchema),
-    mode: 'onTouched',
+    mode: 'onChange',
     defaultValues: {
       loginId: '',
       password: '',
@@ -95,8 +95,7 @@ export default function SignupInfoScreen() {
     handleCloseDuplicate();
   };
   const { errors, touchedFields, isValid } = formState;
-  const hasMismatch =
-    touchedFields.confirmPassword && confirmation !== '' && password !== confirmation;
+  const hasMismatch = confirmation !== '' && password !== confirmation;
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -140,6 +139,7 @@ export default function SignupInfoScreen() {
                   <Controller
                     control={control}
                     name={name}
+                    rules={{ deps: name === 'password' ? ['confirmPassword'] : undefined }}
                     render={({ field: { value, onChange, onBlur, ref } }) => (
                       <TextField
                         variant="auth"
@@ -164,7 +164,7 @@ export default function SignupInfoScreen() {
                         errorMessage={
                           name === 'confirmPassword' && hasMismatch
                             ? '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.'
-                            : touchedFields[name]
+                            : touchedFields[name] || (name === 'password' && value !== '')
                               ? errors[name]?.message
                               : undefined
                         }
