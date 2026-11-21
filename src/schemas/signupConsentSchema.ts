@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
-export const signupConsentSchema = z.object({
+const signupConsentInputSchema = z.object({
+  termsAgreed: z.boolean(),
+  privacyAgreed: z.boolean(),
+  marketingAgreed: z.boolean(),
+});
+export const signupConsentSchema = signupConsentInputSchema.extend({
   termsAgreed: z.literal(true),
   privacyAgreed: z.literal(true),
   marketingAgreed: z.boolean(),
 });
 export type SignupConsent = z.infer<typeof signupConsentSchema>;
-export type SignupConsentInput = {
-  termsAgreed: boolean;
-  privacyAgreed: boolean;
-  marketingAgreed: boolean;
-};
+export type SignupConsentInput = z.infer<typeof signupConsentInputSchema>;
