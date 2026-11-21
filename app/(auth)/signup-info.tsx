@@ -34,6 +34,7 @@ import { useSignupEmailStore } from '@/stores/useSignupEmailStore';
 import { formatBirthDateInput } from '@/utils/formatDate';
 import { signupConsentSchema } from '@/schemas/signupConsentSchema';
 import { useSignupFormStore } from '@/stores/useSignupFormStore';
+import { useSignupAvailabilityQuery } from '@/queries/useSignupAvailabilityQuery';
 
 type SignupField = {
   name: keyof SignupInfoForm;
@@ -57,6 +58,8 @@ const DUPLICATE_CHECK_SCHEMAS = { loginId: signupIdSchema, nickname: signupNickn
 
 export default function SignupInfoScreen() {
   const consent = useSignupFormStore((state) => state.consent);
+  const savedInfo = useSignupFormStore((state) => state.info);
+  const setInfo = useSignupFormStore((state) => state.setInfo);
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [acceptedValues, setAcceptedValues] = useState({ loginId: '', nickname: '' });
   const [visiblePasswords, setVisiblePasswords] = useState({
@@ -64,10 +67,10 @@ export default function SignupInfoScreen() {
     confirmPassword: false,
   });
   const setSignupEmail = useSignupEmailStore((state) => state.setEmail);
-  const { control, formState, handleSubmit } = useForm<SignupInfoForm>({
+  const { control, formState, handleSubmit, getValues } = useForm<SignupInfoForm>({
     resolver: zodResolver(signupInfoSchema),
     mode: 'onChange',
-    defaultValues: {
+    defaultValues: savedInfo ?? {
       loginId: '',
       password: '',
       confirmPassword: '',
@@ -77,24 +80,47 @@ export default function SignupInfoScreen() {
       birthDate: '',
     },
   });
-  const [password, confirmation] = useWatch({
+  const [password, confirmation, loginId, nickname] = useWatch({
     control,
-    name: ['password', 'confirmPassword'],
+    name: ['password', 'confirmPassword', 'loginId', 'nickname'],
   });
-  const handleCheckDuplicate = (field: DuplicateCheckResult['field'], value: string) => {
-    // 퍼블리싱용 결과는 개발 빌드에서만 사용합니다.
-    if (!__DEV__ || !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success) return;
+  const loginIdQuery = useSignupAvailabilityQuery('loginId', loginId);
+  const nicknameQuery = useSignupAvailabilityQuery('nickname', nickname);
+  const duplicateQueries = { loginId: loginIdQuery, nickname: nicknameQuery };
+  const handleCheckDuplicate = async (field: DuplicateCheckResult['field'], value: string) => {
+    const query = duplicateQueries[field];
+    if (
+      query.checkedValue !== value ||
+      query.isFetching ||
+      !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success
+    )
+      return;
     Keyboard.dismiss();
-    setDuplicateResult({ field, value });
+    const response = await query.refetch();
+    if (getValues(field) === value && response.data?.available && !response.error)
+      setDuplicateResult({ field, value });
   };
   const handleCloseDuplicate = () => setDuplicateResult(null);
   const handleAcceptDuplicate = () => {
     if (!duplicateResult) return;
     const { field, value } = duplicateResult;
+    if (getValues(field) !== value) {
+      handleCloseDuplicate();
+      return;
+    }
     setAcceptedValues((current) => ({ ...current, [field]: value }));
     handleCloseDuplicate();
   };
   const { errors, touchedFields, isValid } = formState;
+  const hasCheckedDuplicates =
+    acceptedValues.loginId === loginId &&
+    acceptedValues.nickname === nickname &&
+    loginIdQuery.data?.available === true &&
+    nicknameQuery.data?.available === true &&
+    !loginIdQuery.error &&
+    !nicknameQuery.error &&
+    loginIdQuery.checkedValue === loginId &&
+    nicknameQuery.checkedValue === nickname;
   const hasMismatch = confirmation !== '' && password !== confirmation;
 
   const handleBack = () => {
@@ -125,7 +151,7 @@ export default function SignupInfoScreen() {
               기본 정보를 입력해 주세요.
             </Text>
             <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
-              아이디와 닉네임의 중복 확인을 미리 볼 수 있습니다.
+              아이디와 닉네임의 중복 확인을 해 주세요.
             </Text>
           </View>
           <View className="gap-[16px]">
@@ -160,6 +186,11 @@ export default function SignupInfoScreen() {
                         placeholder={placeholder}
                         secureTextEntry={isPassword && !isPasswordVisible}
                         helperText={helperText}
+                        isInvalid={
+                          hasDuplicateAction &&
+                          duplicateQueries[name].checkedValue === value &&
+                          duplicateQueries[name].data?.available === false
+                        }
                         messageSize={name === 'confirmPassword' ? 'double' : 'single'}
                         errorMessage={
                           name === 'confirmPassword' && hasMismatch
@@ -178,7 +209,9 @@ export default function SignupInfoScreen() {
                                   acceptedValues[name] !== '' && acceptedValues[name] === value,
                               }}
                               disabled={
-                                !__DEV__ || !DUPLICATE_CHECK_SCHEMAS[name].safeParse(value).success
+                                duplicateQueries[name].isFetching ||
+                                duplicateQueries[name].checkedValue !== value ||
+                                !DUPLICATE_CHECK_SCHEMAS[name].safeParse(value).success
                               }
                               onPress={() => handleCheckDuplicate(name, value)}
                               className="h-[50px] justify-center rounded-auth-input bg-motu-tonal px-[14px]"
@@ -221,9 +254,11 @@ export default function SignupInfoScreen() {
           <Button
             appearance="auth"
             title="다음"
-            disabled={!__DEV__ || !isValid}
-            onPress={handleSubmit(({ email }) => {
-              setSignupEmail(email);
+            disabled={!isValid || !hasCheckedDuplicates}
+            onPress={handleSubmit((form) => {
+              if (!hasCheckedDuplicates) return;
+              setInfo(form);
+              setSignupEmail(form.email);
               router.push('/signup-email');
             })}
           />
