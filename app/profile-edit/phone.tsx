@@ -110,6 +110,7 @@ export default function PhoneChangeScreen() {
               <TextField
                 variant="auth"
                 label="변경할 연락처"
+                hasMessageSpace={false}
                 inputRef={ref}
                 value={value}
                 onBlur={onBlur}
@@ -163,6 +164,7 @@ export default function PhoneChangeScreen() {
                     <TextField
                       variant="auth"
                       label="인증하기"
+                      hasMessageSpace={false}
                       inputRef={ref}
                       value={value}
                       onBlur={onBlur}
