@@ -2,7 +2,8 @@ import { Modal, Pressable, Text, View } from 'react-native';
 
 type SecondFactorReleaseModalProps = {
   onClose: () => void;
-  onRelease: () => void;
+  // 해제 API 연결 전에는 확인 버튼을 비활성화합니다.
+  onRelease?: () => void;
 };
 
 export function SecondFactorReleaseModal({ onClose, onRelease }: SecondFactorReleaseModalProps) {
@@ -48,6 +49,8 @@ export function SecondFactorReleaseModal({ onClose, onRelease }: SecondFactorRel
             <Pressable
               accessibilityRole="button"
               onPress={onRelease}
+              disabled={!onRelease}
+              accessibilityState={{ disabled: !onRelease }}
               className="h-[46px] flex-1 items-center justify-center rounded-[8px] bg-motu-btn-red"
             >
               <Text className="font-pretendard-semibold text-[13px] leading-[20px] text-motu-on-cta text-no-font-padding">
