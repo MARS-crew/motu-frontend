@@ -40,7 +40,9 @@ export default function ProfileEditFormScreen() {
   const { control, handleSubmit } = useForm<ProfileEditForm>({
     resolver: zodResolver(profileEditSchema),
     mode: 'onBlur',
-    defaultValues: { password: '', passwordConfirm: '', birthDate: '' },
+    // 비밀번호는 비워 두고 생년월일은 지금 값을 채웁니다. 내 정보를 다시 불러와도 사용자가 고친 값은 유지합니다.
+    values: { password: '', passwordConfirm: '', birthDate: myInfo?.birthDate ?? '' },
+    resetOptions: { keepDirtyValues: true },
   });
 
   const handleBack = () => {
@@ -52,10 +54,10 @@ export default function ProfileEditFormScreen() {
 
   const saveProfile = async ({ password, birthDate }: ProfileEditForm) => {
     if (!myInfo) return;
-    // 입력한 항목만 보냅니다. 비워 둔 항목은 바꾸지 않습니다.
+    // 바뀐 항목만 보냅니다. 비워 두거나 지금과 같은 생년월일은 보내지 않습니다.
     const changes = {
       ...(password ? { password } : {}),
-      ...(birthDate ? { birthDate } : {}),
+      ...(birthDate && birthDate !== myInfo.birthDate ? { birthDate } : {}),
     };
     if (Object.keys(changes).length === 0) {
       setToastMessage('수정할 정보를 입력해 주세요.');
