@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LoginRequiredBox } from '@/components/home/LoginRequiredBox';
 import { MyAccountActionModal, type MyAccountAction } from '@/components/my/MyAccountActionModal';
 import { MyMenuGroup } from '@/components/my/MyMenuGroup';
 import { MyMenuItem } from '@/components/my/MyMenuItem';
@@ -10,22 +11,47 @@ import { MyProfileCard } from '@/components/my/MyProfileCard';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useMyInfoQuery } from '@/queries/useMyInfoQuery';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { getTwoFactorEnabled, maskContactPhone } from '@/utils/twoFactor';
+import { maskPhoneNumber } from '@/utils/phoneNumber';
+import { getTwoFactorEnabled } from '@/utils/twoFactor';
 
 export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [accountAction, setAccountAction] = useState<MyAccountAction | null>(null);
-  const myInfo = useMyInfoQuery();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const profile = isLoggedIn && !myInfo.isError ? myInfo.data : undefined;
-  const isSecondFactorEnabled = getTwoFactorEnabled(profile?.twoFactorStatus);
+  const { data: myInfo, isPending } = useMyInfoQuery();
+  // 불러오기 전에는 undefined라 메뉴에 '2차 보안'을 보여 줍니다.
+  const isSecondFactorEnabled = getTwoFactorEnabled(myInfo?.twoFactorStatus);
 
-  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의, 로그아웃, 회원탈퇴)는
-  // 담당 화면이 생기면 연결합니다.
+  // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의)는 담당 화면이 생기면 연결합니다.
   const handleEditPress = () => router.push('/profile-edit');
   const handleNoticePress = () => router.push('/notice');
   const handleListingApplicationPress = () => router.push('/listing-application');
   const handleCloseAccountAction = () => setAccountAction(null);
+
+  // 비로그인 → 로그인 안내, 불러오는 중 → 로딩, 실패 → 안내 문구 순서로 보여 줍니다.
+  const renderProfile = () => {
+    if (!isLoggedIn) return <LoginRequiredBox />;
+    if (isPending) return <ActivityIndicator className="py-10" />;
+    if (!myInfo) {
+      return (
+        <Text className="py-10 text-center font-pretendard-medium text-xs leading-4 text-motu-grey">
+          회원 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+        </Text>
+      );
+    }
+
+    return (
+      <MyProfileCard
+        nickname={myInfo.nickname}
+        email={myInfo.email}
+        maskedPhoneNumber={
+          myInfo.phoneNumber ? maskPhoneNumber(myInfo.phoneNumber) : '연락처 미등록'
+        }
+        isSecondFactorEnabled={isSecondFactorEnabled}
+        onEditPress={handleEditPress}
+      />
+    );
+  };
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-motu-bg">
@@ -47,13 +73,7 @@ export default function MyScreen() {
         contentContainerClassName="px-6 pb-[24px] pt-[4px]"
         showsVerticalScrollIndicator={false}
       >
-        <MyProfileCard
-          nickname={profile?.nickname ?? ''}
-          email={profile?.email ?? ''}
-          maskedPhoneNumber={maskContactPhone(profile?.phoneNumber)}
-          isSecondFactorEnabled={isSecondFactorEnabled}
-          onEditPress={handleEditPress}
-        />
+        {renderProfile()}
 
         <View className="mt-[24px] gap-[12px]">
           <MyMenuGroup>

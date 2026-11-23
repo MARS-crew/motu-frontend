@@ -3,10 +3,12 @@ import { twoFactorStatusSchema } from '@/schemas/twoFactorSchema';
 
 export const myInfoSchema = z.object({
   userId: z.number().int().positive(),
-  userStatus: z.enum(['ACTIVE', 'LOCKED', 'BLOCKED']),
+  loginId: z.string(),
   nickname: z.string(),
   email: z.string(),
-  phoneNumber: z.string().nullable().optional(),
+  // 연락처는 하이픈 없이 내려오고, 등록하지 않았으면 null입니다.
+  phoneNumber: z.string().nullable(),
+  userStatus: z.enum(['ACTIVE', 'LOCKED', 'BLOCKED']),
   twoFactorStatus: twoFactorStatusSchema,
 });
 
