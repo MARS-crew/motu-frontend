@@ -7,16 +7,18 @@ import { MyAccountActionModal, type MyAccountAction } from '@/components/my/MyAc
 import { MyMenuGroup } from '@/components/my/MyMenuGroup';
 import { MyMenuItem } from '@/components/my/MyMenuItem';
 import { MyProfileCard } from '@/components/my/MyProfileCard';
-import { MY_PAGE_PREVIEW } from '@/constants/myPagePreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
-import { useSecondFactorPreviewStore } from '@/stores/useSecondFactorPreviewStore';
+import { useMyInfoQuery } from '@/queries/useMyInfoQuery';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { getTwoFactorEnabled, maskContactPhone } from '@/utils/twoFactor';
 
 export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [accountAction, setAccountAction] = useState<MyAccountAction | null>(null);
-  const profile = MY_PAGE_PREVIEW;
-  const maskedPhone = useSecondFactorPreviewStore((state) => state.maskedPhone);
-  const isSecondFactorEnabled = __DEV__ && maskedPhone !== null;
+  const myInfo = useMyInfoQuery();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const profile = isLoggedIn && !myInfo.isError ? myInfo.data : undefined;
+  const isSecondFactorEnabled = getTwoFactorEnabled(profile?.twoFactorStatus);
 
   // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의, 로그아웃, 회원탈퇴)는
   // 담당 화면이 생기면 연결합니다.
@@ -46,9 +48,9 @@ export default function MyScreen() {
         showsVerticalScrollIndicator={false}
       >
         <MyProfileCard
-          nickname={profile.nickname}
-          email={profile.email}
-          maskedPhoneNumber={profile.maskedPhoneNumber}
+          nickname={profile?.nickname ?? ''}
+          email={profile?.email ?? ''}
+          maskedPhoneNumber={maskContactPhone(profile?.phoneNumber)}
           isSecondFactorEnabled={isSecondFactorEnabled}
           onEditPress={handleEditPress}
         />
@@ -57,7 +59,13 @@ export default function MyScreen() {
           <MyMenuGroup>
             <MyMenuItem
               icon={require('../../assets/icons/my/shieldCheck.svg')}
-              title={isSecondFactorEnabled ? '2차 보안 관리' : '2차 보안 설정하기'}
+              title={
+                isSecondFactorEnabled === undefined
+                  ? '2차 보안'
+                  : isSecondFactorEnabled
+                    ? '2차 보안 관리'
+                    : '2차 보안 설정하기'
+              }
               description="여기서 2차 보안을 설정하거나 해제할 수 있어요."
               onPress={() => router.push('/two-factor-security')}
             />
