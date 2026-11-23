@@ -3,6 +3,7 @@ import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { FormMessage } from '@/components/FormMessage';
 import { useAndroidKeyboardRecovery } from '@/hooks/useAndroidKeyboardRecovery';
+import { getDesignedFormError } from '@/utils/designedFormError';
 
 type TextFieldProps = TextInputProps & {
   label: string;
@@ -54,7 +55,10 @@ export function TextField({
     editable && !inputProps.readOnly && inputProps.inputMode !== 'none' && showSoftInputOnFocus,
   );
   const isAuth = variant === 'auth';
-  const hasError = Boolean(errorMessage) || isInvalid;
+  const visibleErrorMessage = hasDesignMessagesOnly
+    ? getDesignedFormError(errorMessage)
+    : errorMessage;
+  const hasError = Boolean(visibleErrorMessage) || isInvalid;
 
   const input = (
     <View
@@ -112,8 +116,8 @@ export function TextField({
       )}
       {hasMessageSpace && (
         <FormMessage
-          message={errorMessage || helperText}
-          isError={Boolean(errorMessage)}
+          message={visibleErrorMessage || helperText}
+          isError={Boolean(visibleErrorMessage)}
           size={messageSize}
           hasDesignMessagesOnly={hasDesignMessagesOnly}
         />

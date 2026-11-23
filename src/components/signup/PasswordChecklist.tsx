@@ -12,6 +12,7 @@ type PasswordChecklistProps = {
 };
 
 export function PasswordChecklist({ password, confirmation }: PasswordChecklistProps) {
+  const hasPassword = password.length > 0;
   const rules = [
     ...getPasswordRules(password),
     {
@@ -29,9 +30,11 @@ export function PasswordChecklist({ password, confirmation }: PasswordChecklistP
         <View key={label} className="flex-row items-center gap-[6px]">
           <Image
             source={
-              isMet
-                ? require('../../../assets/icons/signup/passwordCheck.svg')
-                : require('../../../assets/icons/signup/passwordInvalid.svg')
+              !hasPassword
+                ? require('../../../assets/icons/signup/check.svg')
+                : isMet
+                  ? require('../../../assets/icons/signup/passwordCheck.svg')
+                  : require('../../../assets/icons/signup/passwordInvalid.svg')
             }
             className="h-[14px] w-[14px]"
             contentFit="contain"
@@ -39,7 +42,7 @@ export function PasswordChecklist({ password, confirmation }: PasswordChecklistP
           />
           <Text
             accessibilityLabel={`${label}, ${isMet ? '충족' : '미충족'}`}
-            className={`font-pretendard-medium text-[13px] leading-[18px] text-no-font-padding ${isMet ? 'text-motu-success' : 'text-motu-btn-red'}`}
+            className={`font-pretendard-medium text-[13px] leading-[18px] text-no-font-padding ${!hasPassword ? 'text-motu-text-tertiary' : isMet ? 'text-motu-success' : 'text-motu-btn-red'}`}
           >
             {label}
           </Text>

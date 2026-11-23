@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Redirect, router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
   Keyboard,
@@ -31,6 +31,7 @@ import {
 } from '@/schemas/signupInfoSchema';
 
 import { formatBirthDateInput } from '@/utils/formatDate';
+import { formatPhoneInput } from '@/utils/formatPhone';
 import { signupConsentSchema } from '@/schemas/signupConsentSchema';
 import { useSignupFormStore } from '@/stores/useSignupFormStore';
 import { useSignupAvailabilityQuery } from '@/queries/useSignupAvailabilityQuery';
@@ -45,10 +46,24 @@ type SignupField = {
 
 const SIGNUP_FIELDS: readonly SignupField[] = [
   { name: 'loginId', label: '아이디 *', helperText: '영문 소문자·숫자 5~20자' },
-  { name: 'password', label: '비밀번호 *', helperText: '8~20자, 영문·숫자·특수문자 각 1자 이상' },
-  { name: 'confirmPassword', label: '비밀번호 확인 *' },
-  { name: 'nickname', label: '닉네임 *', helperText: '한글·영문·숫자 2~10자' },
-  { name: 'email', label: '이메일 *', inputMode: 'email' },
+  {
+    name: 'password',
+    label: '비밀번호 *',
+    placeholder: '8~20자, 영문·숫자·특수문자 포함',
+    helperText: '8~20자, 영문·숫자·특수문자 각 1자 이상',
+  },
+  {
+    name: 'confirmPassword',
+    label: '비밀번호 확인 *',
+    placeholder: '비밀번호를 다시 입력해 주세요',
+  },
+  {
+    name: 'nickname',
+    label: '닉네임 *',
+    placeholder: '한글·영문·숫자 2~10자',
+    helperText: '한글·영문·숫자 2~10자',
+  },
+  { name: 'email', label: '이메일 *', placeholder: 'name@example.com', inputMode: 'email' },
   { name: 'phone', label: '휴대폰 번호(선택)', placeholder: '010-0000-0000', inputMode: 'tel' },
   { name: 'birthDate', label: '생년월일 *', placeholder: 'YYYY-MM-DD', inputMode: 'numeric' },
 ];
@@ -60,6 +75,8 @@ export default function SignupInfoScreen() {
   const savedInfo = useSignupFormStore((state) => state.info);
   const setInfo = useSignupFormStore((state) => state.setInfo);
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
+  const duplicateCheckLock = useRef(false);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
   const [acceptedValues, setAcceptedValues] = useState({ loginId: '', nickname: '' });
   const [visiblePasswords, setVisiblePasswords] = useState({
     password: false,
@@ -68,15 +85,21 @@ export default function SignupInfoScreen() {
   const { control, formState, handleSubmit, getValues } = useForm<SignupInfoForm>({
     resolver: zodResolver(signupInfoSchema),
     mode: 'onChange',
-    defaultValues: savedInfo ?? {
-      loginId: '',
-      password: '',
-      confirmPassword: '',
-      nickname: '',
-      email: '',
-      phone: '',
-      birthDate: '',
-    },
+    defaultValues: savedInfo
+      ? {
+          ...savedInfo,
+          birthDate: formatBirthDateInput(savedInfo.birthDate),
+          phone: formatPhoneInput(savedInfo.phone),
+        }
+      : {
+          loginId: '',
+          password: '',
+          confirmPassword: '',
+          nickname: '',
+          email: '',
+          phone: '',
+          birthDate: '',
+        },
   });
   const [password, confirmation, loginId, nickname] = useWatch({
     control,
@@ -87,20 +110,26 @@ export default function SignupInfoScreen() {
   const duplicateQueries = { loginId: loginIdQuery, nickname: nicknameQuery };
   const handleCheckDuplicate = async (field: DuplicateCheckResult['field'], value: string) => {
     const query = duplicateQueries[field];
-    if (
-      query.checkedValue !== value ||
-      query.isFetching ||
-      !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success
-    )
+    if (duplicateCheckLock.current || !DUPLICATE_CHECK_SCHEMAS[field].safeParse(value).success)
       return;
     Keyboard.dismiss();
-    const response = await query.refetch();
-    if (getValues(field) === value && response.data?.available && !response.error)
-      setDuplicateResult({ field, value });
+    duplicateCheckLock.current = true;
+    setIsCheckingDuplicate(true);
+    try {
+      const response = await query.checkAvailability();
+      if (getValues(field) === value) {
+        setDuplicateResult({ field, value, isAvailable: response.available });
+      }
+    } catch {
+      // 통신 실패를 중복으로 단정하거나 디자인에 없는 오류 문구를 만들지 않습니다.
+    } finally {
+      duplicateCheckLock.current = false;
+      setIsCheckingDuplicate(false);
+    }
   };
   const handleCloseDuplicate = () => setDuplicateResult(null);
   const handleAcceptDuplicate = () => {
-    if (!duplicateResult) return;
+    if (!duplicateResult?.isAvailable) return;
     const { field, value } = duplicateResult;
     if (getValues(field) !== value) {
       handleCloseDuplicate();
@@ -171,7 +200,13 @@ export default function SignupInfoScreen() {
                         inputRef={ref}
                         value={value}
                         onChangeText={(text) => {
-                          onChange(name === 'birthDate' ? formatBirthDateInput(text) : text);
+                          onChange(
+                            name === 'birthDate'
+                              ? formatBirthDateInput(text)
+                              : name === 'phone'
+                                ? formatPhoneInput(text)
+                                : text,
+                          );
                           if (hasDuplicateAction)
                             setAcceptedValues((current) =>
                               current[name] ? { ...current, [name]: '' } : current,
@@ -181,21 +216,19 @@ export default function SignupInfoScreen() {
                         inputMode={inputMode}
                         autoCapitalize="none"
                         autoCorrect={false}
+                        maxLength={name === 'birthDate' ? 10 : name === 'phone' ? 13 : undefined}
                         placeholder={placeholder}
                         secureTextEntry={isPassword && !isPasswordVisible}
                         helperText={helperText}
-                        isInvalid={
-                          hasDuplicateAction &&
-                          duplicateQueries[name].checkedValue === value &&
-                          duplicateQueries[name].data?.available === false
-                        }
                         messageSize={name === 'confirmPassword' ? 'double' : 'single'}
                         errorMessage={
-                          name === 'confirmPassword' && hasMismatch
-                            ? '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.'
-                            : touchedFields[name] || (name === 'password' && value !== '')
-                              ? errors[name]?.message
-                              : undefined
+                          name === 'loginId'
+                            ? undefined
+                            : name === 'confirmPassword' && hasMismatch
+                              ? '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.'
+                              : touchedFields[name] || (name === 'password' && value !== '')
+                                ? errors[name]?.message
+                                : undefined
                         }
                         inputAction={
                           hasDuplicateAction ? (
@@ -207,8 +240,7 @@ export default function SignupInfoScreen() {
                                   acceptedValues[name] !== '' && acceptedValues[name] === value,
                               }}
                               disabled={
-                                duplicateQueries[name].isFetching ||
-                                duplicateQueries[name].checkedValue !== value ||
+                                isCheckingDuplicate ||
                                 !DUPLICATE_CHECK_SCHEMAS[name].safeParse(value).success
                               }
                               onPress={() => handleCheckDuplicate(name, value)}
