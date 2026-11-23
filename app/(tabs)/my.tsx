@@ -12,13 +12,15 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useMyInfoQuery } from '@/queries/useMyInfoQuery';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { maskPhoneNumber } from '@/utils/phoneNumber';
+import { getTwoFactorEnabled } from '@/utils/twoFactor';
 
 export default function MyScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const [accountAction, setAccountAction] = useState<MyAccountAction | null>(null);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { data: myInfo, isPending } = useMyInfoQuery();
-  const isSecondFactorEnabled = myInfo?.twoFactorStatus === 'ENABLED';
+  // 불러오기 전에는 undefined라 메뉴에 '2차 보안'을 보여 줍니다.
+  const isSecondFactorEnabled = getTwoFactorEnabled(myInfo?.twoFactorStatus);
 
   // 퍼블리싱 단계: 아직 화면이 없는 메뉴(1:1 문의)는 담당 화면이 생기면 연결합니다.
   const handleEditPress = () => router.push('/profile-edit');
@@ -77,7 +79,13 @@ export default function MyScreen() {
           <MyMenuGroup>
             <MyMenuItem
               icon={require('../../assets/icons/my/shieldCheck.svg')}
-              title={isSecondFactorEnabled ? '2차 보안 관리' : '2차 보안 설정하기'}
+              title={
+                isSecondFactorEnabled === undefined
+                  ? '2차 보안'
+                  : isSecondFactorEnabled
+                    ? '2차 보안 관리'
+                    : '2차 보안 설정하기'
+              }
               description="여기서 2차 보안을 설정하거나 해제할 수 있어요."
               onPress={() => router.push('/two-factor-security')}
             />

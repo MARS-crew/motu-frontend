@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { twoFactorStatusSchema } from '@/schemas/twoFactorSchema';
 
 export const myInfoSchema = z.object({
   userId: z.number().int().positive(),
@@ -8,7 +9,7 @@ export const myInfoSchema = z.object({
   // 연락처는 하이픈 없이 내려오고, 등록하지 않았으면 null입니다.
   phoneNumber: z.string().nullable(),
   userStatus: z.enum(['ACTIVE', 'LOCKED', 'BLOCKED']),
-  twoFactorStatus: z.enum(['NOT_SET', 'ENABLED', 'DISABLED']),
+  twoFactorStatus: twoFactorStatusSchema,
 });
 
 export type MyInfo = z.infer<typeof myInfoSchema>;

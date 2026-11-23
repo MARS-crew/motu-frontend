@@ -208,8 +208,7 @@ export default function LoginScreen() {
               <Pressable
                 accessibilityRole="button"
                 hitSlop={10}
-                onPress={__DEV__ ? () => router.push('/find-id') : undefined}
-                disabled={!__DEV__}
+                onPress={() => router.push('/find-id')}
               >
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   아이디 찾기
@@ -224,8 +223,7 @@ export default function LoginScreen() {
               <Pressable
                 accessibilityRole="button"
                 hitSlop={10}
-                onPress={__DEV__ ? () => router.push('/reset-password') : undefined}
-                disabled={!__DEV__}
+                onPress={() => router.push('/reset-password')}
               >
                 <Text className="font-pretendard-medium text-[13px] leading-[18px] text-motu-text-secondary text-no-font-padding">
                   비밀번호 재설정
