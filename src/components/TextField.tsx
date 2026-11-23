@@ -37,7 +37,7 @@ export function TextField({
   isInvalid = false,
   hasMessageSpace = true,
   messageSize = 'single',
-  hasDesignMessagesOnly = false,
+  hasDesignMessagesOnly = variant === 'auth',
   inputRef,
   editable = true,
   onBlur,
@@ -115,7 +115,7 @@ export function TextField({
           message={errorMessage || helperText}
           isError={Boolean(errorMessage)}
           size={messageSize}
-          hasDesignMessagesOnly={isAuth || hasDesignMessagesOnly}
+          hasDesignMessagesOnly={hasDesignMessagesOnly}
         />
       )}
     </View>
