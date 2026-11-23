@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { myInfoSchema } from '@/schemas/myInfoSchema';
+
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d\s])\S{8,20}$/;
 const BIRTH_DATE_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
@@ -14,15 +16,20 @@ export type ProfileEditVerifyForm = z.infer<typeof profileEditVerifySchema>;
 // 회원정보 수정
 export const profileEditSchema = z
   .object({
+    // 비워 두면 비밀번호를 바꾸지 않습니다.
     password: z
       .string()
-      .min(1, '비밀번호를 입력해 주세요.')
-      .regex(PASSWORD_PATTERN, '8~20자, 영문·숫자·특수문자를 각 1개 이상 포함해 주세요.'),
-    passwordConfirm: z.string().min(1, '비밀번호를 다시 입력해 주세요.'),
+      .refine(
+        (value) => value === '' || PASSWORD_PATTERN.test(value),
+        '8~20자, 영문·숫자·특수문자를 각 1개 이상 포함해 주세요.',
+      ),
+    passwordConfirm: z.string(),
     birthDate: z
       .string()
-      .min(1, '생년월일을 입력해 주세요.')
-      .regex(BIRTH_DATE_PATTERN, '생년월일을 YYYY-MM-DD 형식으로 입력해 주세요.'),
+      .refine(
+        (value) => value === '' || BIRTH_DATE_PATTERN.test(value),
+        '생년월일을 YYYY-MM-DD 형식으로 입력해 주세요.',
+      ),
   })
   .refine((form) => form.password === form.passwordConfirm, {
     path: ['passwordConfirm'],
@@ -40,3 +47,22 @@ export const phoneChangeSchema = z.object({
 });
 
 export type PhoneChangeForm = z.infer<typeof phoneChangeSchema>;
+
+// 회원정보 수정 이메일 인증 확인 응답: editableUntil까지 수정을 한 번 할 수 있습니다.
+export const profileEditEmailConfirmedSchema = z.object({
+  verified: z.boolean(),
+  editableUntil: z.iso.datetime(),
+});
+
+// 회원정보 수정 요청: 바꿀 항목만 보냅니다.
+export const profileUpdateRequestSchema = z.object({
+  password: z.string().regex(PASSWORD_PATTERN).optional(),
+  birthDate: z.iso.date().optional(),
+});
+
+export type ProfileUpdateRequest = z.infer<typeof profileUpdateRequestSchema>;
+
+// 비밀번호를 바꿨으면 reloginRequired가 true입니다.
+export const profileUpdateResponseSchema = myInfoSchema.extend({
+  reloginRequired: z.boolean(),
+});

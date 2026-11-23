@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,65 +10,84 @@ import { ProfileEditFooter } from '@/components/profileEdit/ProfileEditFooter';
 import { ProfileEditVerifyMessage } from '@/components/profileEdit/ProfileEditVerifyMessage';
 import { TextField } from '@/components/TextField';
 import { TopBar } from '@/components/TopBar';
-import { PROFILE_EDIT_PREVIEW } from '@/constants/profileEditPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useVerificationTimer } from '@/hooks/useVerificationTimer';
+import { useMyInfoQuery } from '@/queries/useMyInfoQuery';
+import {
+  useConfirmProfileEditEmailMutation,
+  useSendProfileEditEmailMutation,
+} from '@/queries/useProfileEditMutation';
 import { profileEditVerifySchema, type ProfileEditVerifyForm } from '@/schemas/profileEditSchema';
+import { getProfileEditErrorMessage } from '@/utils/profileEditError';
 
-type VerifyStatus = 'idle' | 'sent' | 'sendFailed' | 'verified';
-
-// 미리보기 주소: /profile-edit?preview=sent | verified | mismatch | send-failed
-function getInitialStatus(preview?: string): VerifyStatus {
-  if (preview === 'sent' || preview === 'mismatch') return 'sent';
-  if (preview === 'verified') return 'verified';
-  if (preview === 'send-failed') return 'sendFailed';
-  return 'idle';
-}
-
-function getInitialCode(preview?: string) {
-  if (preview === 'mismatch') return '135791';
-  if (preview === 'verified') return PROFILE_EDIT_PREVIEW.verificationCode;
-  return '';
-}
+type Delivery = { email: string; expiresAt: string; resendAvailableAt: string };
 
 export default function ProfileEditVerifyScreen() {
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const [status, setStatus] = useState<VerifyStatus>(() => getInitialStatus(preview));
-  const [hasCodeError, setHasCodeError] = useState(preview === 'mismatch');
+  const { data: myInfo } = useMyInfoQuery();
+  const send = useSendProfileEditEmailMutation();
+  const confirm = useConfirmProfileEditEmailMutation();
+  const isBusyRef = useRef(false);
+  const [delivery, setDelivery] = useState<Delivery | null>(null);
+  // 발송을 한 번이라도 요청했는지입니다. 첫 발송이 실패해도 디자인대로 버튼을 '재발송'으로 바꿉니다.
+  const [hasRequestedSend, setHasRequestedSend] = useState(false);
+  const timer = useVerificationTimer(delivery ?? undefined);
   const {
     control,
     trigger,
-    reset,
     getValues,
+    resetField,
     formState: { errors },
   } = useForm<ProfileEditVerifyForm>({
     resolver: zodResolver(profileEditVerifySchema),
-    defaultValues: { email: PROFILE_EDIT_PREVIEW.email, code: getInitialCode(preview) },
+    // 디자인대로 회원 이메일을 채워 두고, 내 정보를 다시 불러와도 사용자가 고친 값은 유지합니다.
+    values: { email: myInfo?.email ?? '', code: '' },
+    resetOptions: { keepDirtyValues: true },
   });
   const code = useWatch({ control, name: 'code' });
-  const emailError = errors.email?.message;
 
-  const hasRequestedSend = status !== 'idle';
-  const hasSent = status === 'sent' || status === 'verified';
-  const isVerified = status === 'verified';
+  const isVerified = confirm.data?.verified === true;
+  const isBusy = send.isPending || confirm.isPending;
+  const hasExpired = timer.hasExpired && !isVerified;
+  const sendMessage =
+    errors.email?.message ??
+    getProfileEditErrorMessage(send.error, '인증번호 발송에 실패했습니다. 다시 시도해 주세요.');
+  const codeMessage = hasExpired
+    ? '인증번호가 만료되었습니다. 인증번호를 다시 받아 주세요.'
+    : getProfileEditErrorMessage(confirm.error);
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)/my');
   };
 
-  // 퍼블리싱 단계: 실제 발송·검증 없이 화면 상태만 바꿉니다.
   const handleSend = async () => {
-    const isEmailValid = await trigger('email');
-    if (!isEmailValid) return;
-    setStatus('sent');
-    setHasCodeError(false);
-    reset({ ...getValues(), code: '' });
+    if (isBusyRef.current || !(await trigger('email'))) return;
+    isBusyRef.current = true;
+    setHasRequestedSend(true);
+    const email = getValues('email');
+    confirm.reset();
+    try {
+      const result = await send.mutateAsync(email);
+      setDelivery({ email, ...result });
+      resetField('code');
+    } catch {
+      /* 서버에서 받은 오류를 발송 문구 자리에 보여 줍니다. */
+    } finally {
+      isBusyRef.current = false;
+    }
   };
 
-  const handleConfirm = () => {
-    if (code === PROFILE_EDIT_PREVIEW.verificationCode) setStatus('verified');
-    else setHasCodeError(true);
+  const handleConfirm = async () => {
+    if (isBusyRef.current || !delivery || hasExpired) return;
+    isBusyRef.current = true;
+    try {
+      await confirm.mutateAsync({ email: delivery.email, code });
+    } catch {
+      /* 서버에서 받은 오류를 인증 결과 문구 자리에 보여 줍니다. */
+    } finally {
+      isBusyRef.current = false;
+    }
   };
 
   const handleNext = () => router.push('/profile-edit/form');
@@ -99,15 +118,18 @@ export default function ProfileEditVerifyScreen() {
               <TextField
                 variant="auth"
                 label="이메일(필수 입력)"
+                hasMessageSpace={false}
                 inputRef={ref}
                 value={value}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  send.reset();
+                  onChange(text);
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="example@email.com"
-                isInvalid={Boolean(emailError)}
               />
             )}
           />
@@ -116,26 +138,26 @@ export default function ProfileEditVerifyScreen() {
             appearance="auth"
             variant={hasRequestedSend ? 'secondary' : 'primary'}
             title={hasRequestedSend ? '인증번호 재발송' : '인증번호 발송'}
+            disabled={isBusy}
             onPress={handleSend}
           />
 
+          {/* 문구가 없어도 자리를 남겨 아래 입력칸이 움직이지 않게 합니다. */}
           <View className="h-[20px]">
-            {emailError && <ProfileEditVerifyMessage tone="error" message={emailError} />}
-            {!emailError && status === 'sendFailed' && (
-              <ProfileEditVerifyMessage
-                tone="error"
-                message="인증번호 발송에 실패했습니다. 다시 시도해 주세요."
-              />
-            )}
-            {!emailError && status === 'sent' && (
-              <ProfileEditVerifyMessage
-                tone="success"
-                message="인증번호가 발송되었습니다. 이메일을 확인해 주세요."
-              />
+            {sendMessage ? (
+              <ProfileEditVerifyMessage tone="error" message={sendMessage} />
+            ) : (
+              delivery &&
+              !isVerified && (
+                <ProfileEditVerifyMessage
+                  tone="success"
+                  message="인증번호가 발송되었습니다. 이메일을 확인해 주세요."
+                />
+              )
             )}
           </View>
 
-          {hasSent && (
+          {delivery && (
             <>
               <View className="gap-[8px]">
                 <Controller
@@ -145,15 +167,16 @@ export default function ProfileEditVerifyScreen() {
                     <TextField
                       variant="auth"
                       label="인증하기"
+                      hasMessageSpace={false}
                       inputRef={ref}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={(text) => {
-                        setHasCodeError(false);
+                        confirm.reset();
                         onChange(text.replace(/[^0-9]/g, '').slice(0, 6));
                       }}
                       editable={!isVerified}
-                      isInvalid={hasCodeError}
+                      isInvalid={Boolean(codeMessage)}
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       placeholder="인증번호를 입력하세요."
@@ -162,21 +185,17 @@ export default function ProfileEditVerifyScreen() {
                 />
                 {/* 인증 결과 문구 자리를 미리 남겨 확인 버튼 위치를 고정합니다. */}
                 <View className="h-[20px]">
-                  {isVerified && (
+                  {isVerified ? (
                     <ProfileEditVerifyMessage tone="success" message="인증이 완료되었습니다." />
-                  )}
-                  {hasCodeError && (
-                    <ProfileEditVerifyMessage
-                      tone="error"
-                      message="인증번호가 일치하지 않습니다. 다시 확인해 주세요."
-                    />
+                  ) : (
+                    codeMessage && <ProfileEditVerifyMessage tone="error" message={codeMessage} />
                   )}
                 </View>
               </View>
               <Button
                 appearance="auth"
                 title="확인"
-                disabled={isVerified || code.length !== 6}
+                disabled={isVerified || isBusy || hasExpired || code.length !== 6}
                 onPress={handleConfirm}
               />
             </>

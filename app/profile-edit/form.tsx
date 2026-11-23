@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { cssInterop } from 'nativewind';
-import { useEffect } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,10 +10,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProfileEditField } from '@/components/profileEdit/ProfileEditField';
 import { ProfileEditFooter } from '@/components/profileEdit/ProfileEditFooter';
 import { ProfileEditSection } from '@/components/profileEdit/ProfileEditSection';
+import { Toast } from '@/components/Toast';
 import { TopBar } from '@/components/TopBar';
-import { PROFILE_EDIT_PREVIEW } from '@/constants/profileEditPreview';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useMyInfoQuery } from '@/queries/useMyInfoQuery';
+import { useUpdateMyProfileMutation } from '@/queries/useProfileEditMutation';
 import { profileEditSchema, type ProfileEditForm } from '@/schemas/profileEditSchema';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { formatPhoneNumber } from '@/utils/phoneNumber';
+import { getProfileEditErrorMessage } from '@/utils/profileEditError';
+import { tokenStorage } from '@/utils/tokenStorage';
 
 cssInterop(Image, { className: 'style' });
 
@@ -25,34 +31,64 @@ function formatBirthDate(text: string) {
   return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
 }
 
-// 미리보기 주소: /profile-edit/form?preview=mismatch (비밀번호 불일치)
 export default function ProfileEditFormScreen() {
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
-  const isMismatchPreview = preview === 'mismatch';
   const { isScrolled, handleScroll } = useHeaderScroll();
-  const { control, handleSubmit, trigger } = useForm<ProfileEditForm>({
+  const { data: myInfo } = useMyInfoQuery();
+  const updateProfile = useUpdateMyProfileMutation();
+  const isSavingRef = useRef(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { control, handleSubmit } = useForm<ProfileEditForm>({
     resolver: zodResolver(profileEditSchema),
     mode: 'onBlur',
-    defaultValues: {
-      password: isMismatchPreview ? 'motu1234!' : '',
-      passwordConfirm: isMismatchPreview ? 'motu123!' : '',
-      birthDate: '',
-    },
+    // 비밀번호는 비워 두고 생년월일은 지금 값을 채웁니다. 내 정보를 다시 불러와도 사용자가 고친 값은 유지합니다.
+    values: { password: '', passwordConfirm: '', birthDate: myInfo?.birthDate ?? '' },
+    resetOptions: { keepDirtyValues: true },
   });
-
-  useEffect(() => {
-    if (isMismatchPreview) trigger('passwordConfirm');
-  }, [isMismatchPreview, trigger]);
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)/my');
   };
-
-  // 퍼블리싱 단계: 검증만 통과하면 마이페이지로 돌아갑니다.
-  // TODO: 회원정보 수정 API 연결 후 저장 성공 시에만 이동합니다.
-  const handleSave = handleSubmit(() => router.dismissTo('/(tabs)/my'));
+  const handleToastHide = useCallback(() => setToastMessage(null), []);
   const handleContactChangePress = () => router.push('/profile-edit/phone');
+
+  const saveProfile = async ({ password, birthDate }: ProfileEditForm) => {
+    if (!myInfo) return;
+    // 바뀐 항목만 보냅니다. 비워 두거나 지금과 같은 생년월일은 보내지 않습니다.
+    const changes = {
+      ...(password ? { password } : {}),
+      ...(birthDate && birthDate !== myInfo.birthDate ? { birthDate } : {}),
+    };
+    if (Object.keys(changes).length === 0) {
+      setToastMessage('수정할 정보를 입력해 주세요.');
+      return;
+    }
+    try {
+      const { reloginRequired } = await updateProfile.mutateAsync(changes);
+      if (reloginRequired) {
+        // 비밀번호를 바꾸면 서버가 모든 기기에서 로그아웃시키므로, 저장된 토큰을 지우고 다시 로그인하게 합니다.
+        await tokenStorage.clear();
+        useAuthStore.getState().setLoggedIn(false);
+        router.dismissAll();
+        router.replace('/login');
+        return;
+      }
+      router.dismissTo('/(tabs)/my');
+    } catch (error) {
+      setToastMessage(getProfileEditErrorMessage(error));
+    }
+  };
+
+  // 중복 저장을 막고, 입력값 검사를 통과했을 때만 저장합니다.
+  const handleSave = async () => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    try {
+      await handleSubmit(saveProfile)();
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -72,7 +108,7 @@ export default function ProfileEditFormScreen() {
           <ProfileEditSection title="계정 정보">
             <ProfileEditField
               label="아이디"
-              value={PROFILE_EDIT_PREVIEW.loginId}
+              value={myInfo?.loginId ?? ''}
               editable={false}
               helperText="아이디는 변경할 수 없어요."
             />
@@ -119,7 +155,7 @@ export default function ProfileEditFormScreen() {
           <ProfileEditSection title="개인 정보">
             <ProfileEditField
               label="닉네임"
-              value={PROFILE_EDIT_PREVIEW.nickname}
+              value={myInfo?.nickname ?? ''}
               editable={false}
               helperText="닉네임은 변경할 수 없어요."
             />
@@ -144,12 +180,13 @@ export default function ProfileEditFormScreen() {
           </ProfileEditSection>
 
           <ProfileEditSection title="연락처 정보">
-            <ProfileEditField label="이메일" value={PROFILE_EDIT_PREVIEW.email} editable={false} />
+            <ProfileEditField label="이메일" value={myInfo?.email ?? ''} editable={false} />
             <View className="gap-[8px]">
               <ProfileEditField
                 label="전화번호 (선택)"
-                value={PROFILE_EDIT_PREVIEW.phoneNumber}
+                value={myInfo?.phoneNumber ? formatPhoneNumber(myInfo.phoneNumber) : ''}
                 editable={false}
+                placeholder="연락처 미등록"
               />
               <Text className="font-pretendard text-[11px] leading-[16.5px] text-motu-grey-light">
                 연락처를 변경하려면 인증하세요.
@@ -173,8 +210,15 @@ export default function ProfileEditFormScreen() {
             </View>
           </ProfileEditSection>
         </ScrollView>
-        <ProfileEditFooter title="회원정보 수정하기" onPress={handleSave} />
+        <ProfileEditFooter
+          title="회원정보 수정하기"
+          disabled={updateProfile.isPending}
+          onPress={handleSave}
+        />
       </KeyboardAvoidingView>
+      <View pointerEvents="none" className="absolute inset-x-0 bottom-[104px]">
+        <Toast message={toastMessage} onHide={handleToastHide} />
+      </View>
     </SafeAreaView>
   );
 }
