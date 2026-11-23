@@ -2,10 +2,13 @@ import { api } from '@/apis/instance';
 import { verificationDeliverySchema } from '@/schemas/loginVerificationSchema';
 import { myInfoSchema } from '@/schemas/myInfoSchema';
 import {
+  phoneChangeConfirmedSchema,
+  phoneChangeSchema,
   profileEditEmailConfirmedSchema,
   profileEditVerifySchema,
   profileUpdateRequestSchema,
   profileUpdateResponseSchema,
+  type PhoneChangeForm,
   type ProfileEditVerifyForm,
   type ProfileUpdateRequest,
 } from '@/schemas/profileEditSchema';
@@ -39,4 +42,30 @@ export const patchMyProfile = async (body: ProfileUpdateRequest) => {
     profileUpdateRequestSchema.parse(body),
   );
   return profileUpdateResponseSchema.parse(data.data);
+};
+
+// 새 번호로 연락처 변경 인증번호(SMS)를 보냅니다. 2차 보안을 설정한 회원만 쓸 수 있습니다.
+export const postPhoneChangeVerification = async (phoneNumber: string) => {
+  const { data } = await api.post<ApiResponse<unknown>>(
+    '/users/me/phone-verifications',
+    phoneChangeSchema.pick({ phoneNumber: true }).parse({ phoneNumber }),
+  );
+  return verificationDeliverySchema.parse(data.data);
+};
+
+export const postConfirmPhoneChangeVerification = async (body: PhoneChangeForm) => {
+  const { data } = await api.post<ApiResponse<unknown>>(
+    '/users/me/phone-verifications/confirm',
+    phoneChangeSchema.parse(body),
+  );
+  return phoneChangeConfirmedSchema.parse(data.data);
+};
+
+// 인증을 마친 번호로 연락처를 바꿉니다. 인증 결과는 저장에 한 번만 쓸 수 있습니다.
+export const patchMyPhoneNumber = async (phoneNumber: string) => {
+  const { data } = await api.patch<ApiResponse<unknown>>(
+    '/users/me/phone-number',
+    phoneChangeSchema.pick({ phoneNumber: true }).parse({ phoneNumber }),
+  );
+  return myInfoSchema.parse(data.data);
 };
