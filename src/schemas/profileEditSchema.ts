@@ -48,6 +48,9 @@ export const phoneChangeSchema = z.object({
 
 export type PhoneChangeForm = z.infer<typeof phoneChangeSchema>;
 
+// 연락처 변경 인증 확인 응답입니다. 번호 저장은 PATCH /users/me/phone-number로 따로 합니다.
+export const phoneChangeConfirmedSchema = z.object({ verified: z.boolean() });
+
 // 회원정보 수정 이메일 인증 확인 응답: editableUntil까지 수정을 한 번 할 수 있습니다.
 export const profileEditEmailConfirmedSchema = z.object({
   verified: z.boolean(),

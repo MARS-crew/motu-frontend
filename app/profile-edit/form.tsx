@@ -50,7 +50,16 @@ export default function ProfileEditFormScreen() {
     else router.replace('/(tabs)/my');
   };
   const handleToastHide = useCallback(() => setToastMessage(null), []);
-  const handleContactChangePress = () => router.push('/profile-edit/phone');
+
+  // 2차 보안을 설정한 회원만 연락처를 바꿀 수 있어, 미설정 시 2차 보안 설정 화면으로 보냅니다.
+  const handleContactChangePress = () => {
+    if (!myInfo) return;
+    if (myInfo.twoFactorStatus !== 'ENABLED') {
+      router.push({ pathname: '/two-factor-verify', params: { preview: 'required' } });
+      return;
+    }
+    router.push('/profile-edit/phone');
+  };
 
   const saveProfile = async ({ password, birthDate }: ProfileEditForm) => {
     if (!myInfo) return;
