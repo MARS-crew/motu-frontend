@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { twoFactorStatusSchema } from '@/schemas/twoFactorSchema';
 
 export const myInfoSchema = z.object({
   userId: z.number().int().positive(),
@@ -10,7 +11,7 @@ export const myInfoSchema = z.object({
   // 생년월일(YYYY-MM-DD)이며, 관리자 계정은 null입니다.
   birthDate: z.string().nullable(),
   userStatus: z.enum(['ACTIVE', 'LOCKED', 'BLOCKED']),
-  twoFactorStatus: z.enum(['NOT_SET', 'ENABLED', 'DISABLED']),
+  twoFactorStatus: twoFactorStatusSchema,
 });
 
 export type MyInfo = z.infer<typeof myInfoSchema>;

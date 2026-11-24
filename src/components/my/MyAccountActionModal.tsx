@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import {
@@ -17,6 +18,9 @@ import {
   type WithdrawalForm,
 } from '@/schemas/withdrawalSchema';
 
+import { useWithdrawalMutation } from '@/queries/useWithdrawalMutation';
+import { getAuthError } from '@/utils/authError';
+
 export type MyAccountAction = 'logout' | 'withdraw';
 
 type MyAccountActionModalProps = {
@@ -29,9 +33,30 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
     resolver: zodResolver(withdrawalSchema),
     defaultValues: { reason: '' },
   });
+  const withdrawal = useWithdrawalMutation();
+  const submitLock = useRef(false);
+  const serverMessage = getAuthError(withdrawal.error)?.message;
+  const handleClose = () => {
+    if (!submitLock.current) onClose();
+  };
+  const handleWithdraw = async (body: WithdrawalForm) => {
+    if (submitLock.current) return;
+    submitLock.current = true;
+    try {
+      await withdrawal.mutateAsync(body);
+      onClose();
+    } catch {
+      // 실패 시 입력값과 모달을 유지하고 서버가 제공한 문구만 표시합니다.
+    } finally {
+      submitLock.current = false;
+    }
+  };
   const isWithdrawal = action === 'withdraw';
   const actionLabel = isWithdrawal ? '회원탈퇴' : '로그아웃';
-  const handleConfirm = isWithdrawal ? handleSubmit(onClose) : onClose;
+  const handleConfirm = () => {
+    if (isWithdrawal) void handleSubmit(handleWithdraw)();
+    else onClose();
+  };
 
   return (
     <Modal
@@ -39,7 +64,7 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
       animationType="fade"
       statusBarTranslucent
       navigationBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
         className="flex-1 bg-motu-overlay/40"
@@ -54,7 +79,7 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
           <Pressable
             accessible={false}
             importantForAccessibility="no"
-            onPress={onClose}
+            onPress={handleClose}
             className="absolute inset-0"
           />
           <View
@@ -100,16 +125,20 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
                         maxLength={WITHDRAWAL_REASON_MAX_LENGTH}
                         value={value}
                         onBlur={onBlur}
-                        onChangeText={onChange}
-                        className={`h-[45.5px] rounded-[12px] border px-[16px] py-0 font-pretendard text-[13px] leading-[19.5px] text-motu-black outline-none text-no-font-padding text-vertical-center placeholder:font-pretendard-medium placeholder:text-motu-grey-light ${error ? 'border-motu-red' : 'border-motu-grey-lighter'}`}
+                        editable={!withdrawal.isPending}
+                        onChangeText={(text) => {
+                          withdrawal.reset();
+                          onChange(text);
+                        }}
+                        className={`h-[45.5px] rounded-[12px] border px-[16px] py-0 font-pretendard text-[13px] leading-[19.5px] text-motu-black outline-none text-no-font-padding text-vertical-center placeholder:font-pretendard-medium placeholder:text-motu-grey-light ${error || serverMessage ? 'border-motu-red' : 'border-motu-grey-lighter'}`}
                       />
                       <View className="min-h-[20px] flex-row items-center justify-end gap-[8px]">
-                        {error && (
+                        {(error || serverMessage) && (
                           <Text
                             accessibilityLiveRegion="polite"
                             className="flex-1 font-pretendard text-[12px] leading-[19.5px] text-motu-red text-no-font-padding"
                           >
-                            {error.message}
+                            {error?.message ?? serverMessage}
                           </Text>
                         )}
                         <Text className="font-pretendard-medium text-[12px] leading-[19.5px] text-motu-grey-light text-no-font-padding">
@@ -125,7 +154,7 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
             <View className="mt-[24px] flex-row gap-[8px]">
               <Pressable
                 accessibilityRole="button"
-                onPress={onClose}
+                onPress={handleClose}
                 className="h-[45.5px] flex-1 items-center justify-center rounded-[8px] border border-motu-grey-lighter active:opacity-80"
               >
                 <Text className="font-pretendard-semibold text-[13px] leading-[19.5px] text-motu-black text-no-font-padding">
@@ -134,6 +163,8 @@ export function MyAccountActionModal({ action, onClose }: MyAccountActionModalPr
               </Pressable>
               <Pressable
                 accessibilityRole="button"
+                disabled={withdrawal.isPending}
+                accessibilityState={{ disabled: withdrawal.isPending, busy: withdrawal.isPending }}
                 onPress={handleConfirm}
                 className={`h-[45.5px] flex-1 items-center justify-center rounded-[8px] active:opacity-80 ${isWithdrawal ? 'bg-motu-btn-red' : 'bg-motu-black'}`}
               >

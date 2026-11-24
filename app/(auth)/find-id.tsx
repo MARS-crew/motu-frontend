@@ -1,69 +1,103 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from 'expo-router';
+import { useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { AuthFlowBadge, AuthFlowHeading, AuthFlowLayout } from '@/components/login/AuthFlowLayout';
 import { TextField } from '@/components/TextField';
-import { formatEmailCodeTime, useEmailCodeTimer } from '@/hooks/useEmailCodeTimer';
+import { formatEmailCodeTime } from '@/hooks/useEmailCodeTimer';
+import { getVerificationTime, useVerificationTimer } from '@/hooks/useVerificationTimer';
+import {
+  useFindIdDeliveryQuery,
+  useSendFindIdCodeMutation,
+  useFindLoginIdMutation,
+} from '@/queries/useFindIdMutation';
+import { getAuthError } from '@/utils/authError';
 import { findIdSchema, type FindIdForm } from '@/schemas/accountRecoverySchema';
 
-const RESEND_SECONDS = 30;
-const PREVIEW_CODE = '135790';
-
 export default function FindIdScreen() {
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
-  const [status, setStatus] = useState<'input' | 'no-match' | 'result'>('input');
-  const timer = useEmailCodeTimer(RESEND_SECONDS);
   const {
     control,
     setValue,
+    getValues,
+    handleSubmit,
+    trigger,
     setError,
     clearErrors,
     formState: { errors },
   } = useForm<FindIdForm>({
+    resolver: zodResolver(findIdSchema),
     defaultValues: { email: '', code: '' },
   });
   const [email, code] = useWatch({ control, name: ['email', 'code'] });
-
-  if (!__DEV__) return <Redirect href="/login" />;
+  const delivery = useFindIdDeliveryQuery(email);
+  const send = useSendFindIdCodeMutation();
+  const find = useFindLoginIdMutation();
+  const timer = useVerificationTimer(delivery.data ?? undefined);
+  const isSubmittingRef = useRef(false);
+  const isPending = send.isPending || find.isPending;
+  const hasNoMatch = getAuthError(send.error)?.code === 'AUTH_EMAIL_NOT_REGISTERED';
+  const hasSent = Boolean(delivery.data) && !hasNoMatch;
 
   const handleLogin = () => router.dismissTo('/login');
   const handleBack = () => (router.canGoBack() ? router.back() : handleLogin());
   const handleEmailChange = (value: string) => {
+    delivery.clear();
+    send.reset();
+    find.reset();
     setValue('email', value);
     setValue('code', '');
     clearErrors();
-    timer.reset();
-    setStatus('input');
   };
-  const handleSend = () => {
-    if (timer.hasSent && timer.resendRemaining > 0) return;
-    const parsed = findIdSchema.shape.email.safeParse(email.trim());
-    if (!parsed.success) {
-      setError('email', { message: parsed.error.issues[0]?.message });
+  const handleSend = async () => {
+    if (
+      isSubmittingRef.current ||
+      getVerificationTime(delivery.data ?? undefined).resendRemaining > 0
+    )
       return;
+    isSubmittingRef.current = true;
+    try {
+      if (!(await trigger('email'))) return;
+      clearErrors();
+      find.reset();
+      await send.mutateAsync({ email: getValues('email') });
+      setValue('code', '');
+    } catch (error) {
+      const serverError = getAuthError(error);
+      if (serverError?.code === 'AUTH_EMAIL_NOT_REGISTERED') {
+        delivery.clear();
+      } else if (serverError?.message) {
+        setError('email', { message: serverError.message });
+      }
+    } finally {
+      isSubmittingRef.current = false;
     }
-    if (preview === 'no-match') {
-      setStatus('no-match');
-      return;
-    }
-    clearErrors();
-    setValue('code', '');
-    timer.start();
   };
-  const handleVerify = () => {
-    if (!timer.isCurrent() || !findIdSchema.shape.code.safeParse(code).success) return;
-    if (code !== PREVIEW_CODE) {
-      setError('code', { message: '인증번호가 일치하지 않습니다.' });
+  const handleVerify = async () => {
+    if (
+      isSubmittingRef.current ||
+      !hasSent ||
+      getVerificationTime(delivery.data ?? undefined).hasExpired
+    )
       return;
+    isSubmittingRef.current = true;
+    try {
+      clearErrors('code');
+      await handleSubmit(async (form) => {
+        await find.mutateAsync(form);
+        delivery.clear();
+      })();
+    } catch (error) {
+      const message = getAuthError(error)?.message;
+      if (message) setError('code', { message });
+    } finally {
+      isSubmittingRef.current = false;
     }
-    timer.reset();
-    setStatus('result');
   };
 
-  if (status === 'result') {
+  if (find.data) {
     return (
       <AuthFlowLayout title="아이디 찾기 결과">
         <AuthFlowBadge>인증 완료</AuthFlowBadge>
@@ -76,7 +110,7 @@ export default function FindIdScreen() {
             가입한 아이디
           </Text>
           <Text className="font-pretendard-bold text-[24px] leading-[32px] text-motu-text-primary text-no-font-padding">
-            jin***613
+            {find.data.maskedLoginId}
           </Text>
         </View>
         <View className="flex-1" />
@@ -106,6 +140,7 @@ export default function FindIdScreen() {
               label="가입 이메일"
               inputRef={ref}
               value={value}
+              editable={!isPending}
               onChangeText={handleEmailChange}
               onBlur={onBlur}
               inputMode="email"
@@ -120,16 +155,16 @@ export default function FindIdScreen() {
         <Button
           appearance="auth"
           title={
-            !timer.hasSent
+            !hasSent
               ? '인증번호 보내기'
               : timer.resendRemaining > 0
                 ? `인증번호 재발송 (${formatEmailCodeTime(timer.resendRemaining)})`
                 : '인증번호 재발송'
           }
-          disabled={timer.hasSent && timer.resendRemaining > 0}
+          disabled={isPending || timer.resendRemaining > 0}
           onPress={handleSend}
         />
-        {timer.hasSent && (
+        {hasSent && (
           <>
             <Text
               accessibilityLiveRegion="polite"
@@ -146,6 +181,7 @@ export default function FindIdScreen() {
                   label="인증번호"
                   inputRef={ref}
                   value={value}
+                  editable={!isPending}
                   onChangeText={(text) => {
                     clearErrors('code');
                     onChange(text.replace(/[^0-9]/g, '').slice(0, 6));
@@ -166,13 +202,13 @@ export default function FindIdScreen() {
             <Button
               appearance="auth"
               title="아이디 확인"
-              disabled={code.length !== 6 || timer.hasExpired}
+              disabled={isPending || code.length !== 6 || timer.hasExpired}
               onPress={handleVerify}
             />
           </>
         )}
       </View>
-      {status === 'no-match' && (
+      {hasNoMatch && (
         <>
           <View className="items-center gap-[6px] rounded-[14px] bg-motu-surface-card px-[16px] py-[20px]">
             <Text

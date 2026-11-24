@@ -5,7 +5,9 @@ import { getPasswordRules } from '@/schemas/signupInfoSchema';
 
 const recoveryEmailSchema = z.email('올바른 이메일을 입력해 주세요.');
 
-export const findIdSchema = newDeviceSchema.extend({ email: recoveryEmailSchema });
+export const findIdSchema = newDeviceSchema.extend({
+  email: z.string().trim().pipe(recoveryEmailSchema),
+});
 export const requestPasswordResetSchema = z.object({
   loginId: z.string().trim().min(1, '아이디를 입력해 주세요.'),
   email: recoveryEmailSchema,

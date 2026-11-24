@@ -8,7 +8,7 @@ type MyProfileCardProps = {
   nickname: string;
   email: string;
   maskedPhoneNumber: string;
-  isSecondFactorEnabled: boolean;
+  isSecondFactorEnabled?: boolean;
   onEditPress?: () => void;
 };
 
@@ -56,7 +56,7 @@ export function MyProfileCard({
           numberOfLines={1}
           className="flex-1 font-pretendard-bold text-[15px] leading-[22.5px] text-motu-black"
         >
-          {nickname} 님
+          {nickname ? `${nickname} 님` : ''}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -81,8 +81,20 @@ export function MyProfileCard({
         <InfoRow icon={require('../../../assets/icons/my/phone.svg')} text={maskedPhoneNumber} />
         <InfoRow
           icon={require('../../../assets/icons/my/shield.svg')}
-          text={isSecondFactorEnabled ? '2차 보안 설정 완료' : '2차 보안 미설정'}
-          textClassName={isSecondFactorEnabled ? 'text-motu-green' : 'text-motu-red'}
+          text={
+            isSecondFactorEnabled === undefined
+              ? ''
+              : isSecondFactorEnabled
+                ? '2차 보안 설정 완료'
+                : '2차 보안 미설정'
+          }
+          textClassName={
+            isSecondFactorEnabled === undefined
+              ? 'text-motu-grey'
+              : isSecondFactorEnabled
+                ? 'text-motu-green'
+                : 'text-motu-red'
+          }
         />
       </View>
     </View>

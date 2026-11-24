@@ -17,6 +17,11 @@ const isTokenEndpoint = (url?: string) =>
   url === '/auth/login' ||
   url === '/auth/refresh' ||
   url?.startsWith('/auth/login/verifications') === true ||
+  url === '/auth/password-reset' ||
+  url === '/auth/password-reset/verify' ||
+  url === '/auth/password-reset/confirm' ||
+  url === '/auth/find-login-id/email-verifications' ||
+  url === '/auth/find-login-id/email-verifications/confirm' ||
   url === '/users' ||
   url?.startsWith('/users/email-verifications') === true ||
   url === '/users/login-id/availability' ||

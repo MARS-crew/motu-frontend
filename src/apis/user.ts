@@ -12,6 +12,7 @@ import {
   type ProfileEditVerifyForm,
   type ProfileUpdateRequest,
 } from '@/schemas/profileEditSchema';
+import { withdrawalSchema, type WithdrawalForm } from '@/schemas/withdrawalSchema';
 import type { ApiResponse } from '@/types/api';
 
 export const getMyInfo = async (signal?: AbortSignal) => {
@@ -69,3 +70,8 @@ export const patchMyPhoneNumber = async (phoneNumber: string) => {
   );
   return myInfoSchema.parse(data.data);
 };
+
+// 성공 응답은 본문 없는 204입니다.
+export async function postWithdrawal(body: WithdrawalForm) {
+  await api.post<void>('/users/me/withdrawal', withdrawalSchema.parse(body));
+}
