@@ -15,7 +15,7 @@ type MyMenuItemProps = {
 };
 
 // 마이페이지 메뉴 한 줄: [아이콘] 제목(+설명) [>]
-// 설명이 있는 줄은 디자인대로 높이 66px, 간격 6px로 설명이 한 줄에 들어가게 합니다.
+// 설명이 있는 줄은 디자인대로 높이 66px이며, 설명은 11px·자간 -0.2px로 한 줄에 들어가게 합니다.
 // 구분선(테두리 1px)이 있는 줄은 위 여백을 1px 줄여 줄 높이를 60px로 맞춥니다.
 export function MyMenuItem({
   icon,
@@ -32,7 +32,7 @@ export function MyMenuItem({
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      className={`flex-row items-center px-[16px] active:bg-motu-grey-lighter/40 ${description ? 'min-h-[66px] gap-[6px]' : 'min-h-[60px] gap-[12px]'} ${hasDivider ? 'border-t border-motu-grey-lighter pb-[12px] pt-[11px]' : 'py-[12px]'}`}
+      className={`flex-row items-center gap-[12px] px-[16px] active:bg-motu-grey-lighter/40 ${description ? 'min-h-[66px]' : 'min-h-[60px]'} ${hasDivider ? 'border-t border-motu-grey-lighter pb-[12px] pt-[11px]' : 'py-[12px]'}`}
     >
       <View
         className={`h-[36px] w-[36px] items-center justify-center rounded-[8px] ${isDanger ? 'bg-motu-red/10' : 'bg-motu-grey-lighter/50'}`}
@@ -51,7 +51,7 @@ export function MyMenuItem({
           {title}
         </Text>
         {description && (
-          <Text className="mt-[4px] font-pretendard text-[11.5px] leading-[16px] text-motu-grey">
+          <Text className="mt-[4px] font-pretendard text-[11px] leading-[16px] tracking-[-0.2px] text-motu-grey">
             {description}
           </Text>
         )}

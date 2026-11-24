@@ -7,7 +7,7 @@ cssInterop(Image, { className: 'style' });
 type MyProfileCardProps = {
   nickname: string;
   email: string;
-  maskedPhoneNumber: string;
+  maskedPhoneNumber?: string;
   isSecondFactorEnabled?: boolean;
   onEditPress?: () => void;
 };
@@ -78,7 +78,9 @@ export function MyProfileCard({
 
       <View className="mt-[16px] gap-[10px] border-t border-motu-grey-lighter pt-[16px]">
         <InfoRow icon={require('../../../assets/icons/my/mail.svg')} text={email} />
-        <InfoRow icon={require('../../../assets/icons/my/phone.svg')} text={maskedPhoneNumber} />
+        {maskedPhoneNumber && (
+          <InfoRow icon={require('../../../assets/icons/my/phone.svg')} text={maskedPhoneNumber} />
+        )}
         <InfoRow
           icon={require('../../../assets/icons/my/shield.svg')}
           text={

@@ -44,9 +44,7 @@ export default function MyScreen() {
       <MyProfileCard
         nickname={myInfo.nickname}
         email={myInfo.email}
-        maskedPhoneNumber={
-          myInfo.phoneNumber ? maskPhoneNumber(myInfo.phoneNumber) : '연락처 미등록'
-        }
+        maskedPhoneNumber={myInfo.phoneNumber ? maskPhoneNumber(myInfo.phoneNumber) : undefined}
         isSecondFactorEnabled={isSecondFactorEnabled}
         onEditPress={handleEditPress}
       />
