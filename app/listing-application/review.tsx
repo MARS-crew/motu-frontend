@@ -8,12 +8,14 @@ import { Button } from '@/components/Button';
 import { ListingReviewSummary } from '@/components/listingApplication/ListingReviewSummary';
 import { listingSubmissionSchema } from '@/schemas/listingSubmissionSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useTwoFactorGate } from '@/hooks/useTwoFactorGate';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 cssInterop(Image, { className: 'style' });
 
 export default function ListingReviewScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
+  const security = useTwoFactorGate();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
   const submitDraftPreview = useListingDraftStore((state) => state.submitDraftPreview);
@@ -42,9 +44,22 @@ export default function ListingReviewScreen() {
   const handleBack = () => {
     router.dismissTo({ pathname: '/listing-application/evidence', params: { draftId } });
   };
-  const handleSubmit = () => {
-    if (!canSubmit || !draftId || !submitDraftPreview(draftId)) return;
-    // 퍼블리싱용 이동입니다. 실제 접수 API 및 2차 보안 인증은 서버 연동 시 연결합니다.
+  const handleSubmit = async () => {
+    if (!canSubmit || !draftId) return;
+    try {
+      if (
+        !(await security.requireVerification({
+          kind: 'listing',
+          pathname: '/listing-application/review',
+          draftId,
+        }))
+      )
+        return;
+    } catch {
+      return;
+    }
+    if (!submitDraftPreview(draftId)) return;
+    // 퍼블리싱용 이동입니다. 실제 접수 API는 서버 연동 시 연결합니다.
     router.replace({ pathname: '/listing-application/complete', params: { draftId } });
   };
 
@@ -101,7 +116,11 @@ export default function ListingReviewScreen() {
               접수됩니다.
             </Text>
           </View>
-          <Button title="최종 제출" onPress={handleSubmit} disabled={!canSubmit} />
+          <Button
+            title="최종 제출"
+            onPress={() => void handleSubmit()}
+            disabled={!canSubmit || security.isChecking}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

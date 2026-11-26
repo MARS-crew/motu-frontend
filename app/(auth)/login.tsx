@@ -25,7 +25,11 @@ import { getLoginRestriction } from '@/utils/authError';
 
 export default function LoginScreen() {
   // 개발 환경에서만 Figma의 실패 화면을 API 요청 없이 확인합니다.
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
+  const { preview, returnStockId, returnTo } = useLocalSearchParams<{
+    preview?: string;
+    returnStockId?: string;
+    returnTo?: string;
+  }>();
   const isErrorPreview = __DEV__ && preview === 'error';
   const [hasPreviewError, setHasPreviewError] = useState(isErrorPreview);
   const [isSecurityPreviewVisible, setIsSecurityPreviewVisible] = useState(
@@ -55,7 +59,23 @@ export default function LoginScreen() {
     try {
       await handleSubmit(async (form) => {
         const { result } = await login(form);
-        if (result.verificationRequired) router.push('/new-device');
+        if (result.verificationRequired) {
+          if (result.method === 'SMS')
+            router.push({
+              pathname: '/two-factor-session',
+              params: {
+                intent: JSON.stringify({
+                  kind: 'login',
+                  returnTo: returnTo === '/listing-application' ? returnTo : undefined,
+                  stockId:
+                    Number.isSafeInteger(Number(returnStockId)) && Number(returnStockId) > 0
+                      ? Number(returnStockId)
+                      : undefined,
+                }),
+              },
+            });
+          else router.push('/new-device');
+        }
         Keyboard.dismiss();
       })();
     } catch (error) {
