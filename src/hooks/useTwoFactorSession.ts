@@ -15,7 +15,8 @@ import {
   type TwoFactorDelivery,
 } from '@/schemas/twoFactorSessionSchema';
 import { getAuthError } from '@/utils/authError';
-import { getTwoFactorSecondsUntil } from '@/utils/twoFactorSession';
+import { getTwoFactorVerificationState } from '@/utils/twoFactorVerification';
+import { getVerificationTime } from '@/hooks/useVerificationTimer';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { tokenStorage } from '@/utils/tokenStorage';
 
@@ -24,7 +25,8 @@ export function useTwoFactorSession() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const send = useSendTwoFactorSessionMutation();
   const confirm = useConfirmTwoFactorSessionMutation();
-  const [now, setNow] = useState(Date.now);
+  const [, setNow] = useState(Date.now);
+  const [hasFailedAttempt, setHasFailedAttempt] = useState(false);
   const [failure, setFailure] = useState<'mismatch' | 'expired' | 'locked' | null>(null);
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const lock = useRef(false);
@@ -46,12 +48,17 @@ export function useTwoFactorSession() {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [delivery.data, status.data?.lockedUntil]);
-  const remaining = getTwoFactorSecondsUntil(delivery.data?.expiresAt, now);
-  const resendRemaining = getTwoFactorSecondsUntil(delivery.data?.resendAvailableAt, now);
-  const isLocked =
-    failure === 'locked' ||
-    Boolean(status.data?.lockedUntil && Date.parse(status.data.lockedUntil) > now);
-  const isExpired = failure === 'expired' || Boolean(delivery.data && remaining === 0);
+  const { remaining, resendRemaining, remainingAttempts, isLocked, isExpired } =
+    getTwoFactorVerificationState({
+      status: status.data,
+      delivery: delivery.data,
+      statusUpdatedAt: status.dataUpdatedAt,
+      deliveryUpdatedAt: delivery.dataUpdatedAt,
+      isStatusSuccess: status.isSuccess,
+      isStatusFetching: status.isFetching,
+      hasFailedAttempt,
+      failure,
+    });
   const isComplete = confirm.isSuccess && hasSameSession;
   const handleError = async (error: unknown) => {
     const code = getAuthError(error)?.code;
@@ -66,7 +73,9 @@ export function useTwoFactorSession() {
       !useAuthStore.getState().isLoggedIn ||
       lock.current ||
       isLocked ||
-      resendRemaining > 0 ||
+      getVerificationTime(delivery.data).resendRemaining > 0 ||
+      !status.isSuccess ||
+      status.data.status !== 'ENABLED' ||
       initialSessionId !== tokenStorage.getSessionId()
     )
       return;
@@ -74,6 +83,7 @@ export function useTwoFactorSession() {
     try {
       await send.mutateAsync();
       setFailure(null);
+      setHasFailedAttempt(false);
       setServerMessage(null);
       form.reset({ code: '' });
       setNow(Date.now());
@@ -89,8 +99,11 @@ export function useTwoFactorSession() {
         !useAuthStore.getState().isLoggedIn ||
         lock.current ||
         isLocked ||
-        isExpired ||
+        failure === 'expired' ||
+        getVerificationTime(delivery.data).hasExpired ||
         !delivery.data ||
+        !status.isSuccess ||
+        status.data.status !== 'ENABLED' ||
         initialSessionId !== tokenStorage.getSessionId()
       )
         return;
@@ -99,6 +112,7 @@ export function useTwoFactorSession() {
         await confirm.mutateAsync(body);
         setServerMessage(null);
       } catch (error) {
+        setHasFailedAttempt(true);
         await handleError(error);
       } finally {
         lock.current = false;
@@ -107,7 +121,8 @@ export function useTwoFactorSession() {
   };
   return {
     status,
-    canSend: hasSameSession && status.data?.status === 'ENABLED',
+    isAuthenticated: hasSameSession,
+    canSend: hasSameSession && status.isSuccess && status.data.status === 'ENABLED',
     form,
     code,
     send: { ...send, data: hasSameSession ? delivery.data : undefined },
@@ -119,15 +134,15 @@ export function useTwoFactorSession() {
     isLocked,
     isExpired,
     isComplete,
-    isPending: send.isPending || confirm.isPending,
+    isPending: send.isPending || confirm.isPending || status.isFetching,
     handleSend,
     handleConfirm,
-    remainingAttempts: status.data?.remainingAttempts ?? delivery.data?.remainingAttempts,
+    remainingAttempts,
     maskedPhoneNumber: hasSameSession
       ? (delivery.data?.maskedPhoneNumber ?? status.data?.maskedPhoneNumber ?? '')
       : '',
     clearFailure: () => {
-      setFailure(null);
+      setFailure((current) => (current === 'mismatch' ? null : current));
       setServerMessage(null);
     },
   };

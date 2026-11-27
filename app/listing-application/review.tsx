@@ -7,7 +7,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { ListingReviewSummary } from '@/components/listingApplication/ListingReviewSummary';
 import { listingSubmissionSchema } from '@/schemas/listingSubmissionSchema';
-import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useRef } from 'react';
+import { useListingApplicationDetailQuery } from '@/queries/useListingApplicationDetailQuery';
+import { useSubmitListingMutation } from '@/queries/useSubmitListingMutation';
+import { useSectorsQuery } from '@/queries/useSectorsQuery';
+import { listingDraftDetailSchema } from '@/schemas/listingDraftSchema';
+import { toListingBasicForm } from '@/utils/listingBasicDraft';
+import { toListingTradingForm } from '@/utils/listingTradingDraft';
+import { toListingMetricsForm } from '@/utils/listingMetricsDraft';
+import { toListingRevisionEvidence } from '@/utils/listingRevision';
+import { getAuthError } from '@/utils/authError';
 import { useTwoFactorGate } from '@/hooks/useTwoFactorGate';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
@@ -17,8 +26,29 @@ export default function ListingReviewScreen() {
   const { isScrolled, handleScroll } = useHeaderScroll();
   const security = useTwoFactorGate();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
-  const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
-  const submitDraftPreview = useListingDraftStore((state) => state.submitDraftPreview);
+  const id = Number(draftId);
+  const isValidId = Number.isSafeInteger(id) && id > 0;
+  const query = useListingApplicationDetailQuery(isValidId ? id : null);
+  const sectors = useSectorsQuery();
+  const submit = useSubmitListingMutation(id);
+  const lock = useRef(false);
+  const application = query.data;
+  const parsed = listingDraftDetailSchema.safeParse(application);
+  const saved = parsed.success ? parsed.data : null;
+  const draft =
+    saved && application
+      ? {
+          values: toListingBasicForm(
+            saved,
+            sectors.data ?? [],
+            application.attachments.logo,
+            application.attachments.mainImage,
+          ),
+          tradingValues: toListingTradingForm(saved),
+          metricsValues: toListingMetricsForm(saved),
+          evidenceValues: toListingRevisionEvidence(application.attachments.evidence),
+        }
+      : null;
   const steps = [
     {
       title: '기본 정보',
@@ -40,12 +70,17 @@ export default function ListingReviewScreen() {
         .success,
     },
   ];
-  const canSubmit = listingSubmissionSchema.safeParse(draft).success;
+  const canSubmit =
+    query.isSuccess &&
+    !query.isFetching &&
+    listingSubmissionSchema.safeParse(draft).success &&
+    Boolean(draft?.evidenceValues.items.length);
   const handleBack = () => {
     router.dismissTo({ pathname: '/listing-application/evidence', params: { draftId } });
   };
   const handleSubmit = async () => {
-    if (!canSubmit || !draftId) return;
+    if (!canSubmit || !draftId || !application || lock.current) return;
+    lock.current = true;
     try {
       if (
         !(await security.requireVerification({
@@ -55,15 +90,27 @@ export default function ListingReviewScreen() {
         }))
       )
         return;
-    } catch {
-      return;
+      await submit.mutateAsync({ expectedLastSavedAt: application.lastSavedAt });
+      router.replace({ pathname: '/listing-application/complete', params: { draftId } });
+    } catch (error) {
+      const code = getAuthError(error)?.code;
+      if (code === 'TWO_FACTOR_REQUIRED' || code === 'TWO_FACTOR_NOT_ENABLED') {
+        await security
+          .requireVerification(
+            { kind: 'listing', pathname: '/listing-application/review', draftId },
+            undefined,
+            true,
+          )
+          .catch(() => undefined);
+      }
+    } finally {
+      lock.current = false;
     }
-    if (!submitDraftPreview(draftId)) return;
-    // 퍼블리싱용 이동입니다. 실제 접수 API는 서버 연동 시 연결합니다.
-    router.replace({ pathname: '/listing-application/complete', params: { draftId } });
   };
 
-  if (!draft) return <Redirect href="/listing-application" />;
+  if (!isValidId) return <Redirect href="/listing-application" />;
+  if (application && application.status !== 'DRAFT' && application.applicationNumber)
+    return <Redirect href={{ pathname: '/listing-application/complete', params: { draftId } }} />;
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -116,10 +163,18 @@ export default function ListingReviewScreen() {
               접수됩니다.
             </Text>
           </View>
+          {getAuthError(submit.error ?? query.error)?.message && (
+            <Text
+              accessibilityLiveRegion="polite"
+              className="font-pretendard-medium text-xs text-motu-btn-red"
+            >
+              {getAuthError(submit.error ?? query.error)?.message}
+            </Text>
+          )}
           <Button
             title="최종 제출"
             onPress={() => void handleSubmit()}
-            disabled={!canSubmit || security.isChecking}
+            disabled={!canSubmit || security.isChecking || submit.isPending}
           />
         </View>
       </ScrollView>

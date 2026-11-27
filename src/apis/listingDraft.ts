@@ -1,4 +1,5 @@
-import { api } from '@/apis/instance';
+import { api, SessionChangedError } from '@/apis/instance';
+import { tokenStorage } from '@/utils/tokenStorage';
 import {
   listingDraftListSchema,
   listingDraftDetailSchema,
@@ -78,3 +79,19 @@ export const validateListingMetricsStep = async (id: number, body: SaveListingMe
   );
   return listingMetricsStepResultSchema.parse(data.data);
 };
+
+export async function saveListingEvidenceStep(
+  id: number,
+  collectionId: string,
+  description: string,
+) {
+  const session = tokenStorage.getSessionId();
+  const body = { data: { evidenceCollectionId: collectionId, evidenceDescription: description } };
+  await api.patch(`/listing-applications/drafts/${id}`, { currentStep: 4, ...body });
+  if (session !== tokenStorage.getSessionId()) throw new SessionChangedError();
+  const { data } = await api.put<ApiResponse<unknown>>(
+    `/listing-applications/drafts/${id}/steps/4`,
+    body,
+  );
+  return listingDraftDetailSchema.parse(data.data);
+}

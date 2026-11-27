@@ -33,6 +33,9 @@ function LoginSessionContent({ rawIntent }: { rawIntent?: string }) {
 }
 function AccountSessionContent({ rawIntent }: { rawIntent?: string }) {
   const session = useTwoFactorSession();
+  if (!session.isAuthenticated) return <Redirect href="/login" />;
+  if (session.status.isSuccess && session.status.data.status !== 'ENABLED')
+    return <Redirect href={{ pathname: '/two-factor-required', params: { intent: rawIntent } }} />;
   return <TwoFactorSessionContent session={session} rawIntent={rawIntent} />;
 }
 function TwoFactorSessionContent({
@@ -194,7 +197,7 @@ function TwoFactorSessionContent({
                   )}
                 />
                 <View className="-mt-[8px] min-h-[68px] gap-[4px]">
-                  {session.failure === 'mismatch' && session.remainingAttempts !== undefined && (
+                  {session.failure === 'mismatch' && (
                     <Text
                       accessibilityLiveRegion="polite"
                       className="font-pretendard-medium text-[12px] leading-[20px] text-motu-btn-red text-no-font-padding"

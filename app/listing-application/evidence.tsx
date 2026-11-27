@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +22,10 @@ import {
 } from '@/schemas/listingEvidenceSchema';
 import { useListingDraftStore } from '@/stores/useListingDraftStore';
 import { createEvidenceId } from '@/utils/listingEvidence';
+import { useListingApplicationDetailQuery } from '@/queries/useListingApplicationDetailQuery';
+import { toListingRevisionEvidence } from '@/utils/listingRevision';
+import { useSaveListingEvidenceMutation } from '@/queries/useSaveListingEvidenceMutation';
+import { getAuthError } from '@/utils/authError';
 import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 
 export default function ListingEvidenceScreen() {
@@ -56,6 +60,16 @@ export default function ListingEvidenceScreen() {
     reValidateMode: 'onChange',
     shouldFocusError: false,
   });
+  const saveMutation = useSaveListingEvidenceMutation(Number(currentDraftId));
+  const remote = useListingApplicationDetailQuery(
+    Number.isSafeInteger(Number(currentDraftId)) ? Number(currentDraftId) : null,
+  );
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (hydrated.current || !remote.data || isDirty || initialDraft?.evidenceValues) return;
+    hydrated.current = true;
+    reset(toListingRevisionEvidence(remote.data.attachments.evidence));
+  }, [remote.data, isDirty, initialDraft, reset]);
   const values = useWatch({ control });
   const canProceed = listingEvidenceSchema.safeParse(values).success;
   const handleItemsChange = (items: EvidenceItem[]) => {
@@ -107,7 +121,7 @@ export default function ListingEvidenceScreen() {
     reset(currentValues);
   };
   const handlePrevious = () => {
-    if (picker.isPicking) return;
+    if (picker.isPicking || saveMutation.isPending) return;
     handleSave();
     router.dismissTo({
       pathname: '/listing-application/service-metrics',
@@ -116,8 +130,15 @@ export default function ListingEvidenceScreen() {
   };
   const handleNext = () =>
     void handleSubmit(
-      () => {
-        handleSave();
+      async (values) => {
+        if (saveMutation.isPending || !Number.isSafeInteger(Number(currentDraftId))) return;
+        try {
+          await saveMutation.mutateAsync(values);
+        } catch (error) {
+          setAttachmentError(getAuthError(error)?.message ?? null);
+          return;
+        }
+        saveEvidenceDraft(currentDraftId, values);
         router.push({
           pathname: '/listing-application/review',
           params: { draftId: currentDraftId },
@@ -173,6 +194,8 @@ export default function ListingEvidenceScreen() {
               errors={errors}
               attachmentError={attachmentError}
               isPicking={picker.isPicking}
+              isSaving={saveMutation.isPending}
+              hasDesignMessagesOnly={false}
               onPick={handlePick}
               onHelp={() => {
                 setSelectedItem(null);
@@ -192,7 +215,7 @@ export default function ListingEvidenceScreen() {
           <View className="gap-1.5 pt-2">
             <Pressable
               accessibilityRole="button"
-              disabled={picker.isPicking}
+              disabled={picker.isPicking || saveMutation.isPending}
               onPress={handleSave}
               className="h-8 items-center justify-center"
             >
@@ -206,14 +229,19 @@ export default function ListingEvidenceScreen() {
                   title="이전"
                   variant="secondary"
                   onPress={handlePrevious}
-                  disabled={picker.isPicking}
+                  disabled={picker.isPicking || saveMutation.isPending}
                 />
               </View>
               <View className="flex-1">
                 <Button
                   title="다음"
                   onPress={handleNext}
-                  disabled={!canProceed || picker.isPicking}
+                  disabled={
+                    !canProceed ||
+                    !values.items?.length ||
+                    picker.isPicking ||
+                    saveMutation.isPending
+                  }
                 />
               </View>
             </View>
