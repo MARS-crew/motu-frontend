@@ -16,6 +16,7 @@ type ListingEvidenceFieldsProps = {
   attachmentError: string | null;
   isPicking: boolean;
   isSaving?: boolean;
+  hasDesignMessagesOnly?: boolean;
   onPick: () => void;
   onHelp: () => void;
   onDelete: (item: EvidenceItem) => void;
@@ -29,6 +30,7 @@ export function ListingEvidenceFields({
   attachmentError,
   isPicking,
   isSaving = false,
+  hasDesignMessagesOnly = true,
   onPick,
   onHelp,
   onDelete,
@@ -76,6 +78,7 @@ export function ListingEvidenceFields({
           첨부 가능 형식: JPG, JPEG, PNG, PDF
         </Text>
         <FormMessage
+          hasDesignMessagesOnly={hasDesignMessagesOnly}
           message={
             attachmentError ||
             errors.items?.message ||

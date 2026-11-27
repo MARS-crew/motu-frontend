@@ -13,12 +13,7 @@ export const evidenceLinkSchema = z
   .refine((value) => {
     try {
       const url = new URL(value);
-      return (
-        ['https:', 'http:'].includes(url.protocol) &&
-        !!url.hostname &&
-        !url.username &&
-        !url.password
-      );
+      return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password;
     } catch {
       return false;
     }

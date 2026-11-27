@@ -45,3 +45,8 @@ export async function postConfirmTwoFactorPhoneVerification(body: SecondFactorFo
   });
   return twoFactorSchema.parse(data.data);
 }
+
+export async function postDisableTwoFactor() {
+  const { data } = await api.post<ApiResponse<unknown>>('/two-factor/disable');
+  return twoFactorSchema.parse(data.data);
+}

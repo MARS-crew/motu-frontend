@@ -3,20 +3,30 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { LISTING_RECEIPT_NUMBER_PREVIEW } from '@/constants/listingSubmissionPreview';
-import { listingSubmissionSchema } from '@/schemas/listingSubmissionSchema';
-import { useListingDraftStore } from '@/stores/useListingDraftStore';
+import { useListingApplicationDetailQuery } from '@/queries/useListingApplicationDetailQuery';
+import { getAuthError } from '@/utils/authError';
 
 export default function ListingCompleteScreen() {
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
-  const draft = useListingDraftStore((state) => (draftId ? state.drafts[draftId] : undefined));
+  const id = Number(draftId);
+  const isValidId = Number.isSafeInteger(id) && id > 0;
+  const query = useListingApplicationDetailQuery(isValidId ? id : null);
+  const application = query.data;
+  const isSubmitted = Boolean(application?.applicationNumber && application.submittedAt);
   const handleViewApplications = () => router.dismissTo('/listing-application/my-applications');
-  const handleNewApplication = () => router.replace('/listing-application/basic-info');
+  const handleNewApplication = () => router.replace('/listing-application');
 
-  if (!draft) return <Redirect href="/listing-application" />;
-  if (!listingSubmissionSchema.safeParse(draft).success) {
+  if (!isValidId) return <Redirect href="/listing-application" />;
+  if (application?.status === 'DRAFT')
     return <Redirect href={{ pathname: '/listing-application/review', params: { draftId } }} />;
-  }
+  if (!isSubmitted)
+    return (
+      <SafeAreaView className="flex-1 bg-motu-bg px-6 pt-3">
+        <Text className="font-pretendard-medium text-xs text-motu-btn-red">
+          {getAuthError(query.error)?.message}
+        </Text>
+      </SafeAreaView>
+    );
 
   return (
     <SafeAreaView className="flex-1 bg-motu-bg">
@@ -46,7 +56,7 @@ export default function ListingCompleteScreen() {
               신청번호
             </Text>
             <Text className="font-pretendard-bold text-[15px] leading-5 text-motu-text-primary">
-              {LISTING_RECEIPT_NUMBER_PREVIEW}
+              {application?.applicationNumber}
             </Text>
           </View>
           <View className="flex-row items-center gap-2">
@@ -54,7 +64,7 @@ export default function ListingCompleteScreen() {
               현재 상태
             </Text>
             <Text className="font-pretendard-bold text-[15px] leading-5 text-motu-text-primary">
-              접수
+              {application?.statusLabel}
             </Text>
           </View>
         </View>
