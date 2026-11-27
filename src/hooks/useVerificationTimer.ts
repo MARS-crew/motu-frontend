@@ -13,11 +13,12 @@ export function getVerificationTime(deadline: VerificationDeadline | undefined, 
 }
 
 export function useVerificationTimer(deadline?: VerificationDeadline) {
-  const [now, setNow] = useState(Date.now);
+  const [, setNow] = useState(Date.now);
   useEffect(() => {
     if (!deadline) return;
     const interval = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(interval);
   }, [deadline]);
-  return getVerificationTime(deadline, now);
+  // 응답을 기다린 시간 때문에 첫 프레임의 남은 시간이 늘어나지 않도록 현재 시각으로 계산합니다.
+  return getVerificationTime(deadline);
 }

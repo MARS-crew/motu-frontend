@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -39,6 +39,7 @@ import { useWishlistMutation } from '@/queries/useWishlistMutation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { OrderSide } from '@/types/order';
 import type { ChartPeriod } from '@/types/product';
+import { useTwoFactorGate } from '@/hooks/useTwoFactorGate';
 import { getApiErrorMessage } from '@/utils/apiError';
 
 type DetailTab = 'chart' | 'orderBook' | 'info';
@@ -51,7 +52,8 @@ const DETAIL_TABS: { label: string; value: DetailTab }[] = [
 ];
 
 export default function ProductDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, securityResume } = useLocalSearchParams<{ id: string; securityResume?: string }>();
+  const { requireVerification } = useTwoFactorGate();
   const { data: product, isLoading, error } = useStockDetailQuery(Number(id));
   const { mutate: toggleWishlist } = useWishlistMutation();
 
@@ -121,24 +123,41 @@ export default function ProductDetailScreen() {
   const handleToastHide = useCallback(() => setToastMessage(null), []);
 
   // 주문은 로그인 상태에서만 가능합니다. (화면설계서 USR-MARKET-02-M02)
-  const handleOrderPress = async (side: OrderSide) => {
-    if (!isLoggedIn) {
-      setLoginRequiredReason('order');
-      return;
-    }
-    // 주문 규칙·사용 가능 포인트·매도 가능 수량을 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
-    const refetchPromise = refetchOrderAvailability();
-    const availability = orderAvailability ?? (await refetchPromise).data;
-    if (!availability) {
-      setToastMessage('주문 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
-      return;
-    }
-    if (!availability.isTradable) {
-      setToastMessage('지금은 거래할 수 없는 상품이에요.');
-      return;
-    }
-    setOrderSide(side);
-  };
+  const handleOrderPress = useCallback(
+    async (side: OrderSide) => {
+      if (!isLoggedIn) {
+        setLoginRequiredReason('order');
+        return;
+      }
+      try {
+        if (!(await requireVerification({ kind: 'order', stockId: Number(id), side }))) return;
+      } catch (error) {
+        setToastMessage(getApiErrorMessage(error));
+        return;
+      }
+      // 주문 규칙·사용 가능 포인트·매도 가능 수량을 최신 값으로 다시 조회합니다. 이미 불러온 값이 있으면 먼저 열고 갱신합니다.
+      const refetchPromise = refetchOrderAvailability();
+      const availability = orderAvailability ?? (await refetchPromise).data;
+      if (!availability) {
+        setToastMessage('주문 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      if (!availability.isTradable) {
+        setToastMessage('지금은 거래할 수 없는 상품이에요.');
+        return;
+      }
+      setOrderSide(side);
+    },
+    [id, isLoggedIn, orderAvailability, refetchOrderAvailability, requireVerification],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (securityResume !== 'buy' && securityResume !== 'sell') return;
+      router.setParams({ securityResume: undefined });
+      void handleOrderPress(securityResume);
+    }, [securityResume, handleOrderPress]),
+  );
 
   // 관심 상품은 회원만 등록할 수 있습니다.
   const handleFavoritePress = () => {
@@ -152,7 +171,7 @@ export default function ProductDetailScreen() {
 
   const handleLoginPress = () => {
     setLoginRequiredReason(null);
-    router.push('/login');
+    router.push({ pathname: '/login', params: { returnStockId: id } });
   };
 
   const handleOrderHistoryPress = () => {

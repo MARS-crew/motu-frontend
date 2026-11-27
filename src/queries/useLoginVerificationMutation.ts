@@ -47,12 +47,13 @@ export function useConfirmLoginVerificationMutation() {
     retry: false,
     mutationFn: async (code: string) => {
       const sessionId = tokenStorage.getSessionId();
+      const challenge = await pendingLoginStorage.get();
       const result = await postConfirmLoginVerification(code);
       const revision = await saveLoginSession(result, sessionId);
       await pendingLoginStorage.clear();
-      return revision;
+      return { revision, maskedTarget: challenge?.maskedTarget ?? '' };
     },
-    onSuccess: async (revision) => {
+    onSuccess: async ({ revision }) => {
       await client.cancelQueries();
       if (revision !== tokenStorage.getRevision()) return;
       client.removeQueries();

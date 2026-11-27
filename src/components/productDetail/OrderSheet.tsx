@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useTwoFactorGate } from '@/hooks/useTwoFactorGate';
+import { getAuthError } from '@/utils/authError';
 import { Button } from '@/components/Button';
 import { OrderCompleteStep } from '@/components/productDetail/OrderCompleteStep';
 import { OrderConfirmStep } from '@/components/productDetail/OrderConfirmStep';
@@ -57,6 +59,7 @@ export function OrderSheet({
   onHistoryPress,
 }: OrderSheetProps) {
   const { bottom } = useSafeAreaInsets();
+  const security = useTwoFactorGate();
   const [step, setStep] = useState<OrderStep>('input');
   const [submittedOrder, setSubmittedOrder] = useState<SubmittedOrder | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -96,8 +99,9 @@ export function OrderSheet({
 
   // 주문 오류는 화면설계서 문구로 Toast에 보여줍니다. (USR-MARKET-02-M04, M07)
   const handleSubmitPress = async () => {
-    if (isSubmitting || !clientOrderIdRef.current) return;
+    if (isSubmitting || security.isChecking || !clientOrderIdRef.current) return;
     try {
+      if (!(await security.requireVerification({ kind: 'order', stockId, side }, onClose))) return;
       const order = await createOrder({
         clientOrderId: clientOrderIdRef.current,
         stockId,
@@ -108,6 +112,14 @@ export function OrderSheet({
       setSubmittedOrder({ ...amounts, orderedAt: formatOrderedAt(new Date(order.createDate)) });
       setStep('complete');
     } catch (error) {
+      if (getAuthError(error)?.code === 'TWO_FACTOR_REQUIRED') {
+        try {
+          await security.requireVerification({ kind: 'order', stockId, side }, onClose, true);
+        } catch (verificationError) {
+          setToastMessage(getOrderErrorMessage(verificationError));
+        }
+        return;
+      }
       setToastMessage(getOrderErrorMessage(error));
     }
   };
@@ -210,7 +222,7 @@ export function OrderSheet({
                 <Button
                   title={`${sideStyle.label} 주문 제출`}
                   color={sideStyle.buttonColor}
-                  isLoading={isSubmitting}
+                  isLoading={isSubmitting || security.isChecking}
                   onPress={() => void handleSubmitPress()}
                 />
                 <Button title="취소" variant="secondary" onPress={onClose} />

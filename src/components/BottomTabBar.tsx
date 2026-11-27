@@ -1,5 +1,6 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { cssInterop } from 'nativewind';
 import type { ComponentProps } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -102,6 +103,47 @@ export function BottomTabBar({ descriptors, navigation, state, insets }: BottomT
             </Pressable>
           );
         })}
+      </View>
+    </View>
+  );
+}
+
+// 탭 네비게이터 바깥의 디자인 화면에서도 같은 메뉴와 아이콘을 재사용합니다.
+export function ScreenBottomTabBar() {
+  const insets = useSafeAreaInsets();
+  const routes = {
+    index: '/(tabs)',
+    market: '/market',
+    portfolio: '/portfolio',
+    transactions: '/transactions',
+    my: '/my',
+  } as const;
+  return (
+    <View
+      className="border-t border-motu-border bg-motu-surface-card"
+      style={{ paddingBottom: Math.max(24, insets.bottom) }}
+    >
+      <View className="h-[60px] flex-row">
+        {TAB_ITEMS.map((item) => (
+          <Pressable
+            key={item.routeName}
+            accessibilityRole="button"
+            accessibilityLabel={item.label}
+            onPress={() => router.dismissTo(routes[item.routeName as keyof typeof routes])}
+            className="flex-1 items-center justify-center gap-[4px]"
+          >
+            <Image
+              source={item.routeName === 'my' ? item.activeIcon : item.inactiveIcon}
+              className="h-[22px] w-[22px]"
+              contentFit="contain"
+            />
+            <Text
+              className={`font-pretendard-medium text-[10px] leading-[15px] text-no-font-padding ${item.routeName === 'my' ? 'text-motu-text-primary' : 'text-motu-text-tertiary'}`}
+            >
+              {item.label}
+            </Text>
+          </Pressable>
+        ))}
       </View>
     </View>
   );
